@@ -2,7 +2,7 @@
 
 Локальный инструмент для проверки и упаковки небольших автономных HTML-приложений в QR-код. Готовая лаборатория работает одним HTML-файлом: без сервера, установки, CDN и подключения к Интернету.
 
-Автор: **Илья Барило (Ilya Barilo)**.
+Автор: **[Илья Барило (Ilya Barilo)](https://barilo.ru/)**.
 
 <p align="center">
   <a href="https://ilyabarilo.github.io/qr-microapps-lab/"><img src="https://img.shields.io/badge/демо-открыть-2ea44f?style=for-the-badge" alt="Открыть QR Microapps Lab"></a>
@@ -14,7 +14,7 @@
   <a href="https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/pages.yml"><img src="https://img.shields.io/github/actions/workflow/status/IlyaBarilo/qr-microapps-lab/pages.yml?style=for-the-badge&amp;label=pages" alt="Статус GitHub Pages"></a>
 </p>
 
-[Открыть онлайн](https://ilyabarilo.github.io/qr-microapps-lab/) · [Скачать автономный HTML](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest/download/qr-microapps-lab.html) · [Последний релиз](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest) · [Спецификация игр](spec_game_creation_ru.md)
+[Открыть онлайн](https://ilyabarilo.github.io/qr-microapps-lab/) · [Скачать автономный HTML](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest/download/qr-microapps-lab.html) · [Последний релиз](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest) · [Практический кейс](docs/case-study-ru.md) · [Спецификация игр](spec_game_creation_ru.md)
 
 [![Интерфейс QR Microapps Lab: исходный HTML, QR-код и изолированный предпросмотр игры](docs/images/qr-microapps-lab.webp)](docs/images/qr-microapps-lab.webp)
 
@@ -114,7 +114,7 @@ HTML → оптимизация → автоматические проверк�
 
 ## Разработка
 
-Для сборки требуется Node.js 20 или новее. Редактировать нужно файлы в `editor/`; корневой автономный HTML является результатом сборки.
+Для сборки требуется Node.js 22 или новее. Редактировать нужно файлы в `editor/`; корневой автономный HTML является результатом сборки.
 
 ```text
 npm --prefix tests run build:standalone
