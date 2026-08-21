@@ -1,6 +1,5 @@
 {
   "name": "qr-microapps-lab",
-  "version": "0.1.0",
   "private": true,
   "author": "Ilya Barilo",
   "description": "Локальная лаборатория автономных HTML-микроприложений в QR-кодах",
