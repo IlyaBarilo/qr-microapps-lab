@@ -11,7 +11,7 @@
   <a href="https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest"><img src="https://img.shields.io/github/v/release/IlyaBarilo/qr-microapps-lab?display_name=tag&amp;label=%D1%80%D0%B5%D0%BB%D0%B8%D0%B7&amp;color=blue&amp;style=for-the-badge" alt="Последний релиз"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="Лицензия MIT"></a>
   <a href="https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/IlyaBarilo/qr-microapps-lab/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI" alt="Статус автоматических проверок"></a>
-  <a href="https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/pages.yml"><img src="https://img.shields.io/github/actions/workflow/status/IlyaBarilo/qr-microapps-lab/pages.yml?branch=main&amp;style=for-the-badge&amp;label=pages" alt="Статус GitHub Pages"></a>
+  <a href="https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/pages.yml"><img src="https://img.shields.io/github/actions/workflow/status/IlyaBarilo/qr-microapps-lab/pages.yml?style=for-the-badge&amp;label=pages" alt="Статус GitHub Pages"></a>
 </p>
 
 [Открыть онлайн](https://ilyabarilo.github.io/qr-microapps-lab/) · [Скачать автономный HTML](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest/download/qr-microapps-lab.html) · [Последний релиз](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest) · [Спецификация игр](spec_game_creation_ru.md)
@@ -105,7 +105,7 @@ npm --prefix tests run check:all
 
 ## GitHub Pages
 
-Workflow `Deploy GitHub Pages` автоматически запускается после каждого push в `main`; при необходимости его также можно запустить вручную. Он проверяет проект, подставляет в интерфейс тег последнего опубликованного GitHub Release, копирует `pages/index.html` в корень статического сайта и добавляет автономный `qr-microapps-lab.html`. Если релизов ещё нет, используется версия из `tests/package.json`. Исходный каталог `pages/` не нужен для локального запуска лаборатории.
+Workflow `Deploy GitHub Pages` автоматически запускается при публикации GitHub Release и извлекает сайт из соответствующего тега. Он проверяет выбранную версию, подставляет тег в интерфейс, копирует `pages/index.html` в корень статического сайта и добавляет автономный `qr-microapps-lab.html`. Содержимое демо, отображаемая версия и скачиваемый релиз поэтому соответствуют друг другу. Для повторной публикации существующего релиза workflow можно запустить вручную, указав его тег. Обычный push в `main` обновляет исходники и запускает CI, но не меняет стабильное демо. Исходный каталог `pages/` не нужен для локального запуска лаборатории.
 
 ## Релизы
 

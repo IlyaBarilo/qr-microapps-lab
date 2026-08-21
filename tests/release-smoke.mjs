@@ -87,10 +87,13 @@ if (!/permissions:\s*\n\s*contents: read/.test(ciWorkflow)) errors.push('CI до
 
 const pagesWorkflow = read('.github/workflows/pages.yml');
 if (!/workflow_dispatch:/.test(pagesWorkflow)) errors.push('Pages должен поддерживать ручной запуск.');
-if (!/push:\s*\n\s*branches:\s*\[main\]/.test(pagesWorkflow)) errors.push('Pages должен автоматически публиковаться после push в main.');
+if (!/release:\s*\n\s*types:\s*\[published\]/.test(pagesWorkflow)) errors.push('Pages должен автоматически публиковаться при публикации релиза.');
+if (/push:\s*\n\s*branches:\s*\[main\]/.test(pagesWorkflow)) errors.push('Pages не должен публиковать непроверенную версию из последнего push в main.');
+if (!/Existing release tag/.test(pagesWorkflow)) errors.push('Ручной запуск Pages должен принимать существующий тег релиза.');
+if (!/ref:.*github\.event\.release\.tag_name.*inputs\.tag/.test(pagesWorkflow)) errors.push('Pages должен извлекать файлы выбранного тега релиза.');
 if (!/npm --prefix tests run check/.test(pagesWorkflow)) errors.push('Pages должен проверять проект до упаковки.');
 if (!/cp pages\/index\.html _site\/index\.html/.test(pagesWorkflow)) errors.push('Pages должен брать стартовую страницу из pages/.');
-if (!/releases\/latest/.test(pagesWorkflow) || !/set-standalone-version\.mjs --version/.test(pagesWorkflow)) errors.push('Pages должен подставлять номер последнего опубликованного релиза.');
+if (!/grep -q "__APP_VERSION__"/.test(pagesWorkflow) || !/set-standalone-version\.mjs --version/.test(pagesWorkflow)) errors.push('Pages должен подставлять выбранный тег с поддержкой старых релизов без метки версии.');
 
 const releaseWorkflow = read('.github/workflows/release.yml');
 if (!/release:\s*\n\s*types:\s*\[published\]/.test(releaseWorkflow)) errors.push('Release workflow должен запускаться при публикации релиза.');

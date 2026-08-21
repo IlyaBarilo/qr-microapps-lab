@@ -1,9 +1,14 @@
 name: Deploy GitHub Pages
 
 on:
-  push:
-    branches: [main]
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -18,6 +23,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          fetch-depth: 0
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -25,17 +33,13 @@ jobs:
           package-manager-cache: false
       - name: Test before publishing
         run: npm --prefix tests run check
-      - name: Detect published version
+      - name: Inject release version
         env:
-          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
         run: |
-          VERSION="$(gh api "repos/${{ github.repository }}/releases/latest" --jq '.tag_name' 2>/dev/null || true)"
-          if [ -z "$VERSION" ]; then
-            VERSION="$(node tools/set-standalone-version.mjs --print-local)"
+          if grep -q "__APP_VERSION__" qr-microapps-lab.html; then
+            node tools/set-standalone-version.mjs --version "$RELEASE_TAG"
           fi
-          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
-      - name: Inject published version
-        run: node tools/set-standalone-version.mjs --version "$APP_VERSION"
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Prepare static artifact
