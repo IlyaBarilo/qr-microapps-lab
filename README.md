@@ -4,19 +4,37 @@
 
 Автор: **Илья Барило (Ilya Barilo)**.
 
+[![Открыть QR Microapps Lab](https://img.shields.io/badge/демо-открыть-2ea44f?style=for-the-badge)](https://ilyabarilo.github.io/qr-microapps-lab/)
+
+[![Последний релиз](https://img.shields.io/github/v/release/IlyaBarilo/qr-microapps-lab?display_name=tag&label=релиз&color=blue)](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest)
+[![Лицензия MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![CI](https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/ci.yml)
+[![GitHub Pages](https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/pages.yml/badge.svg)](https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/pages.yml)
+
+[Открыть онлайн](https://ilyabarilo.github.io/qr-microapps-lab/) · [Скачать автономный HTML](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest/download/qr-microapps-lab.html) · [Последний релиз](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest) · [Спецификация игр](spec_game_creation_ru.md)
+
+[![Интерфейс QR Microapps Lab: исходный HTML, QR-код и изолированный предпросмотр игры](docs/images/qr-microapps-lab.webp)](docs/images/qr-microapps-lab.webp)
+
 ```text
 HTML → оптимизация → автоматические проверки → QR → обратное декодирование → предпросмотр
 ```
 
 ## Быстрый запуск
 
-1. Скачайте [qr-microapps-lab.html](qr-microapps-lab.html).
+1. Скачайте [qr-microapps-lab.html](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest/download/qr-microapps-lab.html).
 2. Откройте файл в современном браузере.
 3. Загрузите собственный HTML или выберите готовый пример, затем нажмите «Проверить и создать QR».
 
 Стили, исходный код, QRCode.js, jsQR и обязательные лицензионные уведомления уже встроены в этот файл. Для обычного запуска остальные файлы репозитория не нужны.
 
 > QR с `data:` URL может распознаться камерой как текст, а не как обычная веб-ссылка. Возможность открыть его зависит от сканера, браузера и операционной системы телефона.
+
+## Для кого
+
+- для авторов компактных автономных HTML-игр и микроприложений;
+- для преподавателей и разработчиков интерактивных учебных материалов;
+- для проектов, которым нужен запуск без сервера и подключения к Интернету;
+- для разработчиков, проверяющих вместимость, корректность и практическую читаемость QR-кодов.
 
 ## Что умеет лаборатория
 
@@ -42,7 +60,8 @@ HTML → оптимизация → автоматические проверк�
 
 | Каталог | Зачем нужен |
 |---|---|
-| `.github/workflows/` | Автоматическая проверка проекта и ручная публикация GitHub Pages. |
+| `.github/workflows/` | Автоматическая проверка, публикация GitHub Pages и подготовка файлов релиза. |
+| `docs/images/` | Изображения, используемые в README и других публичных материалах проекта. |
 | `editor/` | Редактируемые исходники лаборатории: HTML-шаблон, CSS, JavaScript-модули и локальные QR-библиотеки. |
 | `editor/vendor/` | QRCode.js, jsQR и тексты их лицензий. Библиотеки включаются в итоговый HTML и не загружаются из CDN. |
 | `pages/` | Стартовая страница и служебный файл для публикации GitHub Pages. |
@@ -88,6 +107,8 @@ Workflow `Deploy GitHub Pages` автоматически запускается
 ## Релизы
 
 При публикации GitHub Release workflow `Attach standalone HTML to release` автоматически добавляет к релизу готовый `qr-microapps-lab.html`. Создаваемые GitHub архивы `Source code` остаются доступны отдельно.
+
+В отображаемых версиях и тегах конечный нулевой номер исправления опускается: `v0.1` вместо `v0.1.0`, `v1.2` вместо `v1.2.0`. Ненулевой номер сохраняется полностью, например `v0.1.2`.
 
 ## Ограничения и безопасность
 

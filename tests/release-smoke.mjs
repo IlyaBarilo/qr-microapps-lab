@@ -18,6 +18,7 @@ function read(relativePath) {
 
 [
   'pages/index.html', 'pages/.nojekyll', 'qr-microapps-lab.html', 'editor/source.html', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'spec_game_creation_ru.md',
+  'docs/images/qr-microapps-lab.webp',
   '.github/workflows/ci.yml', '.github/workflows/pages.yml', '.github/workflows/release.yml',
   'tests/package.json', 'tests/package-lock.json', 'tests/playwright.config.js', 'tests/e2e/lab.spec.js', 'tests/standalone-browser-smoke.mjs',
   'tools/build-standalone.mjs'
@@ -52,6 +53,10 @@ for (const match of editorHtml.matchAll(assetPattern)) {
 
 const indexHtml = read('pages/index.html');
 if (!indexHtml.includes('qr-microapps-lab.html')) errors.push('Страница GitHub Pages не ведёт к редактору.');
+
+const readme = read('README.md');
+if (!readme.includes('docs/images/qr-microapps-lab.webp')) errors.push('README не содержит публичный скриншот интерфейса.');
+if (!readme.includes('releases/latest/download/qr-microapps-lab.html')) errors.push('README не содержит прямую ссылку на автономный HTML последнего релиза.');
 
 const standaloneHtml = read('qr-microapps-lab.html');
 if (/<script\b[^>]*\bsrc=/i.test(standaloneHtml)) errors.push('Автономный HTML содержит внешний script src.');
