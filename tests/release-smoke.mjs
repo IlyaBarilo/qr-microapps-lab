@@ -68,7 +68,7 @@ if (!/permissions:\s*\n\s*contents: read/.test(ciWorkflow)) errors.push('CI до
 
 const pagesWorkflow = read('.github/workflows/pages.yml');
 if (!/workflow_dispatch:/.test(pagesWorkflow)) errors.push('Pages должен поддерживать ручной запуск.');
-if (/\n\s*push:/.test(pagesWorkflow)) errors.push('Pages не должен публиковаться автоматически до решения по лицензии.');
+if (!/push:\s*\n\s*branches:\s*\[main\]/.test(pagesWorkflow)) errors.push('Pages должен автоматически публиковаться после push в main.');
 if (!/npm --prefix tests run check/.test(pagesWorkflow)) errors.push('Pages должен проверять проект до упаковки.');
 if (!/cp pages\/index\.html _site\/index\.html/.test(pagesWorkflow)) errors.push('Pages должен брать стартовую страницу из pages/.');
 
