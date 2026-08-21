@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>QR Microapps Lab</title>
+  <link rel="stylesheet" href="editor/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">QR MICROAPPS LAB · V0.1</p>
+      <h1>Проверка и упаковка автономных HTML-микроприложений</h1>
+      <p class="lead">HTML → автоматическая проверка → QR-код → обратное декодирование</p>
+    </div>
+    <div class="topbadges" aria-label="Свойства редактора">
+      <span class="badge good">Работает офлайн</span>
+      <span class="badge">Технические проверки</span>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="panel input-panel" aria-labelledby="source-title">
+      <div class="section-head source-head">
+        <div><p class="step">01 · ИСХОДНИК</p><h2 id="source-title">HTML-приложение</h2></div>
+        <div class="source-actions">
+          <div id="file-actions" class="file-actions">
+            <div class="source-import-actions" role="group" aria-label="Загрузка исходника">
+              <label class="button subtle" for="html-file">Загрузить HTML</label>
+              <input id="html-file" type="file" accept=".html,.htm,text/html">
+              <label class="button subtle" for="qr-image-file">Загрузить QR-изображение</label>
+              <input id="qr-image-file" type="file" accept="image/png,image/jpeg,image/webp,image/bmp">
+            </div>
+            <div class="example-picker" role="group" aria-label="Выбор готового примера">
+              <label class="example-select-field" for="example-select"><span>Готовый пример</span><select id="example-select"></select></label>
+              <button id="load-sample" class="button subtle" type="button">Загрузить</button>
+            </div>
+          </div>
+          <div class="project-actions" aria-label="Действия с проектом">
+            <span class="action-group-label">Проект</span>
+            <label class="button subtle" for="project-file">Открыть проект</label>
+            <input id="project-file" type="file" accept=".json,.qrapp.json,application/json">
+            <button id="download-project" class="button subtle" type="button">Сохранить проект</button>
+            <button id="download-spec" class="button subtle" type="button">Скачать профиль</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mode-switch" role="group" aria-label="Режим редактора">
+        <button id="mode-simple" class="mode-button" type="button" aria-pressed="false">Конструктор теста</button>
+        <button id="mode-code" class="mode-button active" type="button" aria-pressed="true">HTML и проверки</button>
+      </div>
+
+      <section id="simple-editor" class="simple-editor" aria-labelledby="simple-title-label" hidden>
+        <div class="simple-intro">
+          <div class="simple-intro-copy">
+            <div class="simple-intro-heading"><b id="simple-title-label">Конструктор теста</b><span id="simple-question-count" class="badge">3 вопроса</span></div>
+            <p>Измените содержание и оформление. Кодирование и коррекция QR настраиваются в блоке упаковки ниже.</p>
+          </div>
+        </div>
+
+        <label class="simple-field">Название приложения<input id="simple-title" type="text" maxlength="28" value="Мой ИТ-тест"></label>
+
+        <label class="simple-field">Оформление
+          <select id="simple-theme">
+            <option value="compact">Компактное · больше места для содержания</option>
+            <option value="balanced" selected>Сбалансированное · оптимальный вид и размер</option>
+            <option value="expressive">Выразительное · больше декоративных деталей</option>
+          </select>
+        </label>
+
+        <div class="simple-colors" aria-label="Цвета приложения">
+          <label>Фон<input id="simple-background" type="color" value="#071d2b"></label>
+          <label>Карточка<input id="simple-card" type="color" value="#0d3042"></label>
+          <label>Кнопки<input id="simple-accent" type="color" value="#64e6d4"></label>
+        </div>
+
+        <div id="simple-questions" class="simple-questions"></div>
+
+        <div class="simple-list-actions">
+          <button id="simple-add-question" class="button subtle" type="button">Добавить вопрос</button>
+          <span>В каждом вопросе должно быть не меньше двух ответов. Верхнего ограничения нет, но объём ограничен вместимостью QR.</span>
+        </div>
+
+        <div class="simple-estimate"><span>Автоматически собранная версия</span><strong id="simple-size">HTML — · Data URL —</strong></div>
+      </section>
+
+      <div id="code-editor">
+        <label class="field-label" for="source">HTML-код или готовый data URL</label>
+        <div id="difficulty-editor" class="difficulty-editor" hidden>
+          <div class="difficulty-editor-copy"><strong>Сложность приложения</strong><small id="difficulty-variable-note">Добавьте в код переменную var $d=3;</small></div>
+          <label for="code-difficulty"><span>Уровень</span><select id="code-difficulty"><option value="1">1 — очень легко</option><option value="2">2 — легко</option><option value="3">3 — средне</option><option value="4">4 — сложно</option><option value="5">5 — очень сложно</option></select></label>
+          <button id="apply-difficulty" class="button subtle" type="button">Применить</button>
+        </div>
+        <textarea id="source" class="code source-code" spellcheck="false" placeholder="Вставьте автономный HTML-файл…"></textarea>
+
+        <details class="spec-box">
+          <summary>
+            <span><b>Профиль проверки</b><small>Только технические и измеримые критерии</small></span>
+            <span class="summary-hint">показать</span>
+          </summary>
+          <div class="spec-content">
+            <div class="spec-mode-switch" role="group" aria-label="Представление профиля проверки">
+              <button id="spec-mode-form" class="spec-mode-button active" type="button" aria-pressed="true">Конструктор</button>
+              <button id="spec-mode-json" class="spec-mode-button" type="button" aria-pressed="false">JSON</button>
+            </div>
+
+            <section id="spec-form" class="spec-form" aria-label="Настройка профиля проверки">
+              <div class="spec-grid three">
+                <label>Название<input id="spec-title-input" type="text" maxlength="80"></label>
+                <label>Идентификатор<input id="spec-id-input" type="text" maxlength="64" pattern="[a-z0-9][a-z0-9-]*"></label>
+                <label>Тип<select id="spec-type-input"><option value="quiz">Тест</option><option value="game">Игра</option><option value="career-guidance">Профориентация</option><option value="interactive">Интерактив</option><option value="other">Другое</option></select></label>
+              </div>
+
+              <div class="spec-rule-columns">
+                <fieldset class="spec-fieldset">
+                  <legend>Автономность</legend>
+                  <label class="check-option"><input id="spec-single-file-input" type="checkbox"> Один HTML-файл</label>
+                  <label class="check-option"><input id="spec-external-input" type="checkbox"> Разрешить внешние ресурсы</label>
+                  <label class="check-option"><input id="spec-network-input" type="checkbox"> Разрешить сетевые запросы</label>
+                  <label class="check-option"><input id="spec-viewport-input" type="checkbox"> Требовать meta viewport</label>
+                </fieldset>
+                <fieldset class="spec-fieldset">
+                  <legend>Интерфейс</legend>
+                  <label class="check-option"><input id="spec-touch-input" type="checkbox"> Сенсорное управление</label>
+                  <label class="check-option"><input id="spec-overflow-input" type="checkbox"> Без горизонтальной прокрутки</label>
+                  <label class="check-option"><input id="spec-vertical-overflow-input" type="checkbox"> Без вертикальной прокрутки</label>
+                </fieldset>
+              </div>
+
+              <div class="spec-grid three">
+                <label>Мин. зона касания, px<input id="spec-touch-size-input" type="number" min="24" max="96" placeholder="не проверять"></label>
+                <label>Мин. интервал, px<input id="spec-gap-input" type="number" min="0" max="32" placeholder="не проверять"></label>
+                <label>Подписи элементов<select id="spec-labels-input"><option value="">Не проверять</option><option value="true">Требовать</option><option value="false">Не требовать</option></select></label>
+              </div>
+
+            </section>
+
+            <div id="spec-json-editor" hidden>
+              <div class="field-topline">
+                <label class="field-label" for="spec">JSON-профиль проверки</label>
+                <label class="text-action" for="spec-file">Загрузить JSON</label>
+                <input id="spec-file" type="file" accept=".json,application/json">
+              </div>
+              <textarea id="spec" class="code spec-code" spellcheck="false" placeholder="{ &quot;schemaVersion&quot;: &quot;0.1&quot;, … }"></textarea>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="source-reset-actions">
+        <button id="clear" class="button subtle" type="button">Очистить</button>
+      </div>
+    </section>
+
+    <section class="panel output-panel" aria-labelledby="result-title">
+      <div class="section-head">
+        <div><p class="step">02 · РЕЗУЛЬТАТ</p><h2 id="result-title">QR и восстановление</h2></div>
+        <span id="roundtrip-pill" class="badge muted">Ещё не проверено</span>
+      </div>
+
+      <details class="qr-controls">
+        <summary class="qr-controls-head"><span id="qr-settings-title" class="qr-controls-title">Параметры QR</span><span>Показать размер и рамку</span></summary>
+        <input id="encoding" type="hidden" value="base64">
+        <input id="ecc" type="hidden" value="M">
+        <div class="settings" aria-label="Параметры упаковки">
+          <label>Пикселей на модуль<select id="module-scale"><option value="4">4</option><option value="6" selected>6</option><option value="8">8</option><option value="10">10</option></select></label>
+          <label>Белая рамка, модулей<input id="quiet-zone" type="number" min="4" max="16" value="4"></label>
+        </div>
+      </details>
+
+      <div class="qr-action-row">
+        <button id="build" class="button primary" type="button">Проверить и создать QR</button>
+        <p id="status" class="status" role="status" aria-live="polite">Готов к проверке.</p>
+      </div>
+
+      <div class="result-grid">
+        <div class="qr-column">
+          <button id="qr-zoom" class="qr-stage" type="button" aria-label="Увеличить QR-код" aria-expanded="false" disabled>
+            <canvas id="qr-canvas" aria-label="Сгенерированный QR-код"></canvas>
+            <p id="qr-placeholder">QR-код появится после проверки</p>
+            <span id="qr-zoom-icon" class="qr-zoom-icon" aria-hidden="true">🔍</span>
+          </button>
+
+          <div class="download-actions">
+            <button id="download-png" class="button subtle" type="button" disabled>Скачать PNG</button>
+            <button id="copy-url" class="button subtle" type="button" disabled>Копировать data URL</button>
+            <button id="download-html" class="button subtle" type="button" disabled>Скачать HTML</button>
+          </div>
+        </div>
+
+        <div class="metrics-column">
+          <div id="qr-correction-card" class="correction-card">
+            <div><span>Автокоррекция QR</span><strong id="qr-correction-value">—</strong></div>
+            <p id="qr-correction-note">Уровень будет выбран после расчёта нагрузки.</p>
+          </div>
+          <div class="limit-metrics">
+            <div class="metric key-metric"><span id="qr-reserve-label">Запас при M</span><strong id="qr-reserve">—</strong></div>
+            <div id="qr-l-option" class="metric fallback-metric"><span id="qr-l-option-label">Запас при L</span><strong id="qr-l-reserve">—</strong></div>
+          </div>
+
+          <details class="metric-details">
+            <summary><span>Другие показатели</span><span class="summary-hint">показать</span></summary>
+            <div class="metric-grid">
+              <div class="metric"><span>HTML</span><strong id="html-bytes">0 Б</strong></div>
+              <div class="metric"><span>Data URL</span><strong id="url-bytes">0 Б</strong></div>
+              <div class="metric"><span>Версия QR</span><strong id="qr-version">—</strong></div>
+              <div class="metric"><span>Матрица</span><strong id="qr-matrix">—</strong></div>
+              <div class="metric checksum-metric"><span>Контрольная сумма</span><strong id="checksum">—</strong></div>
+            </div>
+          </details>
+
+          <details class="size-analysis">
+            <summary><span>Размер и оптимизация</span><span class="size-analysis-meta"><strong id="size-total">—</strong><span class="summary-hint">показать</span></span></summary>
+            <div id="optimization-summary" class="optimization-summary" hidden>
+              <div><span>Автооптимизация HTML</span><strong id="optimization-saving">—</strong></div>
+              <p id="optimization-detail">Исходный и итоговый размеры появятся после проверки.</p>
+            </div>
+            <div id="size-breakdown" class="size-breakdown"><p class="analysis-empty">Анализ появится после проверки.</p></div>
+            <p id="encoding-compare" class="encoding-compare"></p>
+            <div id="optimization-hints" class="optimization-hints"></div>
+          </details>
+
+          <div class="roundtrip-card" id="roundtrip-card">
+            <span id="roundtrip-icon" class="roundtrip-icon">↺</span>
+            <div><strong id="roundtrip-title">Обратная проверка не выполнена</strong><p id="roundtrip-detail">После генерации изображение QR будет декодировано и побайтово сравнено с исходной нагрузкой.</p></div>
+          </div>
+
+          <details class="payload-details">
+            <summary><span>Итоговая QR-нагрузка</span><span class="summary-hint">показать</span></summary>
+            <label class="field-label" for="data-url">Полный data URL</label>
+            <textarea id="data-url" class="code data-url" readonly placeholder="data:text/html…"></textarea>
+          </details>
+        </div>
+      </div>
+
+      <aside id="qr-open-help" class="qr-open-help" hidden aria-labelledby="qr-open-help-title">
+        <div class="qr-open-help-icon" aria-hidden="true">↗</div>
+        <div>
+          <strong id="qr-open-help-title">Как открыть автономный QR на телефоне</strong>
+          <p>Если штатный сканер показывает код как текст, можно выбрать «Поиск», чтобы перейти к адресной строке. Затем для полного адреса <code>data:</code> выберите подсказку «Открыть как сайт».</p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="panel preview-panel" aria-labelledby="preview-title">
+      <div class="section-head">
+        <div><p class="step">03 · ПРЕДПРОСМОТР</p><h2 id="preview-title">Изолированный запуск</h2><span id="preview-difficulty" class="preview-difficulty badge muted">Без сложности</span></div>
+        <div class="preview-actions">
+          <button id="run-preview" class="button primary small" type="button">Запустить</button>
+          <button id="reset-preview" class="button subtle small" type="button">Сбросить</button>
+          <button id="stop-preview" class="button danger small" type="button">Остановить</button>
+        </div>
+      </div>
+
+      <div class="preview-settings">
+        <label>Формат<select id="preview-preset"><option value="360x640" selected>Телефон · 360×640</option><option value="390x844">Телефон · 390×844</option><option value="640x360">Альбомный · 640×360</option><option value="420x560">Планшет · 420×560</option><option value="custom">Свои размеры</option></select></label>
+        <label>Ширина<input id="preview-width" type="number" min="180" max="1200" value="360"></label>
+        <label>Высота<input id="preview-height" type="number" min="240" max="1600" value="640"></label>
+      </div>
+
+      <section class="validation-inline" aria-labelledby="validation-title">
+        <div class="validation-toolbar">
+          <strong id="validation-title" class="validation-title">04 · АВТООТЧЁТ</strong>
+          <div id="validation-summary" class="validation-summary"><span class="badge muted">Проверка ещё не запускалась</span></div>
+          <p id="validation-remarks" class="validation-remarks" hidden></p>
+          <button id="validation-toggle" class="validation-toggle summary-hint" type="button" aria-expanded="false" aria-controls="validation-details">показать</button>
+        </div>
+        <div id="validation-details" class="validation-details" hidden>
+          <div class="validation-details-head">
+            <h3>Результаты автоматической проверки</h3>
+            <button id="download-report" class="button subtle small" type="button" disabled>Скачать JSON-отчёт</button>
+          </div>
+          <div id="validation-list" class="validation-list"></div>
+          <p class="report-note">Автоотчёт содержит только результаты, которые программа смогла определить автоматически.</p>
+        </div>
+      </section>
+
+      <div class="preview-layout">
+        <div class="device-shell" id="device"><iframe id="preview" title="Предпросмотр HTML-приложения" sandbox="allow-scripts" referrerpolicy="no-referrer" src="about:blank"></iframe></div>
+        <aside class="runtime-box">
+          <h3>Наблюдения среды</h3>
+          <ul id="runtime-log" class="runtime-log"><li class="muted-item">Предпросмотр ещё не запускался.</li></ul>
+          <p class="security-note">Sandbox и запрет сети снижают риск, но не гарантируют защиту от кода, перегружающего вкладку. Запускайте неизвестный код осознанно.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="panel history-panel" aria-labelledby="history-title">
+      <div class="section-head">
+        <div><p class="step">05 · ИТЕРАЦИИ</p><h2 id="history-title">История сборок</h2></div>
+        <div class="history-actions">
+          <button id="download-history" class="button subtle" type="button" disabled>Скачать CSV</button>
+          <button id="clear-history" class="button danger" type="button" disabled>Очистить историю</button>
+        </div>
+      </div>
+      <p class="history-note">Хранится только в этой вкладке: размеры, результаты проверки и контрольные суммы. HTML и data URL в историю не записываются.</p>
+      <div id="history-summary" class="history-summary"><span class="badge muted">Пока одна сборка или история пуста</span></div>
+      <div id="iteration-history" class="iteration-history"><p class="analysis-empty">Успешные сборки появятся здесь автоматически.</p></div>
+    </section>
+
+    <section class="panel comparison-panel" aria-labelledby="comparison-title">
+      <div class="section-head">
+        <div><p class="step">06 · СРАВНЕНИЕ</p><h2 id="comparison-title">Сравнение реализаций</h2></div>
+        <div class="comparison-actions">
+          <button id="add-current-comparison" class="button primary small" type="button" disabled>Добавить текущую</button>
+          <label class="button subtle small" for="comparison-files">Загрузить отчёты</label>
+          <input id="comparison-files" type="file" accept=".json,application/json" multiple>
+          <button id="download-comparison" class="button subtle small" type="button" disabled>Скачать CSV</button>
+          <button id="clear-comparison" class="button danger small" type="button" disabled>Очистить</button>
+        </div>
+      </div>
+      <p class="comparison-note">Сравниваются только JSON-отчёты: код приложений не загружается и не запускается. Порядок учитывает автоматические нарушения, обратную проверку и размер. Испытания на реальных устройствах проводятся отдельно.</p>
+      <div id="comparison-summary" class="comparison-summary"><span class="badge muted">Добавьте текущую сборку или загрузите отчёты</span></div>
+      <div id="comparison-list" class="comparison-list"><p class="analysis-empty">Результаты сравнения появятся здесь.</p></div>
+    </section>
+  </main>
+
+  <footer><span>QR Microapps Lab · локальная версия 0.1</span><span>QR — один из способов упаковки, а не гарантия запуска штатной камерой любого телефона.</span></footer>
+
+  <script src="editor/vendor/qrcode.min.js"></script>
+  <script src="editor/vendor/jsQR.js"></script>
+  <script src="editor/core.js"></script>
+  <script src="editor/simple-builder.js"></script>
+  <script src="editor/spec-builder.js"></script>
+  <script src="editor/history.js"></script>
+  <script src="editor/project.js"></script>
+  <script src="editor/comparison.js"></script>
+  <script src="editor/sample.js"></script>
+  <script src="editor/app.js"></script>
+</body>
+</html>

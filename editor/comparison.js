@@ -1,0 +1,142 @@
+(function (root, factory) {
+  var api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.QRMicroappsComparison = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  var MAX_TEXT_LENGTH = 1000000;
+  var CSV_FIELDS = [
+    'position', 'source', 'title', 'application_id', 'assignment_id', 'generated_at', 'automatic_ready',
+    'html_bytes', 'data_url_bytes', 'qr_version', 'encoding', 'ecc', 'pass', 'fail', 'warn', 'pending',
+    'roundtrip_ok', 'checksum'
+  ];
+
+  function object(value) {
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  }
+
+  function number(value) {
+    value = Number(value);
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  function text(value, fallback) {
+    value = String(value == null ? '' : value).trim();
+    return value || fallback || '';
+  }
+
+  function normalize(report, sourceName) {
+    if (!report || typeof report !== 'object' || Array.isArray(report)) throw new Error('Отчёт должен быть JSON-объектом.');
+    if (report.reportVersion !== '0.1') throw new Error('Поддерживаются отчёты версии 0.1.');
+    var application = object(report.application);
+    var specification = object(report.specification);
+    var measurements = object(report.measurements);
+    var qr = object(measurements.qr);
+    var checksum = object(measurements.checksum);
+    var validation = object(report.validation);
+    var summary = object(validation.summary);
+    var roundtrip = object(report.roundtrip);
+    var applicationId = text(application.id);
+    var title = text(application.title);
+    if (!applicationId || !title) throw new Error('В отчёте отсутствуют данные приложения.');
+    if (number(measurements.htmlBytes) < 1 || number(measurements.dataUrlBytes) < 1) throw new Error('В отчёте отсутствуют измерения размера.');
+    if (!text(checksum.value)) throw new Error('В отчёте отсутствует контрольная сумма.');
+    var item = {
+      source: text(sourceName, 'Отчёт'),
+      title: title,
+      applicationId: applicationId,
+      assignmentId: text(specification.id, applicationId),
+      generatedAt: text(report.generatedAt),
+      htmlBytes: number(measurements.htmlBytes),
+      dataUrlBytes: number(measurements.dataUrlBytes),
+      qrVersion: number(qr.version),
+      encoding: text(measurements.encoding),
+      ecc: text(qr.ecc),
+      validation: {
+        pass: number(summary.pass), fail: number(summary.fail),
+        warn: number(summary.warn), pending: number(summary.pending)
+      },
+      roundtripOk: roundtrip.ok === true,
+      checksum: text(checksum.value)
+    };
+    item.automaticReady = item.validation.fail === 0 && item.validation.pending === 0 && item.roundtripOk && item.qrVersion > 0;
+    item.signature = [item.source, item.applicationId, item.checksum, item.encoding, item.ecc].join('|');
+    return item;
+  }
+
+  function parse(textValue, sourceName) {
+    if (typeof textValue !== 'string') throw new Error('Отчёт должен быть текстовым JSON.');
+    if (textValue.length > MAX_TEXT_LENGTH) throw new Error('Файл отчёта слишком велик.');
+    var report;
+    try { report = JSON.parse(textValue); }
+    catch (error) { throw new Error('Ошибка JSON-отчёта: ' + error.message); }
+    return normalize(report, sourceName);
+  }
+
+  function upsert(items, report, sourceName, maxItems) {
+    var list = Array.isArray(items) ? items.slice() : [];
+    var next = report && report.signature ? report : normalize(report, sourceName);
+    var index = list.findIndex(function (item) { return item.signature === next.signature; });
+    var added = index < 0;
+    if (added) list.push(next);
+    else list[index] = next;
+    maxItems = Math.max(1, number(maxItems) || 30);
+    if (list.length > maxItems) list = list.slice(list.length - maxItems);
+    return { items: list, record: next, added: added };
+  }
+
+  function rank(items) {
+    return (Array.isArray(items) ? items : []).slice().sort(function (left, right) {
+      if (left.automaticReady !== right.automaticReady) return left.automaticReady ? -1 : 1;
+      if (left.validation.fail !== right.validation.fail) return left.validation.fail - right.validation.fail;
+      if (left.validation.pending !== right.validation.pending) return left.validation.pending - right.validation.pending;
+      if (left.roundtripOk !== right.roundtripOk) return left.roundtripOk ? -1 : 1;
+      if (left.dataUrlBytes !== right.dataUrlBytes) return left.dataUrlBytes - right.dataUrlBytes;
+      if (left.htmlBytes !== right.htmlBytes) return left.htmlBytes - right.htmlBytes;
+      return left.title.localeCompare(right.title, 'ru');
+    });
+  }
+
+  function summarize(items) {
+    var list = Array.isArray(items) ? items : [];
+    var assignments = [];
+    list.forEach(function (item) { if (assignments.indexOf(item.assignmentId) < 0) assignments.push(item.assignmentId); });
+    return {
+      total: list.length,
+      ready: list.filter(function (item) { return item.automaticReady; }).length,
+      assignments: assignments,
+      mixedAssignments: assignments.length > 1
+    };
+  }
+
+  function csvCell(value) {
+    var valueText = String(value == null ? '' : value);
+    if (/^[=+\-@]/.test(valueText)) valueText = "'" + valueText;
+    return '"' + valueText.replace(/"/g, '""') + '"';
+  }
+
+  function toCsv(items) {
+    var rows = [CSV_FIELDS.join(',')];
+    rank(items).forEach(function (item, index) {
+      rows.push([
+        index + 1, item.source, item.title, item.applicationId, item.assignmentId, item.generatedAt,
+        item.automaticReady ? 'yes' : 'no', item.htmlBytes, item.dataUrlBytes, item.qrVersion,
+        item.encoding, item.ecc, item.validation.pass, item.validation.fail, item.validation.warn, item.validation.pending,
+        item.roundtripOk ? 'yes' : 'no', item.checksum
+      ].map(csvCell).join(','));
+    });
+    return rows.join('\r\n') + '\r\n';
+  }
+
+  return {
+    MAX_TEXT_LENGTH: MAX_TEXT_LENGTH,
+    CSV_FIELDS: CSV_FIELDS.slice(),
+    normalize: normalize,
+    parse: parse,
+    upsert: upsert,
+    rank: rank,
+    summarize: summarize,
+    toCsv: toCsv
+  };
+});

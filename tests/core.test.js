@@ -1,0 +1,1033 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const core = require('../editor/core.js');
+const sample = require('../editor/sample.js');
+const simpleBuilder = require('../editor/simple-builder.js');
+const specBuilder = require('../editor/spec-builder.js');
+const history = require('../editor/history.js');
+const projectFile = require('../editor/project.js');
+const comparison = require('../editor/comparison.js');
+
+test('base64 data URL сохраняет Unicode побайтово', () => {
+  const html = '<!doctype html><h1>Привет, QR!</h1>';
+  const url = core.makeDataUrl(html, 'base64');
+  const decoded = core.parseDataUrl(url);
+  assert.equal(decoded.encoding, 'base64');
+  assert.equal(decoded.mime, 'text/html');
+  assert.equal(decoded.text, html);
+});
+
+test('percent data URL декодируется обратно', () => {
+  const html = '<p data-x="1">Тест & проверка</p>';
+  const url = core.makeDataUrl(html, 'percent');
+  assert.equal(core.parseDataUrl(url).text, html);
+});
+
+test('полноэкранный QR масштабируется целым числом физических пикселей на модуль', () => {
+  assert.deepEqual(core.fitQrDisplay(141, 4, 1920, 1080, 1), {
+    totalModules: 149,
+    pixelsPerModule: 7,
+    physicalSize: 1043,
+    cssSize: 1043,
+    physicalLeft: 438,
+    physicalTop: 18,
+    cssLeft: 438,
+    cssTop: 18
+  });
+  assert.deepEqual(core.fitQrDisplay(157, 4, 1920, 1080, 1), {
+    totalModules: 165,
+    pixelsPerModule: 6,
+    physicalSize: 990,
+    cssSize: 990,
+    physicalLeft: 465,
+    physicalTop: 45,
+    cssLeft: 465,
+    cssTop: 45
+  });
+  assert.deepEqual(core.fitQrDisplay(157, 4, 1536, 864, 1.25), {
+    totalModules: 165,
+    pixelsPerModule: 6,
+    physicalSize: 990,
+    cssSize: 792,
+    physicalLeft: 465,
+    physicalTop: 45,
+    cssLeft: 372,
+    cssTop: 36
+  });
+});
+
+test('расчёт сокращения показывает точный объём HTML для возврата к M при Base64', () => {
+  const prefixBytes = core.byteLength(core.makeDataUrl('', 'base64'));
+  const maxHtmlBytes = Math.floor((core.getQrLimit('M') - prefixBytes) / 4) * 3;
+  const fitting = core.getReductionToFit('A'.repeat(maxHtmlBytes), 'base64', 'M');
+  const overflowing = core.getReductionToFit('A'.repeat(maxHtmlBytes + 1), 'base64', 'M');
+  assert.equal(fitting.payloadReduction, 0);
+  assert.equal(fitting.htmlReduction, 0);
+  assert.ok(overflowing.payloadReduction > 0);
+  assert.equal(overflowing.htmlReduction, 1);
+
+  const percentHtml = '<p>' + 'я'.repeat(400) + '</p>';
+  const percent = core.getReductionToFit(percentHtml, 'percent', 'M');
+  assert.ok(percent.payloadReduction > 0);
+  assert.equal(percent.htmlReduction, null);
+  assert.equal(percent.payloadBytes, core.byteLength(core.makeDataUrl(percentHtml, 'percent')));
+});
+
+test('normalizeSource принимает и HTML, и data URL', () => {
+  const html = '<main>ok</main>';
+  assert.equal(core.normalizeSource(html), html);
+  assert.equal(core.normalizeSource(core.makeDataUrl(html, 'base64')), html);
+});
+
+test('универсальная сложность обнаруживается и изменяется в любом HTML-коде', () => {
+  const html = '<!doctype html><script>var $d=3;speed=$d*2</script>';
+  assert.deepEqual(core.inspectDifficulty(html), {
+    count: 1, editable: true, valid: true, name: '$d', value: 3,
+    start: html.indexOf('3;speed'), end: html.indexOf('3;speed') + 1
+  });
+  const changed = core.setDifficulty(html, 5);
+  assert.match(changed, /var \$d=5/);
+  assert.equal(core.inspectDifficulty(changed).value, 5);
+  assert.equal(core.inspectDifficulty('<script>var $d=8</script>').valid, false);
+  assert.equal(core.inspectDifficulty('<script>var d=3,$x=3</script>').count, 0, 'переключатель должен учитывать только стандартную переменную $d');
+  assert.throws(() => core.setDifficulty('<script>var $d=2;var $d=3</script>', 4), /ровно одна/);
+  assert.throws(() => core.setDifficulty('<script>play()</script>', 4), /\$d/);
+  const gameSpec = {
+    schemaVersion: '0.1', id: 'any-game', title: 'Любая игра', type: 'game', difficulty: 3,
+    qr: { encoding: 'base64', ecc: 'M' }, technical: {}, interface: {}
+  };
+  assert.equal(core.validateHtml(html, gameSpec, {}).find((check) => check.id === 'difficulty').status, 'pass');
+  assert.equal(core.validateHtml(core.setDifficulty(html, 4), gameSpec, {}).find((check) => check.id === 'difficulty').status, 'fail');
+  assert.equal(core.validateHtml('<script>play()</script>', gameSpec, {}).find((check) => check.id === 'difficulty').status, 'fail');
+});
+
+test('автоотчёт предупреждает о пользовательских идентификаторах с зарезервированным префиксом $', () => {
+  const html = '<!doctype html><script>var $d=3,a=6/b,$score=0;let $timer=1,$d2=2;var text="$fake",pattern=/var \\$regex=1/;/* var $comment=1 */\n// let $line=1\n</script>';
+  assert.deepEqual(core.findReservedFormatIdentifiers(html), ['$score', '$timer', '$d2']);
+  assert.deepEqual(core.findReservedFormatIdentifiers('<script>var $d=3;let text="$fake";var pattern=/\\$regex/</script>'), []);
+  const checks = core.validateHtml(html, {
+    schemaVersion: '0.1', id: 'reserved-prefix', title: 'Проверка префикса', type: 'game', difficulty: 3,
+    qr: { encoding: 'base64', ecc: 'M' }, technical: {}, interface: {}
+  }, {});
+  const warning = checks.find((check) => check.id === 'reserved-format-identifiers');
+  assert.equal(warning.status, 'warn');
+  assert.equal(warning.evidence, '$score, $timer, $d2');
+  assert.equal(core.validateHtml('<script>var $d=3</script>', {
+    type: 'game', difficulty: 3, qr: { encoding: 'base64', ecc: 'M' }, technical: {}, interface: {}
+  }, {}).find((check) => check.id === 'reserved-format-identifiers').status, 'pass');
+});
+
+test('оптимизатор HTML удаляет служебное форматирование и сохраняет чувствительное содержимое', () => {
+  const html = `
+<!doctype html>
+<html>
+  <style>
+    /* удалить CSS-комментарий */
+    .note::before { content: "два  пробела"; color: red; }
+  </style>
+  <body>
+    <!-- удалить -->
+    <div   data-note = "a  b">
+      <span>Первый</span> <span>второй</span>
+    </div>
+    <script>
+      const value = "два  пробела";
+    </script>
+    <pre>  строка 1
+  строка 2</pre>
+  </body>
+</html>
+`;
+  const result = core.optimizeHtml(html);
+  assert.doesNotMatch(result.html, /удалить/);
+  assert.match(result.html, /<html><style>\.note::before\{content:"два  пробела";color:red\}<\/style><body><div data-note="a  b"><span>Первый<\/span> <span>второй<\/span><\/div><script>/);
+  assert.match(result.html, /const value="два  пробела";/);
+  assert.match(result.html, /<pre>  строка 1\n  строка 2<\/pre>/);
+  assert.ok(result.savedBytes > 0);
+  assert.equal(result.optimizedBytes, core.byteLength(result.html));
+  assert.equal(result.commentsRemoved, 1);
+  const secondPass = core.optimizeHtml(result.html);
+  assert.equal(secondPass.html, result.html);
+  assert.equal(secondPass.savedBytes, 0);
+});
+
+test('оптимизатор JavaScript убирает форматирование массивов и сохраняет чувствительный синтаксис', () => {
+  const html = `<!doctype html><script>
+Q = [['Что интереснее?',                                             'Разбираться в коде', 0, 'Объяснять людям', 1], [
+  'Как удобнее работать?', 'Создавать интерфейсы'
+]];
+const text = 'два  пробела';
+const template = \`строка  с  пробелами\`;
+const pattern = /[ ,]+\\/x/;
+function value() { return
+  { ok: true } }
+</script>`;
+  const result = core.optimizeHtml(html);
+  assert.match(result.html, /Q=\[\['Что интереснее\?','Разбираться в коде',0,'Объяснять людям',1\],\['Как удобнее работать\?','Создавать интерфейсы'\]\];/);
+  assert.match(result.html, /'два  пробела'/);
+  assert.match(result.html, /`строка  с  пробелами`/);
+  assert.match(result.html, /\/\[ ,\]\+\\\/x\//);
+  assert.match(result.html, /return\n\{ok:true\}/);
+  const sandbox = {};
+  vm.runInNewContext(result.html.match(/<script>([\s\S]*)<\/script>/)[1], sandbox);
+  assert.equal(JSON.stringify(sandbox.Q), JSON.stringify([
+    ['Что интереснее?', 'Разбираться в коде', 0, 'Объяснять людям', 1],
+    ['Как удобнее работать?', 'Создавать интерфейсы']
+  ]));
+  assert.equal(sandbox.value(), undefined, 'перенос после return должен сохранять автоматическую вставку точки с запятой');
+  assert.ok(result.savedBytes > 40);
+  assert.equal(core.optimizeHtml(result.html).html, result.html);
+});
+
+test('некорректный data URL отклоняется с понятной ошибкой', () => {
+  assert.throws(() => core.parseDataUrl('data:text/html;base64'), /разделитель/);
+  assert.throws(() => core.makeDataUrl('x', 'unknown'), /Неизвестный/);
+});
+
+test('валидатор профиля проверяет формат и QR-параметры', () => {
+  assert.deepEqual(core.validateSpec(sample.spec), []);
+  assert.ok(core.validateSpec({ schemaVersion: '9' }).length >= 3);
+  assert.match(core.validateSpec({ ...sample.spec, interface: { minTouchTargetPx: 10, minControlGapPx: 80, requireControlLabels: 'yes', noVerticalScroll: 'yes' } }).join(' '), /minTouchTargetPx.*minControlGapPx.*requireControlLabels.*noVerticalScroll/);
+});
+
+test('встроенный каталог содержит шесть компактных примеров с валидными профилями', () => {
+  assert.equal(sample.items.length, 6);
+  assert.equal(sample.defaultId, 'brick-breaker');
+  for (const item of sample.items) {
+    assert.doesNotMatch(item.html, /[\r\n]$/);
+    assert.deepEqual(core.validateSpec(item.spec), []);
+  }
+});
+
+test('эталонный пример укладывается в стандартную вместимость QR', () => {
+  const url = core.makeDataUrl(sample.html, sample.spec.qr.encoding);
+  assert.ok(core.byteLength(url) <= core.getQrLimit(sample.spec.qr.ecc));
+  const checks = core.validateHtml(sample.html, sample.spec, { dataUrl: url, encoding: 'base64', ecc: 'M', qrVersion: 35 });
+  assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
+});
+
+test('«Пакет в сети» укладывается в стандартную вместимость QR', () => {
+  const packet = sample.getById('packet-network');
+  const url = core.makeDataUrl(packet.html, packet.spec.qr.encoding);
+  assert.ok(core.byteLength(url) <= core.getQrLimit(packet.spec.qr.ecc));
+  assert.match(packet.html, /H=h\/s/);
+  assert.match(packet.html, /setTransform\(D\*s,0,0,D\*s,O\*D,0\)/);
+  assert.match(packet.html, /f\(-O\/s,0,w\/s,H\)/);
+  assert.match(packet.html, /H-S\[i\]\[1\]-G/);
+  assert.match(packet.html, /C\[z\]='#123047'/);
+  assert.match(packet.html, /Q>1\?0:Q\?R\(\):V=-J/);
+  assert.match(packet.html, /Q=64/);
+  assert.match(packet.html, /B=U\*P/);
+  assert.match(packet.html, /I=\.045\*r/);
+  assert.match(packet.html, /E=B\/\(U\+I\)\*J\*\(\$d\*\$d\+9\)\/75/);
+  assert.match(packet.html, /p&&\(U\+=I\)/);
+  assert.match(packet.html, /L\+\(Math\.random\(\)\*2-1\)\*\(E=/);
+  assert.match(packet.html, /S\.push\(\[o\[0\]\+B,N\(\)\]\)/);
+  const checks = core.validateHtml(packet.html, packet.spec, { dataUrl: url, encoding: 'base64', ecc: 'M', qrVersion: 40 });
+  assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
+
+  const ticks = [];
+  const drawingContext = { setTransform() {}, fillRect() {}, fillText() {} };
+  const canvas = { style: {}, getContext: () => drawingContext };
+  const sandbox = {
+    c: canvas,
+    devicePixelRatio: 1,
+    innerWidth: 360,
+    innerHeight: 640,
+    Math,
+    setInterval: (callback) => { ticks.push(callback); }
+  };
+  const script = packet.html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
+  vm.runInNewContext(script, sandbox);
+  canvas.ontouchstart();
+  sandbox.Y = sandbox.H;
+  ticks[0]();
+  assert.ok(sandbox.Q > 1, 'после проигрыша должна кратко отображаться защита от случайного касания');
+  for (let index = 0; index < 70; index++) ticks[0]();
+  assert.equal(sandbox.Q, 1, 'задержка результата должна завершаться, даже если персонаж остался за границей');
+  canvas.ontouchstart();
+  assert.equal(sandbox.Q, 0, 'нажатие после ожидания должно запускать новый раунд');
+
+  const maximumOffsets = [1, 2, 3, 4, 5].map((difficulty) => {
+    const variant = core.setDifficulty(packet.html, difficulty);
+    const variantTicks = [];
+    const fixedMath = Object.create(Math);
+    fixedMath.random = () => 1;
+    const variantContext = { setTransform() {}, fillRect() {}, fillText() {} };
+    const variantCanvas = { style: {}, getContext: () => variantContext };
+    const variantSandbox = {
+      c: variantCanvas,
+      devicePixelRatio: 1,
+      innerWidth: 360,
+      innerHeight: 640,
+      Math: fixedMath,
+      setInterval: (callback) => { variantTicks.push(callback); }
+    };
+    vm.runInNewContext(variant.match(/<script>\s*([\s\S]*?)<\/script>/)[1], variantSandbox);
+    const previousGap = variantSandbox.L;
+    const nextGap = variantSandbox.N();
+    assert.ok(nextGap >= 30 && nextGap <= variantSandbox.H - variantSandbox.G - 30, 'новый проём должен оставаться внутри экрана');
+    assert.ok(Math.abs(nextGap - previousGap) <= variantSandbox.E + 0.001, 'новый проём не должен превышать рассчитанное достижимое отклонение');
+    assert.ok(variantSandbox.E <= variantSandbox.B / (variantSandbox.U + variantSandbox.I) * variantSandbox.J, 'отклонение должно оставаться в пределах физически доступного подлёта');
+    return variantSandbox.E;
+  });
+  for (let index = 1; index < maximumOffsets.length; index++) {
+    assert.ok(maximumOffsets[index] > maximumOffsets[index - 1], 'максимальное случайное отклонение должно возрастать со сложностью');
+  }
+
+  const spacingTicks = [];
+  const fixedMath = Object.create(Math);
+  fixedMath.random = () => 0.5;
+  const spacingContext = { setTransform() {}, fillRect() {}, fillText() {} };
+  const spacingCanvas = { style: {}, getContext: () => spacingContext };
+  const spacingSandbox = {
+    c: spacingCanvas,
+    devicePixelRatio: 1,
+    innerWidth: 360,
+    innerHeight: 640,
+    Math: fixedMath,
+    setInterval: (callback) => { spacingTicks.push(callback); }
+  };
+  vm.runInNewContext(script, spacingSandbox);
+  spacingCanvas.ontouchstart();
+  spacingSandbox.A = 0;
+  spacingSandbox.V = 0;
+  const initialSpeed = spacingSandbox.U;
+  let previousSpeed = initialSpeed;
+  let previousScore = 0;
+  const speedIncrements = [];
+  let measuredPairs = 0;
+  for (let frame = 0; frame < 600; frame++) {
+    spacingTicks[0]();
+    assert.equal(spacingSandbox.Q, 0, 'при проёмах на одной высоте пакет не должен столкнуться');
+    if (spacingSandbox.K > previousScore) {
+      speedIncrements.push(spacingSandbox.U - previousSpeed);
+      previousSpeed = spacingSandbox.U;
+      previousScore = spacingSandbox.K;
+    }
+    for (let index = 1; index < spacingSandbox.S.length; index++) {
+      const distance = spacingSandbox.S[index][0] - spacingSandbox.S[index - 1][0];
+      assert.ok(Math.abs(distance - spacingSandbox.B) < 0.001, 'расстояние между линиями должно оставаться постоянным');
+      measuredPairs++;
+    }
+  }
+  assert.ok(measuredPairs > 0, 'тест должен измерить расстояние между несколькими линиями');
+  assert.ok(spacingSandbox.U > initialSpeed, 'проверка постоянного расстояния должна включать ускорение игры');
+  assert.ok(speedIncrements.length > 2, 'тест должен измерить несколько шагов ускорения');
+  for (const increment of speedIncrements) {
+    assert.ok(Math.abs(increment - spacingSandbox.I) < 0.000001, 'каждая пройденная линия должна добавлять одинаковую скорость');
+  }
+});
+
+test('«Разбей блоки» начисляет очки за цветные блоки и завершает игру победой', () => {
+  const game = sample.getById('brick-breaker');
+  const url = core.makeDataUrl(game.html, game.spec.qr.encoding);
+  assert.equal(game.title, 'Разбей блоки');
+  assert.equal(game.spec.difficulty, 3);
+  assert.equal(core.inspectDifficulty(game.html).value, 3);
+  assert.ok(core.byteLength(url) <= core.getQrLimit(game.spec.qr.ecc));
+  assert.match(game.html, /hsl\('/);
+  assert.match(game.html, /A\^=1<<i/);
+  assert.match(game.html, /ПОБЕДА/);
+  assert.match(game.html, /ГОТОВО/);
+  assert.match(game.html, /,120,168/);
+  assert.match(game.html, /,120,196/);
+  assert.match(game.html, /f\(-O\/S,0,w\/S,H\)/);
+  assert.match(game.html, /Math\.min\(2,\(t-o\)\/16\.7\|\|1\)/);
+  const checks = core.validateHtml(game.html, game.spec, { dataUrl: url, encoding: 'base64', ecc: 'M', qrVersion: 40 });
+  assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
+
+  const frames = [];
+  const drawingContext = {
+    setTransform() {}, fillRect() {}, beginPath() {}, arc() {}, fill() {}, fillText() {}
+  };
+  const canvas = { style: {}, getContext: () => drawingContext };
+  const sandbox = {
+    c: canvas,
+    devicePixelRatio: 1,
+    innerWidth: 360,
+    innerHeight: 640,
+    Math,
+    requestAnimationFrame: (callback) => { frames.push(callback); }
+  };
+  const script = game.html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
+  vm.runInNewContext(script, sandbox);
+  assert.equal(sandbox.Q, 1, 'до первого касания должен отображаться стартовый экран');
+  assert.equal(sandbox.A, -1, 'в начале должны быть активны все 32 блока');
+  assert.equal(sandbox.J, 70, 'средняя сложность должна использовать платформу шириной 70');
+  assert.ok(Math.abs(sandbox.V - 1.6) < 0.001, 'горизонтальная скорость средней сложности должна быть умеренной');
+  assert.ok(Math.abs(sandbox.U + 1.95) < 0.001, 'вертикальная скорость средней сложности должна быть умеренной');
+
+  const pointer = (clientX) => ({ clientX, preventDefault() {} });
+  canvas.onpointerdown(pointer(180));
+  assert.equal(sandbox.Q, 0, 'первое касание должно запустить игру');
+
+  sandbox.X = 100;
+  sandbox.Y = 250;
+  sandbox.V = 2;
+  sandbox.U = 0;
+  frames.shift()(100);
+  const fullFrameX = sandbox.X;
+  frames.shift()(108.35);
+  assert.ok(Math.abs(sandbox.X - fullFrameX - 1) < 0.001, 'на экране 120 Гц движение за кадр должно уменьшаться вдвое');
+
+  sandbox.X = sandbox.P + 0.5;
+  sandbox.Y = sandbox.PY + 8;
+  sandbox.U = 2;
+  frames.shift()();
+  assert.ok(sandbox.U > 0, 'мяч, уже прошедший верх платформы, не должен отскакивать от её бокового края');
+
+  sandbox.X = sandbox.P + sandbox.J / 2 - 1.6;
+  sandbox.Y = sandbox.PY - sandbox.B - 1;
+  sandbox.V = 1.6;
+  sandbox.U = 2;
+  const speedBeforeBounce = Math.hypot(sandbox.V, sandbox.U);
+  frames.shift()();
+  assert.ok(sandbox.U < 0, 'платформа должна отбить падающий мяч вверх');
+  assert.ok(Math.abs(Math.hypot(sandbox.V, sandbox.U) - speedBeforeBounce) < 0.001, 'отскок от платформы не должен менять скорость мяча');
+
+  sandbox.X = 18.5 - sandbox.V;
+  sandbox.Y = 52 - sandbox.U;
+  frames.shift()();
+  assert.equal(sandbox.K, 1, 'попадание в блок должно начислять очко');
+  assert.equal(sandbox.A & 1, 0, 'разбитый блок должен исчезнуть');
+
+  sandbox.A = 1;
+  sandbox.K = 31;
+  sandbox.X = 18.5 - sandbox.V;
+  sandbox.Y = 52 - sandbox.U;
+  frames.shift()();
+  assert.equal(sandbox.K, 32);
+  assert.equal(sandbox.Q, 3, 'последний разбитый блок должен открыть экран победы');
+
+  const variants = [1, 2, 3, 4, 5].map((difficulty) => ({
+    html: core.setDifficulty(game.html, difficulty),
+    spec: { ...game.spec, difficulty }
+  }));
+  assert.equal(new Set(variants.map((item) => item.html)).size, 5, 'каждый уровень должен создавать собственный HTML');
+  variants.forEach((variant, index) => {
+    assert.equal(core.inspectDifficulty(variant.html).value, index + 1);
+    assert.ok(core.byteLength(core.makeDataUrl(variant.html, 'base64')) <= core.getQrLimit('M'), 'уровень ' + (index + 1) + ' должен помещаться в M');
+    const variantChecks = core.validateHtml(variant.html, variant.spec, { encoding: 'base64', ecc: 'M' });
+    assert.equal(variantChecks.find((check) => check.id === 'difficulty').status, 'pass');
+  });
+  assert.match(variants[0].html, /var \$d=1/);
+  assert.match(variants[4].html, /var \$d=5/);
+});
+
+test('извлечённый из QR «Брандмауэр» встроен как автономный пример', () => {
+  const game = sample.getById('firewall');
+  const url = core.makeDataUrl(game.html, 'base64');
+  assert.equal(game.title, 'Брандмауэр');
+  assert.equal(core.inspectDifficulty(game.html).value, 3);
+  assert.ok(core.byteLength(url) <= core.getQrLimit('M'));
+  assert.match(game.html, /КРАСНЫЕ НАЖИМАЙ/);
+  assert.match(game.html, /ЗЕЛЕНЫЕ ПРОПУСКАЙ/);
+  assert.match(game.html, /onpointerdown/);
+  assert.match(game.html, /v=\.8\+\$d\/12/);
+  assert.match(game.html, /f=\(\.33-\$d\*\.02\)\*14\/13/);
+  assert.match(game.html, /p=\.3/);
+  assert.match(game.html, /j\*=1\.0004/);
+  assert.match(game.html, /w=26\.25\+n\(\)\*6\.25;y=w\*\(1\+n\(\)\*3\)/);
+  assert.match(game.html, /a=A\[i\]\)\[3\]&&X<a\[0\]\+a\[4\]\+3/);
+  assert.match(game.html, /for\(r=0;r<2;r\+\+\)for\(i=A\.length;i--;\).*a\[3\]==r/, 'зелёные должны рисоваться до красных');
+  assert.match(game.html, /display:block/);
+  const checks = core.validateHtml(game.html, game.spec, { dataUrl: url, encoding: 'base64', ecc: 'M', qrVersion: 40 });
+  assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
+
+  const ticks = [];
+  const fixedMath = Object.create(Math);
+  fixedMath.random = () => 0;
+  const drawingContext = { setTransform() {}, fillRect() {}, fillText() {} };
+  const canvas = { style: {}, getContext: () => drawingContext };
+  const sandbox = {
+    c: canvas,
+    devicePixelRatio: 1,
+    innerWidth: 360,
+    innerHeight: 640,
+    Math: fixedMath,
+    setInterval: (callback) => { ticks.push(callback); }
+  };
+  const script = game.html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
+  vm.runInNewContext(script, sandbox);
+  canvas.onpointerdown({ clientX: 180, clientY: 320 });
+  for (let index = 0; index < 150; index++) ticks[0]();
+  const redBlocks = sandbox.A.filter((block) => block[3]);
+  assert.ok(redBlocks.length > 1, 'красные блоки должны иметь возможность следовать друг над другом');
+  assert.equal(new Set(redBlocks.map((block) => block[0])).size, 1, 'вертикально разделённые красные блоки могут использовать одну координату X');
+  redBlocks.forEach((block) => {
+    assert.ok(block[4] >= 26.25, 'ширина блока должна быть не меньше полутора прежних минимумов');
+    assert.ok(block[4] <= 32.5, 'верхняя граница ширины блока не должна измениться');
+    assert.ok(block[2] >= block[4], 'высота блока не должна быть меньше ширины');
+    assert.ok(block[2] <= block[4] * 4, 'высота блока не должна превышать четыре ширины');
+  });
+  for (let left = 0; left < redBlocks.length; left++) {
+    for (let right = left + 1; right < redBlocks.length; right++) {
+      const a = redBlocks[left];
+      const b = redBlocks[right];
+      const separated = a[0] + a[4] < b[0] || b[0] + b[4] < a[0] || a[1] + a[2] < b[1] || b[1] + b[2] < a[1];
+      assert.equal(separated, true, 'красные блоки не должны накладываться или стыковаться');
+    }
+  }
+});
+
+test('извлечённая из QR игра «Успей в релиз» встроена как автономный пример', () => {
+  const game = sample.getById('release-run');
+  const url = core.makeDataUrl(game.html, 'base64');
+  assert.equal(game.title, 'Успей в релиз');
+  assert.equal(core.inspectDifficulty(game.html).value, 3);
+  assert.ok(core.byteLength(url) <= core.getQrLimit('M'));
+  assert.match(game.html, /УСПЕЙ В РЕЛИЗ/);
+  assert.match(game.html, /ТАП-ПРЫЖОК/);
+  assert.match(game.html, /u=2\.9\+\$d\*\.3/);
+  assert.match(game.html, /t=58-\$d\*4\+n\(\)\*\(32-\$d\*2\)/);
+  assert.match(game.html, /u\+=\.004\+\$d\*\.002/);
+  assert.match(game.html, /x\.arc\(M,50,11,0,7\);x\.fill\(\)/, 'луна должна начинаться с заполненного круга ниже счётчика');
+  assert.match(game.html, /x\.arc\(M\+4,47,8,0,7\);x\.fill\(\)/, 'смещённый круг цвета фона должен формировать заполненный полумесяц');
+  assert.match(game.html, /x\.fillText\(s,18,28\)/, 'счётчик должен располагаться с отступом от края');
+  assert.match(game.html, /x\[F\]='#123e'/, 'информационная карточка должна иметь контрастный тёмный фон');
+  assert.match(game.html, /x\.font='bold 18px sans-serif'/, 'заголовок карточки должен быть полужирным');
+  const checks = core.validateHtml(game.html, game.spec, { dataUrl: url, encoding: 'base64', ecc: 'M', qrVersion: 40 });
+  assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
+
+  const variants = [1, 2, 3, 4, 5].map((difficulty) => {
+    const html = core.setDifficulty(game.html, difficulty);
+    const ticks = [];
+    const drawingContext = {
+      setTransform() {}, fillRect() {}, beginPath() {}, arc() {}, fill() {}, fillText() {}
+    };
+    const canvas = { style: {}, getContext: () => drawingContext };
+    const sandbox = {
+      c: canvas,
+      devicePixelRatio: 1,
+      innerWidth: 360,
+      innerHeight: 640,
+      Math,
+      setInterval: (callback) => { ticks.push(callback); }
+    };
+    vm.runInNewContext(html.match(/<script>\s*([\s\S]*?)<\/script>/)[1], sandbox);
+    canvas.onpointerdown({ preventDefault() {} });
+    return { speed: sandbox.u, ticks, sandbox };
+  });
+  assert.deepEqual(variants.map((item) => Number(item.speed.toFixed(2))), [3.2, 3.5, 3.8, 4.1, 4.4]);
+  variants.forEach((variant) => {
+    for (let index = 0; index < 36; index++) variant.ticks[0]();
+    assert.ok(variant.sandbox.A.length > 0, 'после старта должно появиться препятствие');
+  });
+});
+
+test('«Карьерный компас» укладывается в QR и содержит три результата', () => {
+  const compass = sample.getById('career-compass');
+  const url = core.makeDataUrl(compass.html, compass.spec.qr.encoding);
+  assert.ok(core.byteLength(url) <= core.getQrLimit(compass.spec.qr.ecc));
+  ['Разработка', 'Управление продуктом', 'Аналитика'].forEach((label) => assert.match(compass.html, new RegExp(label)));
+  const checks = core.validateHtml(compass.html, compass.spec, { dataUrl: url, encoding: 'base64', ecc: 'M', qrVersion: 40 });
+  assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
+});
+
+test('валидатор находит внешние ресурсы и сетевые API', () => {
+  const html = '<meta name=viewport content="width=device-width"><script src="https://cdn.example/app.js"></script><script>fetch("/api")</script>';
+  const checks = core.validateHtml(html, sample.spec, { encoding: 'base64', ecc: 'M' });
+  assert.equal(checks.find((check) => check.id === 'external-resources').status, 'fail');
+  assert.equal(checks.find((check) => check.id === 'network-apis').status, 'fail');
+});
+
+test('автоотчёт предупреждает о коррекции L и указывает сокращение для M', () => {
+  const oversizedForM = '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><p>' + 'я'.repeat(900) + '</p>';
+  const warning = core.validateHtml(oversizedForM, sample.spec, { encoding: 'base64', ecc: 'L' }).find((check) => check.id === 'low-ecc');
+  assert.equal(warning.status, 'warn');
+  assert.match(warning.message, /снижает устойчивость/);
+  assert.match(warning.message, /сократите HTML минимум на \d+ байт/);
+
+  const unnecessaryL = core.validateHtml(sample.html, sample.spec, { encoding: 'base64', ecc: 'L' }).find((check) => check.id === 'low-ecc');
+  assert.match(unnecessaryL.message, /уже помещаются в M/);
+});
+
+test('валидатор требует doctype, UTF-8 и полноценный мобильный viewport', () => {
+  const valid = '<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><button>OK</button>';
+  const invalid = '<meta name=viewport content="width=400"><button>OK</button>';
+  ['single-html', 'charset', 'viewport'].forEach((id) => {
+    assert.equal(core.validateHtml(valid, sample.spec, {}).find((check) => check.id === id).status, 'pass');
+    assert.equal(core.validateHtml(invalid, sample.spec, {}).find((check) => check.id === id).status, 'fail');
+  });
+});
+
+test('поиск зависимостей охватывает навигацию, CSS import и дополнительные атрибуты', () => {
+  const html = '<style>@import "https://cdn.example/theme.css"</style><a href=other.html>Далее</a><video poster=cover.jpg></video><form action=/send></form><meta http-equiv=refresh content="0;url=https://example.test"><script>window.open("https://example.test");location.href="next.html"</script>';
+  const external = core.findExternalResources(html).join('\n');
+  const network = core.findNetworkApis(html).join('\n');
+  assert.match(external, /@import/);
+  assert.match(external, /a\[href\]/);
+  assert.match(external, /poster/);
+  assert.match(external, /form\[action\]/);
+  assert.match(external, /meta\[refresh\]/);
+  assert.match(network, /window\.open/);
+  assert.match(network, /location/);
+});
+
+test('динамическая метрика обнаруживает горизонтальное переполнение', () => {
+  const url = core.makeDataUrl(sample.html, 'base64');
+  const checks = core.validateHtml(sample.html, sample.spec, {
+    dataUrl: url,
+    encoding: 'base64',
+    ecc: 'M',
+    runtime: { horizontalOverflow: true, verticalOverflow: false, scrollWidth: 500, scrollHeight: 640, viewportWidth: 360, viewportHeight: 640, errors: [], blocked: [] }
+  });
+  const overflow = checks.find((check) => check.id === 'horizontal-overflow');
+  assert.equal(overflow.status, 'fail');
+  assert.match(overflow.evidence, /500/);
+});
+
+test('динамические проверки имеют стабильный состав и находят вертикальное переполнение и ошибки', () => {
+  const before = core.validateHtml(sample.html, sample.spec, {});
+  ['horizontal-overflow', 'vertical-overflow', 'touch-target-size', 'control-spacing', 'control-labels', 'preview-start', 'runtime-errors', 'blocked-operations'].forEach((id) => {
+    assert.equal(before.find((check) => check.id === id).status, 'pending', id);
+  });
+  const runtime = {
+    horizontalOverflow: false, verticalOverflow: true,
+    scrollWidth: 360, scrollHeight: 700, viewportWidth: 360, viewportHeight: 640,
+    controls: [{ left: 0, top: 0, right: 200, bottom: 52, width: 200, height: 52, labeled: true }],
+    errors: [{ message: 'boom', line: 7 }], blocked: [{ directive: 'connect-src', uri: 'https://example.test' }]
+  };
+  const after = core.validateHtml(sample.html, sample.spec, { runtime });
+  assert.equal(after.length, before.length);
+  assert.equal(after.find((check) => check.id === 'vertical-overflow').status, 'fail');
+  assert.equal(after.find((check) => check.id === 'runtime-errors').status, 'fail');
+  assert.equal(after.find((check) => check.id === 'blocked-operations').status, 'fail');
+  assert.equal(after.find((check) => check.id === 'preview-start').status, 'pass');
+});
+
+test('предпросмотр получает CSP с запретом сети и монитор', () => {
+  const document = core.buildPreviewDocument('<!doctype html><h1>x</h1>', 'token-1');
+  assert.match(document, /connect-src 'none'/);
+  assert.match(document, /securitypolicyviolation/);
+  assert.match(document, /MutationObserver/);
+  assert.match(document, /controls:cs/);
+  assert.match(document, /verticalOverflow/);
+  assert.match(document, /errors:x\.slice/);
+  assert.match(document, /blocked:b\.slice/);
+  assert.match(document, /token-1/);
+});
+
+test('анализатор интерфейса измеряет размер, подписи и интервалы', () => {
+  const metrics = core.analyzeControls([
+    { left: 0, top: 0, right: 30, bottom: 30, width: 30, height: 30, labeled: true },
+    { left: 0, top: 34, right: 52, bottom: 86, width: 52, height: 52, labeled: false }
+  ], 44, 8);
+  assert.equal(metrics.count, 2);
+  assert.equal(metrics.smallCount, 1);
+  assert.equal(metrics.unlabeledCount, 1);
+  assert.equal(metrics.tightPairCount, 1);
+  assert.equal(metrics.smallestGap, 4);
+});
+
+test('анализ размера точно разделяет HTML, CSS, JavaScript и текст', () => {
+  const html = '<!doctype html><style>body { color: red }</style><main>Привет</main><script>let x = 1</script>';
+  const analysis = core.analyzeSize(html, { encoding: 'base64', ecc: 'M' });
+  assert.equal(analysis.totalBytes, core.byteLength(html));
+  assert.equal(analysis.categories.reduce((sum, category) => sum + category.bytes, 0), analysis.totalBytes);
+  assert.ok(analysis.categories.find((category) => category.id === 'css').bytes > 0);
+  assert.ok(analysis.categories.find((category) => category.id === 'javascript').bytes > 0);
+  assert.ok(analysis.categories.find((category) => category.id === 'content').bytes >= core.byteLength('Привет'));
+});
+
+test('анализ размера предлагает измеримые способы экономии и предупреждает о малом запасе', () => {
+  const html = '<!doctype html>\n<!-- комментарий -->\n<style>\nbutton { color: red; margin: 0; }\n</style>\n<main>' + 'A'.repeat(1600) + '</main>\n';
+  const payloadBytes = core.byteLength(core.makeDataUrl(html, 'base64'));
+  const analysis = core.analyzeSize(html, { encoding: 'base64', ecc: 'M' });
+  const ids = analysis.hints.map((hint) => hint.id);
+  assert.ok(ids.includes('markup-formatting'));
+  assert.ok(ids.includes('css-formatting'));
+  assert.ok(ids.includes('payload-reserve'));
+  assert.ok(ids.includes('largest-category'));
+  assert.equal(analysis.payload.reserve, core.getQrLimit('M') - payloadBytes);
+  const asciiAnalysis = core.analyzeSize('<!doctype html><main>' + 'A'.repeat(200) + '</main>', { encoding: 'base64', ecc: 'M' });
+  assert.ok(asciiAnalysis.hints.some((hint) => hint.id === 'encoding'));
+});
+
+test('runtime-валидатор принимает удобные кнопки и отклоняет маленькие без подписи', () => {
+  const html = sample.html;
+  const goodRuntime = { horizontalOverflow: false, verticalOverflow: false, errors: [], blocked: [], controls: [
+    { left: 0, top: 0, right: 200, bottom: 52, width: 200, height: 52, labeled: true },
+    { left: 0, top: 62, right: 200, bottom: 114, width: 200, height: 52, labeled: true }
+  ] };
+  const badRuntime = { horizontalOverflow: false, verticalOverflow: false, errors: [], blocked: [], controls: [
+    { left: 0, top: 0, right: 30, bottom: 30, width: 30, height: 30, labeled: true },
+    { left: 0, top: 34, right: 200, bottom: 86, width: 200, height: 52, labeled: false }
+  ] };
+  const good = core.validateHtml(html, sample.spec, { runtime: goodRuntime });
+  const bad = core.validateHtml(html, sample.spec, { runtime: badRuntime });
+  ['touch-target-size', 'control-spacing', 'control-labels'].forEach((id) => {
+    assert.equal(good.find((check) => check.id === id).status, 'pass');
+    assert.equal(bad.find((check) => check.id === id).status, 'fail');
+  });
+});
+
+test('автоотчёт содержит только автоматические статусы', () => {
+  const checks = core.validateHtml(sample.html, sample.spec, {});
+  assert.ok(checks.every((check) => ['pass', 'fail', 'warn', 'pending'].includes(check.status)));
+});
+
+test('сводка считает только автоматические результаты', () => {
+  assert.deepEqual(core.summarizeChecks([
+    { status: 'pass' }, { status: 'pass' }, { status: 'fail' }, { status: 'warn' }, { status: 'pending' }, { status: 'legacy' }
+  ]), { pass: 2, fail: 1, warn: 1, pending: 1 });
+});
+
+test('упрощённый конструктор создаёт валидный автономный тест в пределах QR', () => {
+  const built = simpleBuilder.build(simpleBuilder.DEFAULT_CONFIG);
+  const url = core.makeDataUrl(built.html, built.spec.qr.encoding);
+  const editorPage = fs.readFileSync(path.join(__dirname, '../qr-microapps-lab.html'), 'utf8');
+  assert.match(editorPage, /editor\/simple-builder\.js/);
+  assert.match(editorPage, /id="mode-simple"/);
+  assert.match(editorPage, /id="simple-questions"/);
+  assert.match(editorPage, /id="simple-add-question"/);
+  assert.match(editorPage, /Профиль проверки/);
+  assert.match(editorPage, /id="spec-vertical-overflow-input"/);
+  assert.match(editorPage, /<details class="spec-box">[\s\S]*class="summary-hint">показать<\/span>/);
+  assert.doesNotMatch(editorPage, /показать \/ скрыть/);
+  assert.doesNotMatch(editorPage, /Функциональные требования|Макс\. Data URL|Макс\. HTML/);
+  assert.match(editorPage, /<details class="qr-controls">[\s\S]*id="encoding" type="hidden" value="base64"[\s\S]*id="ecc" type="hidden" value="M"[\s\S]*<\/details>\s*<div class="qr-action-row">[\s\S]*id="build"/);
+  assert.doesNotMatch(editorPage, />Кодирование<select|>Коррекция QR<select/);
+  assert.doesNotMatch(editorPage, /<details class="qr-controls"[^>]*\sopen(?:\s|>)/);
+  assert.match(editorPage, /class="qr-column"[\s\S]*id="qr-zoom"[\s\S]*class="download-actions"[\s\S]*class="metrics-column"[\s\S]*id="qr-correction-card"[\s\S]*class="limit-metrics"[\s\S]*id="qr-reserve"[\s\S]*id="qr-l-reserve"/);
+  assert.doesNotMatch(editorPage, /id="qr-limit-note"/);
+  assert.match(editorPage, /<details class="metric-details">[\s\S]*id="html-bytes"[\s\S]*class="metric checksum-metric"[\s\S]*id="checksum"/);
+  assert.match(editorPage, /<details class="payload-details">[\s\S]*id="data-url"/);
+  assert.match(editorPage, /id="qr-open-help"[^>]*hidden[\s\S]*можно выбрать «Поиск»[\s\S]*Открыть как сайт/);
+  assert.doesNotMatch(editorPage, /Для проверки автономности повторите запуск в авиарежиме/);
+  assert.doesNotMatch(editorPage, /<details class="(?:metric-details|size-analysis|payload-details)"[^>]*\sopen(?:\s|>)/);
+  assert.match(editorPage, /id="qr-zoom"[\s\S]*aria-expanded="false"[\s\S]*id="qr-canvas"/);
+  assert.match(editorPage, /id="optimization-summary"[\s\S]*id="optimization-saving"[\s\S]*id="optimization-detail"/);
+  assert.match(editorPage, /<details class="size-analysis">[\s\S]*class="size-analysis-meta"[\s\S]*id="size-total"[\s\S]*class="summary-hint">показать<\/span>/);
+  assert.match(editorPage, /class="validation-inline"[\s\S]*id="validation-summary"[\s\S]*id="validation-remarks"[\s\S]*id="validation-toggle"[\s\S]*id="validation-details"[\s\S]*class="preview-layout"/);
+  assert.match(editorPage, /id="validation-toggle"[^>]*class="[^"]*validation-toggle[^"]*summary-hint[^"]*"[^>]*>показать<\/button>/);
+  assert.doesNotMatch(editorPage, /class="panel validation-panel"/);
+  const editorStyles = fs.readFileSync(path.join(__dirname, '../editor/styles.css'), 'utf8');
+  assert.match(editorStyles, /\.topbar,\.workspace,footer\{width:100%;max-width:none\}/);
+  assert.match(editorStyles, /grid-template-columns:clamp\(320px,22vw,420px\) clamp\(360px,25vw,480px\) minmax\(0,1fr\)/);
+  assert.match(editorStyles, /\.device-shell\{border:0;box-shadow:0 0 0 9px/);
+  assert.match(editorStyles, /@media\(min-width:1200px\)\{\.topbar h1\{[^}]*white-space:nowrap/);
+  assert.match(editorStyles, /@media\(min-width:1600px\)\{\.workspace\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)\}\}/);
+  assert.match(editorStyles, /\.preview-panel \.preview-layout\{grid-template-columns:1fr\}/);
+  assert.match(editorStyles, /\.input-panel\{font-size:15px\}/);
+  assert.match(editorStyles, /\.qr-stage\.expanded\{position:fixed/);
+  assert.match(editorStyles, /\.qr-stage\.expanded\{[^}]*background:#fff/);
+  assert.match(editorStyles, /\.output-panel \.result-grid\{grid-template-columns:minmax\(180px,240px\) minmax\(0,1fr\)/);
+  assert.match(editorStyles, /\.output-panel \.qr-stage:not\(\.expanded\)\{width:100%;max-width:240px/);
+  assert.match(editorStyles, /\.validation-inline\{margin:0 0 16px/);
+  assert.match(editorStyles, /\.validation-toolbar \.validation-toggle\{[^}]*width:auto;min-height:0;[^}]*background:transparent/);
+  assert.match(editorStyles, /\.validation-remarks-line\.warn\{color:var\(--warning\)\}/);
+  assert.match(editorStyles, /\.validation-remarks-line\.fail\{color:var\(--danger\)\}/);
+  assert.match(editorStyles, /\.validation-inline \.validation-summary \.badge\.empty\{[^}]*opacity:\.42/);
+  assert.match(editorStyles, /\.badge\.pending\{[^}]*color:var\(--muted\)/);
+  assert.match(editorStyles, /\.simple-intro-heading\{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap\}/);
+  assert.match(editorStyles, /\.simple-question-count\{flex:0 0 auto;white-space:nowrap\}/);
+  assert.match(editorStyles, /\.spec-box\[open\]>summary \.summary-hint:after\{content:"скрыть";font-size:12px\}/);
+  assert.match(editorStyles, /\.checksum-metric\{grid-column:1\/-1\}/);
+  assert.match(editorStyles, /\.checksum-metric strong\{[^}]*font:700 18px\/1\.35[^}]*white-space:normal;overflow-wrap:anywhere\}/);
+  assert.match(editorStyles, /\.size-analysis\[open\]>summary \.summary-hint:after\{content:"скрыть";font-size:12px\}/);
+  assert.match(editorStyles, /\.qr-open-help\{display:grid;grid-template-columns:32px minmax\(0,1fr\)/);
+  assert.match(editorStyles, /\.fallback-metric strong\{color:var\(--muted\)\}/);
+  assert.match(editorStyles, /\.fallback-metric\.recovery[^{]*\{[^}]*border-color:#765e2d/);
+  const editorApp = fs.readFileSync(path.join(__dirname, '../editor/app.js'), 'utf8');
+  const htmlIds = new Set([...editorPage.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
+  for (const match of editorApp.matchAll(/\$\('([^']+)'\)/g)) assert.ok(htmlIds.has(match[1]), 'в HTML отсутствует #' + match[1]);
+  assert.match(editorApp, /function setQrExpanded\(expanded\)/);
+  assert.match(editorApp, /core\.fitQrDisplay\(state\.qr\.modules, state\.qr\.quietZone, window\.innerWidth, window\.innerHeight, window\.devicePixelRatio \|\| 1\)/);
+  assert.match(editorApp, /elements\.canvas\.style\.left = fit\.cssLeft \+ 'px'/);
+  assert.match(editorApp, /window\.addEventListener\('resize', fitExpandedQr\)/);
+  assert.match(editorApp, /function setValidationExpanded\(expanded\)/);
+  assert.match(editorApp, /expanded \? 'скрыть' : 'показать'/);
+  assert.match(editorApp, /quietWhenEmpty = \(entry\[0\] === 'fail' \|\| entry\[0\] === 'warn'\) && entry\[2\] === 0/);
+  assert.match(editorApp, /Предупреждение: /);
+  assert.match(editorApp, /Нарушение: /);
+  assert.match(editorApp, /var optimization = core\.optimizeHtml\(sourceHtml\)/);
+  assert.match(editorApp, /html = core\.optimizeHtml\(currentHtml\(\)\)\.html/);
+  assert.match(editorApp, /elements\.qrOpenHelp\.hidden = true/);
+  assert.match(editorApp, /elements\.qrOpenHelp\.hidden = !exact/);
+  assert.deepEqual(core.validateSpec(built.spec), []);
+  assert.equal(built.spec.interface.noVerticalScroll, true);
+  assert.ok(core.byteLength(url) <= core.getQrLimit(built.spec.qr.ecc));
+  assert.equal(built.spec.limits, undefined);
+  assert.equal(built.spec.functionalRequirements, undefined);
+  assert.equal(built.spec.manualChecks, undefined);
+  assert.deepEqual(core.findExternalResources(built.html), []);
+  assert.deepEqual(core.findNetworkApis(built.html), []);
+});
+
+test('упрощённый конструктор поддерживает произвольное число вопросов и от двух ответов', () => {
+  const questions = Array.from({ length: 7 }, (_, questionIndex) => ({
+    prompt: 'Вопрос ' + (questionIndex + 1),
+    answers: Array.from({ length: 5 }, (_, answerIndex) => 'Ответ ' + (answerIndex + 1)),
+    correct: 4
+  }));
+  const built = simpleBuilder.build({ title: 'Расширенный тест', questions });
+  assert.equal(built.config.questions.length, 7);
+  built.config.questions.forEach((question) => {
+    assert.equal(question.answers.length, 5);
+    assert.equal(question.correct, 4);
+  });
+  assert.match(built.html, /l=Q\.length/);
+  assert.doesNotMatch(built.html, /n==3/);
+  assert.equal(built.spec.functionalRequirements, undefined);
+
+  const minimum = simpleBuilder.normalizeConfig({ questions: [{ prompt: 'Один', answers: ['Да'], correct: 8 }] });
+  assert.equal(minimum.questions.length, 1);
+  assert.equal(minimum.questions[0].answers.length, 2);
+  assert.equal(minimum.questions[0].correct, 0);
+});
+
+test('варианты оформления последовательно меняют объём теста', () => {
+  const sizes = ['compact', 'balanced', 'expressive'].map((theme) => {
+    const built = simpleBuilder.build({ ...simpleBuilder.DEFAULT_CONFIG, theme });
+    assert.equal(built.config.theme, theme);
+    assert.deepEqual(core.findExternalResources(built.html), []);
+    return core.byteLength(built.html);
+  });
+  assert.ok(sizes[0] < sizes[1], 'компактное оформление должно быть меньше сбалансированного');
+  assert.ok(sizes[1] < sizes[2], 'сбалансированное оформление должно быть меньше выразительного');
+  assert.equal(simpleBuilder.normalizeConfig({ theme: 'unknown' }).theme, 'balanced');
+});
+
+test('модули сохраняют совместимость параметров, а интерфейс использует Base64 и автокоррекцию', () => {
+  const limits = { L: 2953, M: 2331, Q: 1663, H: 1273 };
+  ['base64', 'percent'].forEach((encoding) => {
+    Object.keys(limits).forEach((ecc) => {
+      const built = simpleBuilder.build({ qr: { encoding, ecc } });
+      assert.deepEqual(built.config.qr, { encoding, ecc });
+      assert.equal(built.spec.qr.encoding, encoding);
+      assert.equal(built.spec.qr.ecc, ecc);
+      assert.equal(built.spec.limits, undefined);
+      assert.equal(core.getQrLimit(ecc), limits[ecc]);
+    });
+  });
+  assert.deepEqual(simpleBuilder.normalizeConfig({ qr: { encoding: 'bad', ecc: 'Z' } }).qr, { encoding: 'base64', ecc: 'M' });
+
+  const appSource = fs.readFileSync(path.join(__dirname, '../editor/app.js'), 'utf8');
+  assert.match(appSource, /elements\.encoding\.value = 'base64'/);
+  assert.match(appSource, /payloadBytes <= core\.getQrLimit\('M'\) \? 'M' : 'L'/);
+  assert.match(appSource, /Данные не помещаются даже в QR с коррекцией L/);
+});
+
+test('максимальные кириллические поля упрощённого режима помещаются в QR', () => {
+  const built = simpleBuilder.build({
+    title: 'Я'.repeat(28),
+    questions: [0, 1, 2].map(() => ({ prompt: 'Я'.repeat(48), answers: ['Я'.repeat(24), 'Я'.repeat(24)], correct: 1 }))
+  });
+  const url = core.makeDataUrl(built.html, 'base64');
+  assert.ok(core.byteLength(url) <= core.getQrLimit(built.spec.qr.ecc));
+});
+
+test('упрощённый конструктор экранирует разметку и нормализует цвета и правильные ответы', () => {
+  const built = simpleBuilder.build({
+    title: '<img src=x>',
+    colors: { background: 'red', card: '#ABCDEF', accent: '#123456' },
+    questions: [{ prompt: '</script><script>bad()</script>', answers: ['<b>Да</b>', 'A&B'], correct: 1 }]
+  });
+  assert.doesNotMatch(built.html, /<img src=x>/);
+  assert.doesNotMatch(built.html, /<script>bad\(\)/);
+  assert.match(built.html, /&lt;img src=x&gt;/);
+  assert.match(built.html, /\\u003c\/script\\u003e/);
+  assert.match(built.html, /background:#071d2b/);
+  assert.match(built.html, /background:#abcdef/);
+  assert.match(built.html, /background:#123456/);
+  assert.equal(built.config.questions[0].correct, 1);
+});
+
+test('визуальный конструктор создаёт валидные профили всех эталонов', () => {
+  sample.items.forEach((item) => {
+    const rebuilt = specBuilder.build(specBuilder.normalize(item.spec));
+    assert.deepEqual(core.validateSpec(rebuilt), [], item.id);
+    assert.equal(rebuilt.id, item.spec.id);
+    assert.equal(rebuilt.title, item.spec.title);
+    assert.equal(rebuilt.manualChecks, undefined);
+    assert.equal(rebuilt.functionalRequirements, undefined);
+    assert.equal(rebuilt.limits, undefined);
+    if (item.spec.interface.minTouchTargetPx == null) assert.equal(rebuilt.interface.minTouchTargetPx, undefined);
+  });
+});
+
+test('конструктор нормализует идентификатор и перечисления', () => {
+  const built = specBuilder.build({
+    id: 'Новый тест!', title: 'Новый тест', type: 'unknown',
+    difficulty: 9,
+    qr: { encoding: 'bad', ecc: 'Z', maxVersion: 99 },
+    limits: { maxHtmlBytes: 0, maxDataUrlBytes: 2000000 },
+    technical: {}, interface: { minTouchTargetPx: 10, minControlGapPx: 99 }
+  });
+  assert.match(built.id, /^[a-z0-9][a-z0-9-]*$/);
+  assert.equal(built.difficulty, 5);
+  assert.equal(built.type, 'interactive');
+  assert.deepEqual(built.qr, { encoding: 'base64', ecc: 'M' });
+  assert.equal(built.limits, undefined);
+  assert.equal(built.interface.minTouchTargetPx, 24);
+  assert.equal(built.interface.minControlGapPx, 32);
+  assert.equal(specBuilder.build({ type: 'game' }).difficulty, 3);
+});
+
+test('конструктор игнорирует устаревшие функциональные и ручные поля', () => {
+  const built = specBuilder.build({
+    id: 'lists', title: 'Списки', qr: { encoding: 'base64', ecc: 'M' },
+    functionalRequirements: [' Первое ', '', 'Второе'],
+    manualChecks: [
+      { id: 'phone', label: 'Телефон', instruction: 'Проверить телефон' },
+      { id: 'phone', label: 'Повтор', instruction: 'Проверить ещё раз' },
+      { id: 'empty', label: '', instruction: 'Нет названия' }
+    ]
+  });
+  assert.equal(built.functionalRequirements, undefined);
+  assert.equal(built.manualChecks, undefined);
+  const editorPage = fs.readFileSync(path.join(__dirname, '../qr-microapps-lab.html'), 'utf8');
+  assert.match(editorPage, /editor\/spec-builder\.js/);
+  assert.match(editorPage, /id="spec-form"/);
+  assert.doesNotMatch(editorPage, /id="(?:add-manual|spec-manual-list)"/);
+});
+
+test('история обновляет одинаковую сборку без дубликата и нумерует изменения', () => {
+  const first = history.upsert([], { applicationId: 'quiz', title: 'Тест', signature: 'a', htmlBytes: 100, validation: { pass: 2 } }, 50);
+  const updated = history.upsert(first.items, { applicationId: 'quiz', title: 'Тест', signature: 'a', htmlBytes: 100, validation: { pass: 5 } }, 50);
+  const changed = history.upsert(updated.items, { applicationId: 'quiz', title: 'Тест', signature: 'b', htmlBytes: 90, validation: { pass: 5 } }, 50);
+  assert.equal(first.record.number, 1);
+  assert.equal(updated.items.length, 1);
+  assert.equal(updated.added, false);
+  assert.equal(updated.record.number, 1);
+  assert.equal(updated.record.validation.pass, 5);
+  assert.equal(changed.items.length, 2);
+  assert.equal(changed.record.number, 2);
+});
+
+test('сравнение истории использует предыдущую сборку того же приложения', () => {
+  const first = history.normalize({ number: 1, applicationId: 'quiz', htmlBytes: 120, dataUrlBytes: 200, qrVersion: 5, validation: { fail: 2 } });
+  const other = history.normalize({ number: 2, applicationId: 'game', htmlBytes: 500, dataUrlBytes: 800, qrVersion: 10, validation: { fail: 0 } });
+  const current = history.normalize({ number: 3, applicationId: 'quiz', htmlBytes: 100, dataUrlBytes: 180, qrVersion: 4, validation: { fail: 0 } });
+  const items = [first, other, current];
+  assert.equal(history.previousFor(items, current), first);
+  assert.deepEqual(history.compare(first, current), { htmlBytes: -20, dataUrlBytes: -20, qrVersion: -1, fail: -2 });
+});
+
+test('CSV истории не содержит исходник и защищает формулы таблиц', () => {
+  const record = history.normalize({
+    number: 1, recordedAt: '2026-08-17T10:00:00.000Z', applicationId: 'quiz', title: '=2+2',
+    htmlBytes: 100, dataUrlBytes: 180, qrVersion: 4, encoding: 'base64', ecc: 'M',
+    validation: { pass: 5, fail: 0, warn: 0, pending: 0, manual: 2 }, roundtripOk: true, checksum: 'abc'
+  });
+  const csv = history.toCsv([record]);
+  assert.equal(record.validation.manual, undefined);
+  assert.equal(csv.trim().split(/\r?\n/).length, 2);
+  assert.equal(csv.trim().split(/\r?\n/)[0].split(',').length, 15);
+  assert.match(csv, /"'=2\+2"/);
+  assert.doesNotMatch(csv, /data:text\/html|<!doctype/i);
+  const editorPage = fs.readFileSync(path.join(__dirname, '../qr-microapps-lab.html'), 'utf8');
+  assert.match(editorPage, /editor\/history\.js/);
+  assert.match(editorPage, /id="iteration-history"/);
+});
+
+function comparisonReport(options = {}) {
+  return {
+    reportVersion: '0.1', generatedAt: options.generatedAt || '2026-08-17T12:00:00.000Z',
+    application: { id: options.applicationId || 'shared-task', title: options.title || 'Реализация' },
+    specification: { id: options.assignmentId || 'shared-task' },
+    measurements: {
+      htmlBytes: options.htmlBytes || 1000, dataUrlBytes: options.dataUrlBytes || 1400,
+      encoding: 'base64', checksum: { algorithm: 'SHA-256', value: options.checksum || 'abc' },
+      qr: { version: options.qrVersion == null ? 30 : options.qrVersion, ecc: 'M' }
+    },
+    roundtrip: { ok: options.roundtripOk !== false },
+    validation: { summary: { pass: 10, fail: options.fail || 0, warn: options.warn || 0, pending: options.pending || 0, manual: 3 }, checks: [] }
+  };
+}
+
+test('сравнение принимает валидный отчёт и вычисляет автоматическую готовность', () => {
+  const item = comparison.normalize(comparisonReport({ title: 'Вариант А', checksum: 'aaa' }), 'p01.json');
+  assert.equal(item.source, 'p01.json');
+  assert.equal(item.automaticReady, true);
+  assert.equal(item.dataUrlBytes, 1400);
+  assert.equal(item.validation.manual, undefined);
+  const failed = comparison.normalize(comparisonReport({ fail: 2, checksum: 'bbb' }), 'p02.json');
+  assert.equal(failed.automaticReady, false);
+  const pending = comparison.normalize(comparisonReport({ pending: 2, checksum: 'ccc' }), 'p03.json');
+  assert.equal(pending.automaticReady, false);
+});
+
+test('порядок сравнения прозрачно учитывает готовность, нарушения и размер', () => {
+  const small = comparison.normalize(comparisonReport({ title: 'Малый', dataUrlBytes: 1200, checksum: 'small' }), 'small.json');
+  const large = comparison.normalize(comparisonReport({ title: 'Большой', dataUrlBytes: 1600, checksum: 'large' }), 'large.json');
+  const failed = comparison.normalize(comparisonReport({ title: 'С нарушением', fail: 1, dataUrlBytes: 900, checksum: 'fail' }), 'fail.json');
+  assert.deepEqual(comparison.rank([failed, large, small]).map((item) => item.title), ['Малый', 'Большой', 'С нарушением']);
+  assert.equal(comparison.summarize([small, large]).mixedAssignments, false);
+  const other = comparison.normalize(comparisonReport({ assignmentId: 'other', checksum: 'other' }), 'other.json');
+  assert.equal(comparison.summarize([small, other]).mixedAssignments, true);
+});
+
+test('повторный отчёт обновляется без дубля, а другой источник сохраняется отдельно', () => {
+  const report = comparisonReport({ checksum: 'same' });
+  const first = comparison.upsert([], report, 'p01.json', 30);
+  const repeated = comparison.upsert(first.items, report, 'p01.json', 30);
+  const otherSource = comparison.upsert(repeated.items, report, 'p02.json', 30);
+  assert.equal(first.added, true);
+  assert.equal(repeated.added, false);
+  assert.equal(repeated.items.length, 1);
+  assert.equal(otherSource.items.length, 2);
+});
+
+test('CSV сравнения безопасен для таблиц и не содержит HTML или data URL', () => {
+  const item = comparison.normalize(comparisonReport({ title: '=SUM(1,2)', checksum: 'safe' }), '@report.json');
+  const csv = comparison.toCsv([item]);
+  assert.match(csv, /"'=SUM\(1,2\)"/);
+  assert.match(csv, /"'@report\.json"/);
+  assert.doesNotMatch(csv, /<!doctype|data:text\/html/i);
+  assert.equal(csv.trim().split(/\r?\n/)[0].split(',').length, 18);
+  assert.throws(() => comparison.parse('{"reportVersion":"9"}', 'bad.json'), /версии 0\.1/i);
+  const editorPage = fs.readFileSync(path.join(__dirname, '../qr-microapps-lab.html'), 'utf8');
+  assert.match(editorPage, /editor\/comparison\.js/);
+  assert.match(editorPage, /id="comparison-list"/);
+  assert.match(editorPage, /id="comparison-files"[^>]*multiple/);
+});
+
+test('файл проекта сохраняет HTML, спецификацию и настройки без потерь', () => {
+  const item = sample.getById('tiny-quiz');
+  const text = projectFile.serialize({
+    savedAt: '2026-08-17T12:00:00.000Z', html: item.html, specification: item.spec,
+    settings: { encoding: 'base64', ecc: 'M', moduleScale: 8, quietZone: 6 },
+    preview: { preset: '390x844', width: 390, height: 844 }
+  });
+  const restored = projectFile.parse(text);
+  assert.equal(restored.format, 'qr-microapps-project');
+  assert.equal(restored.version, '0.1');
+  assert.equal(restored.html, item.html);
+  assert.deepEqual(restored.specification, item.spec);
+  assert.deepEqual(restored.settings, { encoding: 'base64', ecc: 'M', moduleScale: 8, quietZone: 6 });
+  assert.deepEqual(restored.preview, { preset: '390x844', width: 390, height: 844 });
+});
+
+test('файл проекта сохраняет редактируемую конфигурацию конструктора теста', () => {
+  const config = simpleBuilder.normalizeConfig({ title: 'Сохранённый тест', theme: 'expressive', qr: { encoding: 'percent', ecc: 'L' } });
+  const built = simpleBuilder.build(config);
+  const restored = projectFile.parse(projectFile.serialize({
+    html: built.html, specification: built.spec,
+    editor: { mode: 'simple', simpleConfig: config }
+  }));
+  assert.equal(restored.editor.mode, 'simple');
+  assert.deepEqual(restored.editor.simpleConfig, config);
+  assert.equal(restored.editor.simpleConfig.theme, 'expressive');
+  assert.deepEqual(restored.editor.simpleConfig.qr, { encoding: 'percent', ecc: 'L' });
+  assert.equal(simpleBuilder.build(restored.editor.simpleConfig).html, restored.html);
+});
+
+test('импорт проекта отклоняет чужой формат, новую версию и слишком большой файл', () => {
+  assert.throws(() => projectFile.parse('{"format":"other","version":"0.1","html":"x","specification":{}}'), /не файл проекта/i);
+  assert.throws(() => projectFile.parse('{"format":"qr-microapps-project","version":"9","html":"x","specification":{}}'), /не поддерживается/i);
+  assert.throws(() => projectFile.parse(' '.repeat(projectFile.MAX_TEXT_LENGTH + 1)), /слишком велик/i);
+  const editorPage = fs.readFileSync(path.join(__dirname, '../qr-microapps-lab.html'), 'utf8');
+  assert.match(editorPage, /editor\/project\.js/);
+  assert.match(editorPage, /id="project-file"/);
+  assert.match(editorPage, /id="download-spec"/);
+  const appSource = fs.readFileSync(path.join(__dirname, '../editor/app.js'), 'utf8');
+  const openProjectSource = appSource.slice(appSource.indexOf('async function openProject'), appSource.indexOf('async function copyDataUrl'));
+  assert.ok(openProjectSource.length > 200);
+  assert.doesNotMatch(openProjectSource, /runPreview\s*\(/, 'импорт не должен автоматически выполнять HTML');
+});
