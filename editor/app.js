@@ -10,6 +10,7 @@
   var sample = window.QRMicroappsSample;
   var $ = function (id) { return document.getElementById(id); };
   var elements = {
+    themeToggle: $('theme-toggle'), themeToggleIcon: $('theme-toggle-icon'), themeToggleLabel: $('theme-toggle-label'),
     source: $('source'), spec: $('spec'), dataUrl: $('data-url'), encoding: $('encoding'), ecc: $('ecc'),
     moduleScale: $('module-scale'), quietZone: $('quiet-zone'), status: $('status'), canvas: $('qr-canvas'),
     placeholder: $('qr-placeholder'), qrZoom: $('qr-zoom'), qrZoomIcon: $('qr-zoom-icon'), htmlBytes: $('html-bytes'), urlBytes: $('url-bytes'),
@@ -52,6 +53,28 @@
     iterations: [], comparisons: [], buildId: 0, mode: 'code', specEditorMode: 'form'
   };
   var simpleBuildTimer = 0;
+
+  function getSavedTheme() {
+    try {
+      var theme = localStorage.getItem('qr-microapps-lab-theme');
+      return theme === 'light' || theme === 'dark' ? theme : 'dark';
+    } catch (error) { return 'dark'; }
+  }
+
+  function saveTheme(theme) {
+    try { localStorage.setItem('qr-microapps-lab-theme', theme); } catch (error) { /* Локальный файл может запрещать хранилище. */ }
+  }
+
+  function applyTheme(theme, save) {
+    var light = theme === 'light';
+    document.documentElement.dataset.theme = light ? 'light' : 'dark';
+    elements.themeToggle.setAttribute('aria-pressed', String(light));
+    elements.themeToggleLabel.textContent = light ? 'Тёмная тема' : 'Светлая тема';
+    elements.themeToggleIcon.textContent = light ? '☾' : '☀';
+    elements.themeToggle.title = light ? 'Включить тёмную тему' : 'Включить светлую тему';
+    elements.themeToggle.setAttribute('aria-label', elements.themeToggle.title);
+    if (save) saveTheme(light ? 'light' : 'dark');
+  }
 
   function setStatus(message, kind) {
     elements.status.textContent = message;
@@ -1403,6 +1426,9 @@
     if (state.mode === 'simple') syncSimpleSource();
     build().then(function () { if (state.html) runPreview(); });
   });
+  elements.themeToggle.addEventListener('click', function () {
+    applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light', true);
+  });
   elements.qrZoom.addEventListener('click', function () { setQrExpanded(!elements.qrZoom.classList.contains('expanded')); });
   window.addEventListener('resize', fitExpandedQr);
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && elements.qrZoom.classList.contains('expanded')) setQrExpanded(false); });
@@ -1457,6 +1483,7 @@
   });
   elements.simpleAddQuestion.addEventListener('click', function () { changeSimpleStructure('add-question', null); });
 
+  applyTheme(getSavedTheme(), false);
   applyPreviewSize();
   renderHistory();
   renderComparison();

@@ -37,7 +37,10 @@ try {
     gameSpecification: document.querySelector('#embedded-game-spec')?.content.querySelector('pre')?.textContent || '',
     difficultyVisible: !document.querySelector('#difficulty-editor')?.hidden,
     difficultyDisabled: document.querySelector('#code-difficulty')?.disabled && document.querySelector('#apply-difficulty')?.disabled,
-    previewDifficulty: document.querySelector('#preview-difficulty')?.textContent || ''
+    previewDifficulty: document.querySelector('#preview-difficulty')?.textContent || '',
+    theme: document.documentElement.dataset.theme,
+    themeLabel: document.querySelector('#theme-toggle-label')?.textContent || '',
+    panelBackground: getComputedStyle(document.querySelector('.panel')).backgroundImage
   }));
 
   assert.equal(result.canvasVisible, true, 'QR-canvas должен быть видим после стартовой проверки.');
@@ -53,6 +56,25 @@ try {
   assert.equal(result.difficultyVisible, true, 'Блок сложности должен быть виден для любого кода.');
   assert.equal(result.difficultyDisabled, false, 'У стартовой игры с $d управление сложностью должно быть активно.');
   assert.equal(result.previewDifficulty, 'Сложность: 3 — средняя');
+  assert.equal(result.theme, 'dark', 'Рабочая сборка должна открываться в тёмной теме по умолчанию.');
+  assert.equal(result.themeLabel, 'Светлая тема');
+
+  await page.click('#theme-toggle');
+  const lightTheme = await page.evaluate(() => ({
+    theme: document.documentElement.dataset.theme,
+    pressed: document.querySelector('#theme-toggle')?.getAttribute('aria-pressed'),
+    label: document.querySelector('#theme-toggle-label')?.textContent || '',
+    panelBackground: getComputedStyle(document.querySelector('.panel')).backgroundImage
+  }));
+  assert.equal(lightTheme.theme, 'light');
+  assert.equal(lightTheme.pressed, 'true');
+  assert.equal(lightTheme.label, 'Тёмная тема');
+  assert.notEqual(lightTheme.panelBackground, result.panelBackground, 'Светлая тема должна менять оформление панелей.');
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => document.querySelector('#roundtrip-title')?.textContent === 'Содержимое восстановлено без изменений', null, { timeout: 30_000 });
+  assert.equal(await page.locator('html').getAttribute('data-theme'), 'light', 'Выбранная тема должна сохраняться после перезагрузки.');
+  await page.click('#theme-toggle');
+  assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
 
   const specificationDownloadPromise = page.waitForEvent('download');
   await page.click('#download-game-spec');
