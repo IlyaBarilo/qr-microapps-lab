@@ -68,11 +68,10 @@ if (!standaloneHtml.includes('id="embedded-game-spec"') || !standaloneHtml.inclu
 if (!standaloneHtml.includes('id="download-game-spec"') || !standaloneHtml.includes('id="copy-game-spec"')) errors.push('В интерфейсе отсутствуют действия со спецификацией создания игр.');
 if ((standaloneHtml.match(/__APP_VERSION__/g) || []).length !== 1) errors.push('Автономный HTML должен содержать ровно одну релизную метку версии.');
 if (standaloneHtml.includes('__LOCAL_VERSION__')) errors.push('В автономном HTML осталась несобранная локальная метка версии.');
-if ((standaloneHtml.match(/data-app-version/g) || []).length < 2) errors.push('Версия программы не отображается в заголовке и подвале.');
+if ((standaloneHtml.match(/data-app-version>/g) || []).length !== 2) errors.push('Для версии программы должны быть подготовлены места в заголовке и подвале.');
+if ((standaloneHtml.match(/data-app-version-wrap hidden/g) || []).length !== 2) errors.push('В рабочей сборке номер версии должен быть скрыт.');
 try {
-  const packageVersion = JSON.parse(read('tests/package.json')).version;
-  const expectedLocalVersion = formatPackageVersion(packageVersion);
-  if (!standaloneHtml.includes(`data-app-version>${expectedLocalVersion}</span>`)) errors.push('Локальная сборка показывает версию, не совпадающую с tests/package.json.');
+  if (formatPackageVersion('0.1.0') !== 'v0.1' || formatPackageVersion('0.1.2') !== 'v0.1.2') errors.push('Форматирование номера релиза работает неверно.');
   const injected = injectAppVersion(standaloneHtml, 'v9.8.7');
   if (!injected.includes("var version = 'v9.8.7'")) errors.push('Инструмент не подставляет номер версии в автономный HTML.');
   if (injected.includes('__APP_VERSION__')) errors.push('После подстановки в HTML осталась релизная метка версии.');

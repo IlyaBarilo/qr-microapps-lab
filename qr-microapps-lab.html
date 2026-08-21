@@ -585,7 +585,7 @@ Base64-упаковки QR Microapps Lab. Решение о M или L прин�
 <body>
   <header class="topbar">
     <div>
-      <p class="eyebrow">QR MICROAPPS LAB · <span data-app-version>v0.1</span></p>
+      <p class="eyebrow">QR MICROAPPS LAB<span data-app-version-wrap hidden> · <span data-app-version></span></span></p>
       <h1>Проверка и упаковка автономных HTML-микроприложений</h1>
       <p class="lead">HTML → автоматическая проверка → QR-код → обратное декодирование</p>
     </div>
@@ -898,14 +898,16 @@ Base64-упаковки QR Microapps Lab. Решение о M или L прин�
     </section>
   </main>
 
-  <footer><span>QR Microapps Lab · версия <span data-app-version>v0.1</span></span><span>QR — один из способов упаковки, а не гарантия запуска штатной камерой любого телефона.</span></footer>
+  <footer><span>QR Microapps Lab<span data-app-version-wrap hidden> · версия <span data-app-version></span></span></span><span>QR — один из способов упаковки, а не гарантия запуска штатной камерой любого телефона.</span></footer>
 
   <script>
     (function () {
       var version = '__APP_VERSION__';
-      if (!/^v\d+\.\d+(?:\.\d+)?(?:-[0-9A-Za-z.-]+)?$/.test(version)) version = 'v0.1';
+      if (!/^v\d+\.\d+(?:\.\d+)?(?:-[0-9A-Za-z.-]+)?$/.test(version)) return;
       var nodes = document.querySelectorAll('[data-app-version]');
       for (var i = 0; i < nodes.length; i++) nodes[i].textContent = version;
+      var wrappers = document.querySelectorAll('[data-app-version-wrap]');
+      for (var j = 0; j < wrappers.length; j++) wrappers[j].hidden = false;
     })();
   </script>
 

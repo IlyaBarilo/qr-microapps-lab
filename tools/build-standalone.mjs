@@ -34,14 +34,6 @@ function gameSpecificationBlock() {
   return `  <template id="embedded-game-spec" data-purpose="game-creation-specification"><pre>${escapeHtmlText(markdown)}</pre></template>\n`;
 }
 
-function localDisplayVersion() {
-  const packageData = JSON.parse(read('tests/package.json'));
-  const match = /^(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z.-]+)?$/.exec(String(packageData.version || ''));
-  if (!match) throw new Error('Некорректная версия в tests/package.json. Ожидается формат 0.1.0 или 0.1.2-beta.1.');
-  const patch = match[3] === '0' ? '' : `.${match[3]}`;
-  return `v${match[1]}.${match[2]}${patch}${match[4] || ''}`;
-}
-
 function build() {
   let html = readFileSync(sourcePath, 'utf8').replace(/^\uFEFF/, '');
   const stylesheetPattern = /  <link rel="stylesheet" href="editor\/styles\.css">/;
@@ -65,11 +57,8 @@ function build() {
   });
   if (scriptsInlined !== 10) throw new Error(`Ожидалось 10 локальных скриптов, встроено: ${scriptsInlined}.`);
 
-  const localVersionTokens = html.match(/__LOCAL_VERSION__/g) || [];
   const releaseVersionTokens = html.match(/__APP_VERSION__/g) || [];
-  if (!localVersionTokens.length) throw new Error('В исходном HTML отсутствует локальная метка версии.');
   if (releaseVersionTokens.length !== 1) throw new Error(`Ожидалась одна релизная метка версии, найдено: ${releaseVersionTokens.length}.`);
-  html = html.replaceAll('__LOCAL_VERSION__', localDisplayVersion());
 
   html = html.replace('</head>', () => `${licenseBlock()}${gameSpecificationBlock()}</head>`);
   if (/<script\b[^>]*\bsrc=/i.test(html) || /<link\b[^>]*\brel="stylesheet"/i.test(html)) {
