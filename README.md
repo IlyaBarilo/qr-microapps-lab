@@ -4,12 +4,15 @@
 
 Автор: **Илья Барило (Ilya Barilo)**.
 
-[![Открыть QR Microapps Lab](https://img.shields.io/badge/демо-открыть-2ea44f?style=for-the-badge)](https://ilyabarilo.github.io/qr-microapps-lab/)
-
-[![Последний релиз](https://img.shields.io/github/v/release/IlyaBarilo/qr-microapps-lab?display_name=tag&label=релиз&color=blue)](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest)
-[![Лицензия MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![CI](https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/ci.yml)
-[![GitHub Pages](https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/pages.yml/badge.svg)](https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/pages.yml)
+<p align="center">
+  <a href="https://ilyabarilo.github.io/qr-microapps-lab/"><img src="https://img.shields.io/badge/демо-открыть-2ea44f?style=for-the-badge" alt="Открыть QR Microapps Lab"></a>
+</p>
+<p align="center">
+  <a href="https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest"><img src="https://img.shields.io/github/v/release/IlyaBarilo/qr-microapps-lab?display_name=tag&amp;label=релиз&amp;color=blue&amp;style=for-the-badge" alt="Последний релиз"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="Лицензия MIT"></a>
+  <a href="https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/IlyaBarilo/qr-microapps-lab/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI" alt="Статус автоматических проверок"></a>
+  <a href="https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/pages.yml"><img src="https://img.shields.io/github/actions/workflow/status/IlyaBarilo/qr-microapps-lab/pages.yml?branch=main&amp;style=for-the-badge&amp;label=pages" alt="Статус GitHub Pages"></a>
+</p>
 
 [Открыть онлайн](https://ilyabarilo.github.io/qr-microapps-lab/) · [Скачать автономный HTML](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest/download/qr-microapps-lab.html) · [Последний релиз](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest) · [Спецификация игр](spec_game_creation_ru.md)
 
