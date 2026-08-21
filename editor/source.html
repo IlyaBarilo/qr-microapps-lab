@@ -61,6 +61,37 @@
         <button id="mode-code" class="mode-button active" type="button" aria-pressed="true">HTML и проверки</button>
       </div>
 
+      <section id="qr-import-analysis" class="qr-import-analysis" aria-labelledby="qr-import-analysis-title" hidden>
+        <div class="qr-import-analysis-head">
+          <div><p class="step">АНАЛИЗ ИЗОБРАЖЕНИЯ</p><h3 id="qr-import-analysis-title">Профиль загруженного QR</h3><p id="qr-import-file" class="qr-import-file"></p></div>
+          <span class="badge good">Декодирован jsQR</span>
+        </div>
+        <p class="qr-analysis-intro">Параметры извлечены из изображения и матрицы. Они помогают подготовить сравнительный QR, но не гарантируют распознавание конкретным телефоном.</p>
+        <div class="metric-grid qr-analysis-grid">
+          <div class="metric"><span>Версия QR</span><strong id="imported-qr-version">—</strong></div>
+          <div class="metric"><span>Матрица</span><strong id="imported-qr-matrix">—</strong></div>
+          <div class="metric"><span>Коррекция</span><strong id="imported-qr-ecc">—</strong></div>
+          <div class="metric"><span>Маска</span><strong id="imported-qr-mask">—</strong></div>
+          <div class="metric"><span>Нагрузка</span><strong id="imported-qr-payload">—</strong></div>
+          <div class="metric"><span>Режимы данных</span><strong id="imported-qr-modes">—</strong></div>
+          <div class="metric"><span>Изображение</span><strong id="imported-qr-image">—</strong></div>
+          <div class="metric"><span>Размер модуля</span><strong id="imported-qr-module">—</strong></div>
+          <div class="metric"><span>Поле до края</span><strong id="imported-qr-margin">—</strong></div>
+          <div class="metric"><span>Перспектива</span><strong id="imported-qr-perspective">—</strong></div>
+          <div class="metric"><span>Контраст</span><strong id="imported-qr-contrast">—</strong></div>
+          <div class="metric"><span>Тип содержимого</span><strong id="imported-qr-type">—</strong></div>
+        </div>
+        <div class="qr-analysis-observations"><strong>Факторы распознавания</strong><ul id="imported-qr-observations"></ul></div>
+        <div class="qr-analysis-actions">
+          <button id="apply-imported-qr" class="button subtle small" type="button">Применить параметры к генерации</button>
+          <button id="close-imported-qr" class="button subtle small" type="button">Скрыть анализ</button>
+        </div>
+        <details class="payload-details qr-analysis-payload">
+          <summary><span>Декодированное содержимое</span><span class="summary-hint">показать</span></summary>
+          <textarea id="imported-qr-data" class="code qr-analysis-data" readonly></textarea>
+        </details>
+      </section>
+
       <section id="simple-editor" class="simple-editor" aria-labelledby="simple-title-label" hidden>
         <div class="simple-intro">
           <div class="simple-intro-copy">
@@ -174,9 +205,10 @@
         <input id="encoding" type="hidden" value="base64">
         <input id="ecc" type="hidden" value="M">
         <div class="settings" aria-label="Параметры упаковки">
-          <label>Пикселей на модуль<select id="module-scale"><option value="4">4</option><option value="6" selected>6</option><option value="8">8</option><option value="10">10</option></select></label>
-          <label>Белая рамка, модулей<input id="quiet-zone" type="number" min="4" max="16" value="4"></label>
+          <label>Пикселей на модуль<input id="module-scale" type="number" min="1" max="20" value="6"></label>
+          <label>Белая рамка, модулей<input id="quiet-zone" type="number" min="0" max="16" value="4"></label>
         </div>
+        <div id="qr-emulation-note" class="qr-emulation-note" hidden><p id="qr-emulation-text"></p><button id="clear-qr-emulation" class="button subtle small" type="button">Вернуть автоматический режим</button></div>
       </details>
 
       <div class="qr-action-row">
@@ -201,7 +233,7 @@
 
         <div class="metrics-column">
           <div id="qr-correction-card" class="correction-card">
-            <div><span>Автокоррекция QR</span><strong id="qr-correction-value">—</strong></div>
+            <div><span id="qr-correction-label">Автокоррекция QR</span><strong id="qr-correction-value">—</strong></div>
             <p id="qr-correction-note">Уровень будет выбран после расчёта нагрузки.</p>
           </div>
           <div class="limit-metrics">
@@ -216,6 +248,7 @@
               <div class="metric"><span>Data URL</span><strong id="url-bytes">0 Б</strong></div>
               <div class="metric"><span>Версия QR</span><strong id="qr-version">—</strong></div>
               <div class="metric"><span>Матрица</span><strong id="qr-matrix">—</strong></div>
+              <div class="metric"><span>Маска</span><strong id="qr-mask">—</strong></div>
               <div class="metric checksum-metric"><span>Контрольная сумма</span><strong id="checksum">—</strong></div>
             </div>
           </details>

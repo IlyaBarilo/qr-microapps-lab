@@ -59,6 +59,25 @@ try {
   assert.equal(result.theme, 'dark', 'Рабочая сборка должна открываться в тёмной теме по умолчанию.');
   assert.equal(result.themeLabel, 'Светлая тема');
 
+  const decodedCorrectionLevels = await page.evaluate(() => ['L', 'M', 'Q', 'H'].map((level) => {
+    const holder = document.createElement('div');
+    document.body.appendChild(holder);
+    const instance = new QRCode(holder, {
+      text: 'QR LEVEL ' + level,
+      width: 256,
+      height: 256,
+      correctLevel: QRCode.CorrectLevel[level]
+    });
+    const canvas = holder.querySelector('canvas');
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    const decoded = jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'dontInvert' });
+    holder.remove();
+    return { expected: level, actual: decoded?.errorCorrectionLevel, mask: decoded?.dataMask };
+  }));
+  assert.deepEqual(decodedCorrectionLevels.map((item) => item.actual), ['L', 'M', 'Q', 'H']);
+  decodedCorrectionLevels.forEach((item) => assert.ok(Number.isInteger(item.mask) && item.mask >= 0 && item.mask <= 7));
+
   await page.click('#theme-toggle');
   const lightTheme = await page.evaluate(() => ({
     theme: document.documentElement.dataset.theme,
@@ -90,10 +109,23 @@ try {
   await page.locator('#qr-image-file').setInputFiles({ name: 'microapp-qr.png', mimeType: 'image/png', buffer: generatedQr });
   await page.waitForFunction(() => document.querySelector('#status')?.textContent.includes('QR-изображение декодировано'), null, { timeout: 30_000 });
   assert.match(await page.locator('#source').inputValue(), /РАЗБЕЙ БЛОКИ/, 'Загруженное QR-изображение должно декодироваться обратно в HTML-код.');
+  assert.equal(await page.locator('#qr-import-analysis').isVisible(), true, 'После загрузки должен показываться профиль QR.');
+  assert.equal(await page.locator('#imported-qr-ecc').textContent(), 'M');
+  assert.match(await page.locator('#imported-qr-mask').textContent(), /^[0-7]$/);
+  assert.match(await page.locator('#imported-qr-matrix').textContent(), /^\d+×\d+$/);
+  assert.match(await page.locator('#imported-qr-module').textContent(), /^≈\d/);
+  assert.match(await page.locator('#imported-qr-margin').textContent(), /мод\./);
+  assert.match(await page.locator('#imported-qr-modes').textContent(), /байты/);
+  assert.equal(await page.locator('#imported-qr-type').textContent(), 'HTML в data URL');
+  await page.click('#apply-imported-qr');
+  assert.equal(await page.locator('#qr-emulation-note').isVisible(), true);
 
   await page.click('#build');
-  await page.waitForTimeout(800);
+  await page.waitForFunction(() => document.querySelector('#qr-correction-label')?.textContent === 'Имитация параметров', null, { timeout: 30_000 });
+  assert.match(await page.locator('#qr-correction-note').textContent(), /из загруженного QR/);
   assert.equal(await page.locator('#validation-summary').textContent(), result.validationSummary, 'Повторная генерация не должна менять число проверок.');
+  await page.click('#clear-qr-emulation');
+  assert.equal(await page.locator('#qr-emulation-note').isVisible(), false);
   assert.deepEqual(networkRequests, [], 'Автономный HTML не должен выполнять HTTP/HTTPS-запросы.');
   assert.deepEqual(pageErrors, [], 'Автономный HTML не должен создавать ошибки страницы.');
   assert.deepEqual(consoleErrors, [], 'Автономный HTML не должен создавать ошибки консоли.');

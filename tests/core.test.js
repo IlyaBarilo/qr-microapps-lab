@@ -59,6 +59,66 @@ test('полноэкранный QR масштабируется целым чи
   });
 });
 
+test('профиль загруженного QR описывает формат, геометрию и параметры имитации', () => {
+  const html = '<!doctype html><p>QR</p>';
+  const data = core.makeDataUrl(html, 'base64');
+  const profile = core.analyzeQrImage({
+    data,
+    binaryData: new Uint8ClampedArray(120),
+    chunks: [{ type: 'byte', text: data }],
+    version: 1,
+    errorCorrectionLevel: 'Q',
+    dataMask: 5,
+    location: {
+      topLeftCorner: { x: 20, y: 20 },
+      topRightCorner: { x: 125, y: 20 },
+      bottomRightCorner: { x: 125, y: 125 },
+      bottomLeftCorner: { x: 20, y: 125 }
+    }
+  }, {
+    fileName: 'foreign-qr.png', fileType: 'image/png', fileSize: 2048,
+    width: 290, height: 290, decodeWidth: 145, decodeHeight: 145, decodeScale: 0.5, inverted: false
+  });
+
+  assert.equal(profile.payload.kind, 'html-data-url');
+  assert.equal(profile.payload.isHtml, true);
+  assert.equal(profile.version, 1);
+  assert.equal(profile.modules, 21);
+  assert.equal(profile.ecc, 'Q');
+  assert.equal(profile.mask, 5);
+  assert.equal(profile.payloadBytes, 120);
+  assert.deepEqual(profile.chunkModes, ['byte']);
+  assert.equal(profile.geometry.modulePixels, 10);
+  assert.equal(profile.geometry.marginPixels, 40);
+  assert.equal(profile.geometry.marginModules, 4);
+  assert.equal(profile.geometry.perspectivePercent, 0);
+  assert.deepEqual(profile.emulation, { ecc: 'Q', moduleScale: 10, quietZone: 4 });
+  assert.ok(profile.observations.some((item) => /не меньше 4 модулей/.test(item.text)));
+});
+
+test('классификация QR-нагрузки отделяет HTML от обычных ссылок и текста', () => {
+  assert.equal(core.classifyQrPayload('<!doctype html><p>OK</p>').isHtml, true);
+  assert.equal(core.classifyQrPayload('https://example.org/').kind, 'url');
+  assert.equal(core.classifyQrPayload('обычный текст').kind, 'text');
+  assert.equal(core.classifyQrPayload('data:text/plain,hello').isHtml, false);
+});
+
+test('округление измерений не создаёт ложное предупреждение на границе четырёх модулей', () => {
+  const profile = core.analyzeQrImage({
+    data: 'test', version: 39, errorCorrectionLevel: 'L', dataMask: 3,
+    location: {
+      topLeftCorner: { x: 24, y: 24 },
+      topRightCorner: { x: 1062.0001, y: 24 },
+      bottomRightCorner: { x: 1062.0001, y: 1062.0001 },
+      bottomLeftCorner: { x: 24, y: 1062.0001 }
+    }
+  }, { width: 1086, height: 1086, decodeWidth: 1086, decodeHeight: 1086, decodeScale: 1 });
+
+  assert.equal(Math.round(profile.geometry.marginModules * 10) / 10, 4);
+  assert.equal(profile.observations.some((item) => /меньше рекомендуемых 4 модулей/.test(item.text)), false);
+  assert.equal(profile.observations.some((item) => /не меньше 4 модулей/.test(item.text)), true);
+});
+
 test('расчёт сокращения показывает точный объём HTML для возврата к M при Base64', () => {
   const prefixBytes = core.byteLength(core.makeDataUrl('', 'base64'));
   const maxHtmlBytes = Math.floor((core.getQrLimit('M') - prefixBytes) / 4) * 3;
@@ -696,6 +756,10 @@ test('упрощённый конструктор создаёт валидны�
   assert.match(editorPage, /class="qr-column"[\s\S]*id="qr-zoom"[\s\S]*class="download-actions"[\s\S]*class="metrics-column"[\s\S]*id="qr-correction-card"[\s\S]*class="limit-metrics"[\s\S]*id="qr-reserve"[\s\S]*id="qr-l-reserve"/);
   assert.doesNotMatch(editorPage, /id="qr-limit-note"/);
   assert.match(editorPage, /<details class="metric-details">[\s\S]*id="html-bytes"[\s\S]*class="metric checksum-metric"[\s\S]*id="checksum"/);
+  assert.match(editorPage, /id="qr-import-analysis"[\s\S]*id="imported-qr-ecc"[\s\S]*id="imported-qr-mask"[\s\S]*id="apply-imported-qr"/);
+  assert.match(editorPage, /id="module-scale" type="number" min="1" max="20"[\s\S]*id="quiet-zone" type="number" min="0" max="16"/);
+  assert.match(editorPage, /id="qr-emulation-note"[\s\S]*id="clear-qr-emulation"/);
+  assert.match(editorPage, /id="qr-mask"/);
   assert.match(editorPage, /<details class="payload-details">[\s\S]*id="data-url"/);
   assert.match(editorPage, /id="qr-open-help"[^>]*hidden[\s\S]*можно выбрать «Поиск»[\s\S]*Открыть как сайт/);
   assert.doesNotMatch(editorPage, /Для проверки автономности повторите запуск в авиарежиме/);
@@ -749,6 +813,12 @@ test('упрощённый конструктор создаёт валидны�
   assert.match(editorApp, /html = core\.optimizeHtml\(currentHtml\(\)\)\.html/);
   assert.match(editorApp, /elements\.qrOpenHelp\.hidden = true/);
   assert.match(editorApp, /elements\.qrOpenHelp\.hidden = !exact/);
+  assert.match(editorApp, /core\.analyzeQrImage\(decoded/);
+  assert.match(editorApp, /inversionAttempts: 'onlyInvert'/);
+  assert.match(editorApp, /var importedEccFits = !!requestedEcc/);
+  const jsQrSource = fs.readFileSync(path.join(__dirname, '../editor/vendor/jsQR.js'), 'utf8');
+  assert.match(jsQrSource, /decoded\.errorCorrectionLevel = \["L", "M", "Q", "H"\]/);
+  assert.match(jsQrSource, /dataMask: decoded\.dataMask/);
   assert.deepEqual(core.validateSpec(built.spec), []);
   assert.equal(built.spec.interface.noVerticalScroll, true);
   assert.ok(core.byteLength(url) <= core.getQrLimit(built.spec.qr.ecc));
@@ -1002,6 +1072,11 @@ test('файл проекта сохраняет HTML, спецификацию 
   assert.deepEqual(restored.specification, item.spec);
   assert.deepEqual(restored.settings, { encoding: 'base64', ecc: 'M', moduleScale: 8, quietZone: 6 });
   assert.deepEqual(restored.preview, { preset: '390x844', width: 390, height: 844 });
+  const emulationSettings = projectFile.create({
+    html: item.html, specification: item.spec,
+    settings: { encoding: 'base64', ecc: 'Q', moduleScale: 1, quietZone: 0 }
+  }).settings;
+  assert.deepEqual(emulationSettings, { encoding: 'base64', ecc: 'Q', moduleScale: 1, quietZone: 0 });
 });
 
 test('файл проекта сохраняет редактируемую конфигурацию конструктора теста', () => {

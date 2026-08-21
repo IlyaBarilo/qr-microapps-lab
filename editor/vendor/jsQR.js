@@ -343,6 +343,8 @@ function scan(matrix) {
                 data: decoded.text,
                 chunks: decoded.chunks,
                 version: decoded.version,
+                errorCorrectionLevel: decoded.errorCorrectionLevel,
+                dataMask: decoded.dataMask,
                 location: {
                     topRightCorner: extracted.mappingFunction(location_1.dimension, 0),
                     topLeftCorner: extracted.mappingFunction(0, 0),
@@ -788,7 +790,11 @@ function decodeMatrix(matrix) {
         }
     }
     try {
-        return decodeData_1.decode(resultBytes, version.versionNumber);
+        var decoded = decodeData_1.decode(resultBytes, version.versionNumber);
+        // QR Microapps Lab exposes format metadata already read by jsQR for local analysis.
+        decoded.errorCorrectionLevel = ["L", "M", "Q", "H"][formatInfo.errorCorrectionLevel] || null;
+        decoded.dataMask = formatInfo.dataMask;
+        return decoded;
     }
     catch (_a) {
         return null;

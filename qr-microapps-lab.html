@@ -45,7 +45,10 @@
 .input-panel{font-size:15px}.input-panel .step{font-size:12px}.input-panel .field-label,.input-panel .simple-field,.input-panel .simple-question label,.input-panel .simple-colors label,.input-panel .spec-grid label,.input-panel .spec-edit-list label{font-size:12px}.input-panel .simple-intro p,.input-panel .summary-hint,.input-panel .text-action,.input-panel .simple-question-head strong{font-size:13px}.input-panel .action-group-label,.input-panel .example-select-field,.input-panel .spec-list-head small,.input-panel .spec-list-empty{font-size:11px}.input-panel .simple-estimate,.input-panel .simple-list-actions span{font-size:12px}
 .optimization-summary{margin:0 12px 10px;border:1px solid #2b665e;border-radius:12px;padding:10px 11px;background:rgba(27,91,79,.18)}.optimization-summary>div{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.optimization-summary span{color:#cfe2e9;font-size:11px;font-weight:800}.optimization-summary strong{color:var(--accent);font-size:13px;text-align:right}.optimization-summary p{margin:4px 0 0;color:var(--muted);font-size:10px}.optimization-summary.unchanged{border-color:var(--line);background:#0a1d27}.optimization-summary.unchanged strong{color:var(--muted)}
 .qr-controls{padding:0}.qr-controls>summary{margin-bottom:0;padding:13px;cursor:pointer;list-style:none}.qr-controls>summary::-webkit-details-marker{display:none}.qr-controls>summary:after{content:"＋";flex:0 0 auto;color:var(--accent);font-size:17px;line-height:1}.qr-controls[open]>summary:after{content:"−"}.qr-controls .qr-controls-title{margin-right:auto;color:var(--text);font-size:15px;font-weight:800}.qr-controls .settings{margin:0;padding:0 13px 13px}.output-panel>.qr-action-row{margin:0 0 16px}.output-panel .result-grid{grid-template-columns:minmax(180px,240px) minmax(0,1fr);align-items:start;gap:14px}.output-panel .qr-stage:not(.expanded){width:100%;max-width:240px;margin:0 auto}.output-panel .download-actions{display:grid;grid-template-columns:1fr;margin:10px 0}.output-panel .download-actions .button{width:100%}.key-metric{border-color:#2b665e;background:rgba(27,91,79,.18)}.key-metric strong{color:var(--accent);font-size:22px}.metric-details,.payload-details{margin:10px 0 13px;border:1px solid var(--line);border-radius:14px;background:#071923}.metric-details>summary,.payload-details>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;cursor:pointer;list-style:none;font-weight:800}.metric-details>summary::-webkit-details-marker,.payload-details>summary::-webkit-details-marker{display:none}.metric-details[open]>summary .summary-hint,.payload-details[open]>summary .summary-hint{font-size:0}.metric-details[open]>summary .summary-hint:after,.payload-details[open]>summary .summary-hint:after{content:"скрыть";font-size:12px}.metric-details .metric-grid{padding:0 12px 12px}.payload-details .field-label{padding:0 12px}.payload-details .data-url{width:calc(100% - 24px);margin:0 12px 12px}.output-panel .roundtrip-card{margin-top:10px}
+.qr-import-analysis{margin:14px 0 16px;border:1px solid #2b665e;border-radius:16px;padding:14px;background:rgba(27,91,79,.13)}.qr-import-analysis-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.qr-import-analysis-head h3{margin:0}.qr-import-file,.qr-analysis-intro{margin:4px 0 0;color:var(--muted);font-size:12px;overflow-wrap:anywhere}.qr-analysis-intro{margin:10px 0}.qr-analysis-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.qr-analysis-grid .metric strong{font-size:15px;white-space:normal;overflow-wrap:anywhere}.qr-analysis-observations{margin-top:10px;border:1px solid var(--line);border-radius:13px;padding:11px;background:#0a1d27}.qr-analysis-observations>strong{font-size:12px}.qr-analysis-observations ul{display:grid;gap:5px;margin:7px 0 0;padding:0;list-style:none}.qr-analysis-observations li{color:var(--muted);font-size:12px}.qr-analysis-observations li:before{content:"•";margin-right:7px;color:var(--accent2)}.qr-analysis-observations li.good:before{color:var(--accent)}.qr-analysis-observations li.warn{color:var(--warning)}.qr-analysis-observations li.warn:before{color:var(--warning)}.qr-analysis-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.qr-analysis-payload{margin-bottom:0}.qr-analysis-data{width:calc(100% - 24px);min-height:84px;margin:0 12px 12px}.qr-emulation-note{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 13px 13px;border:1px solid #765e2d;border-radius:12px;padding:10px;background:rgba(118,94,45,.15)}.qr-emulation-note p{margin:0;color:var(--warning);font-size:12px}.qr-emulation-note .button{flex:0 0 auto}
 @media(max-width:720px){.qr-controls .qr-controls-head{align-items:center;flex-direction:row}.qr-controls-head>span:not(.qr-controls-title){display:none}.output-panel .result-grid{grid-template-columns:1fr}.output-panel .qr-stage:not(.expanded){max-width:240px}.output-panel .download-actions{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:720px){.qr-analysis-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.qr-emulation-note{align-items:stretch;flex-direction:column}.qr-emulation-note .button{width:100%}}
+@media(max-width:430px){.qr-import-analysis-head{align-items:flex-start;flex-direction:column}.qr-analysis-grid{grid-template-columns:1fr}.qr-analysis-actions .button{width:100%}}
 @media(max-width:500px){.output-panel .download-actions{grid-template-columns:1fr}}
 .validation-inline{margin:0 0 16px;border:1px solid var(--line);border-radius:14px;background:#071923}.validation-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px}.validation-title{order:0;flex:0 0 auto;color:var(--accent);font-size:10px;letter-spacing:.1em}.validation-inline .validation-summary{order:1;display:flex;flex:0 1 auto;gap:6px;margin:0}.validation-inline .validation-summary .badge{min-height:25px;padding:3px 8px}.validation-remarks{order:3;flex:1 0 100%;margin:0;font-size:11px;font-weight:700}.validation-remarks-line{display:block}.validation-remarks-line.warn{color:var(--warning)}.validation-remarks-line.fail{color:var(--danger)}.validation-remarks-line+.validation-remarks-line{margin-top:3px}.validation-toolbar .button{flex:0 0 auto;margin-left:auto}.validation-details{border-top:1px solid var(--line);padding:12px}.validation-details-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}.validation-details-head h3{margin:0}.validation-inline .validation-list{grid-template-columns:1fr;max-height:48vh;overflow:auto;padding-right:3px}.validation-inline .report-note{margin-top:10px}
 .preview-difficulty{margin-top:7px;min-height:25px;padding:3px 8px;white-space:nowrap}
@@ -80,7 +83,7 @@
 :root[data-theme=light] .field-label,:root[data-theme=light] .runtime-log li,:root[data-theme=light] .size-row,:root[data-theme=light] .optimization-summary span,:root[data-theme=light] .check-option,:root[data-theme=light] .qr-open-help p{color:#2f515c}
 :root[data-theme=light] .spec-box{background:rgba(226,238,241,.6)}
 :root[data-theme=light] .metric,:root[data-theme=light] .roundtrip-card,:root[data-theme=light] .runtime-box,:root[data-theme=light] .check,:root[data-theme=light] .difficulty-editor.unavailable,:root[data-theme=light] .example-picker,:root[data-theme=light] .simple-colors label,:root[data-theme=light] .simple-question,:root[data-theme=light] .simple-estimate,:root[data-theme=light] .iteration-card,:root[data-theme=light] .comparison-card,:root[data-theme=light] .spec-fieldset,:root[data-theme=light] .correction-card,:root[data-theme=light] .fallback-metric,:root[data-theme=light] .optimization-summary.unchanged{background:#f5f9fa}
-:root[data-theme=light] .mode-switch,:root[data-theme=light] .spec-mode-switch,:root[data-theme=light] .size-analysis,:root[data-theme=light] .iteration-metric,:root[data-theme=light] .comparison-metric,:root[data-theme=light] .metric-details,:root[data-theme=light] .payload-details,:root[data-theme=light] .validation-inline,:root[data-theme=light] .simple-question-head button,:root[data-theme=light] .simple-answer-row>button{background:#edf4f6}
+:root[data-theme=light] .mode-switch,:root[data-theme=light] .spec-mode-switch,:root[data-theme=light] .size-analysis,:root[data-theme=light] .iteration-metric,:root[data-theme=light] .comparison-metric,:root[data-theme=light] .metric-details,:root[data-theme=light] .payload-details,:root[data-theme=light] .validation-inline,:root[data-theme=light] .simple-question-head button,:root[data-theme=light] .simple-answer-row>button,:root[data-theme=light] .qr-analysis-observations{background:#edf4f6}
 :root[data-theme=light] .check-icon,:root[data-theme=light] .roundtrip-icon,:root[data-theme=light] .qr-open-help-icon,:root[data-theme=light] .comparison-rank{background:#d9ecef}
 :root[data-theme=light] .size-track{background:#d3e2e6}
 :root[data-theme=light] .optimization-hint{background:#eaf3f6}
@@ -89,7 +92,8 @@
 :root[data-theme=light] .runtime-log .error-item{color:var(--danger)}:root[data-theme=light] .runtime-log .warn-item{color:var(--warning)}:root[data-theme=light] .runtime-log .good-item{color:var(--accent)}
 :root[data-theme=light] .roundtrip-card.good,:root[data-theme=light] .correction-card.good,:root[data-theme=light] .key-metric{background:#e8f6f2}
 :root[data-theme=light] .roundtrip-card.fail,:root[data-theme=light] .correction-card.danger{background:#fff0f1}
-:root[data-theme=light] .correction-card.warning,:root[data-theme=light] .key-metric.low-ecc,:root[data-theme=light] .fallback-metric.recovery{background:#fff7df}
+:root[data-theme=light] .correction-card.warning,:root[data-theme=light] .key-metric.low-ecc,:root[data-theme=light] .fallback-metric.recovery,:root[data-theme=light] .qr-emulation-note{background:#fff7df}
+:root[data-theme=light] .qr-import-analysis{background:#eef9f6}
 :root[data-theme=light] .source-head .project-actions,:root[data-theme=light] .source-head .game-spec-actions{border-top-color:rgba(135,164,173,.55)}
 :root[data-theme=light] footer{color:#607b85}
   </style>
@@ -667,6 +671,37 @@ Base64-упаковки QR Microapps Lab. Решение о M или L прин�
         <button id="mode-code" class="mode-button active" type="button" aria-pressed="true">HTML и проверки</button>
       </div>
 
+      <section id="qr-import-analysis" class="qr-import-analysis" aria-labelledby="qr-import-analysis-title" hidden>
+        <div class="qr-import-analysis-head">
+          <div><p class="step">АНАЛИЗ ИЗОБРАЖЕНИЯ</p><h3 id="qr-import-analysis-title">Профиль загруженного QR</h3><p id="qr-import-file" class="qr-import-file"></p></div>
+          <span class="badge good">Декодирован jsQR</span>
+        </div>
+        <p class="qr-analysis-intro">Параметры извлечены из изображения и матрицы. Они помогают подготовить сравнительный QR, но не гарантируют распознавание конкретным телефоном.</p>
+        <div class="metric-grid qr-analysis-grid">
+          <div class="metric"><span>Версия QR</span><strong id="imported-qr-version">—</strong></div>
+          <div class="metric"><span>Матрица</span><strong id="imported-qr-matrix">—</strong></div>
+          <div class="metric"><span>Коррекция</span><strong id="imported-qr-ecc">—</strong></div>
+          <div class="metric"><span>Маска</span><strong id="imported-qr-mask">—</strong></div>
+          <div class="metric"><span>Нагрузка</span><strong id="imported-qr-payload">—</strong></div>
+          <div class="metric"><span>Режимы данных</span><strong id="imported-qr-modes">—</strong></div>
+          <div class="metric"><span>Изображение</span><strong id="imported-qr-image">—</strong></div>
+          <div class="metric"><span>Размер модуля</span><strong id="imported-qr-module">—</strong></div>
+          <div class="metric"><span>Поле до края</span><strong id="imported-qr-margin">—</strong></div>
+          <div class="metric"><span>Перспектива</span><strong id="imported-qr-perspective">—</strong></div>
+          <div class="metric"><span>Контраст</span><strong id="imported-qr-contrast">—</strong></div>
+          <div class="metric"><span>Тип содержимого</span><strong id="imported-qr-type">—</strong></div>
+        </div>
+        <div class="qr-analysis-observations"><strong>Факторы распознавания</strong><ul id="imported-qr-observations"></ul></div>
+        <div class="qr-analysis-actions">
+          <button id="apply-imported-qr" class="button subtle small" type="button">Применить параметры к генерации</button>
+          <button id="close-imported-qr" class="button subtle small" type="button">Скрыть анализ</button>
+        </div>
+        <details class="payload-details qr-analysis-payload">
+          <summary><span>Декодированное содержимое</span><span class="summary-hint">показать</span></summary>
+          <textarea id="imported-qr-data" class="code qr-analysis-data" readonly></textarea>
+        </details>
+      </section>
+
       <section id="simple-editor" class="simple-editor" aria-labelledby="simple-title-label" hidden>
         <div class="simple-intro">
           <div class="simple-intro-copy">
@@ -780,9 +815,10 @@ Base64-упаковки QR Microapps Lab. Решение о M или L прин�
         <input id="encoding" type="hidden" value="base64">
         <input id="ecc" type="hidden" value="M">
         <div class="settings" aria-label="Параметры упаковки">
-          <label>Пикселей на модуль<select id="module-scale"><option value="4">4</option><option value="6" selected>6</option><option value="8">8</option><option value="10">10</option></select></label>
-          <label>Белая рамка, модулей<input id="quiet-zone" type="number" min="4" max="16" value="4"></label>
+          <label>Пикселей на модуль<input id="module-scale" type="number" min="1" max="20" value="6"></label>
+          <label>Белая рамка, модулей<input id="quiet-zone" type="number" min="0" max="16" value="4"></label>
         </div>
+        <div id="qr-emulation-note" class="qr-emulation-note" hidden><p id="qr-emulation-text"></p><button id="clear-qr-emulation" class="button subtle small" type="button">Вернуть автоматический режим</button></div>
       </details>
 
       <div class="qr-action-row">
@@ -807,7 +843,7 @@ Base64-упаковки QR Microapps Lab. Решение о M или L прин�
 
         <div class="metrics-column">
           <div id="qr-correction-card" class="correction-card">
-            <div><span>Автокоррекция QR</span><strong id="qr-correction-value">—</strong></div>
+            <div><span id="qr-correction-label">Автокоррекция QR</span><strong id="qr-correction-value">—</strong></div>
             <p id="qr-correction-note">Уровень будет выбран после расчёта нагрузки.</p>
           </div>
           <div class="limit-metrics">
@@ -822,6 +858,7 @@ Base64-упаковки QR Microapps Lab. Решение о M или L прин�
               <div class="metric"><span>Data URL</span><strong id="url-bytes">0 Б</strong></div>
               <div class="metric"><span>Версия QR</span><strong id="qr-version">—</strong></div>
               <div class="metric"><span>Матрица</span><strong id="qr-matrix">—</strong></div>
+              <div class="metric"><span>Маска</span><strong id="qr-mask">—</strong></div>
               <div class="metric checksum-metric"><span>Контрольная сумма</span><strong id="checksum">—</strong></div>
             </div>
           </details>
@@ -1296,6 +1333,8 @@ function scan(matrix) {
                 data: decoded.text,
                 chunks: decoded.chunks,
                 version: decoded.version,
+                errorCorrectionLevel: decoded.errorCorrectionLevel,
+                dataMask: decoded.dataMask,
                 location: {
                     topRightCorner: extracted.mappingFunction(location_1.dimension, 0),
                     topLeftCorner: extracted.mappingFunction(0, 0),
@@ -1741,7 +1780,11 @@ function decodeMatrix(matrix) {
         }
     }
     try {
-        return decodeData_1.decode(resultBytes, version.versionNumber);
+        var decoded = decodeData_1.decode(resultBytes, version.versionNumber);
+        // QR Microapps Lab exposes format metadata already read by jsQR for local analysis.
+        decoded.errorCorrectionLevel = ["L", "M", "Q", "H"][formatInfo.errorCorrectionLevel] || null;
+        decoded.dataMask = formatInfo.dataMask;
+        return decoded;
     }
     catch (_a) {
         return null;
@@ -11504,6 +11547,130 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     };
   }
 
+  function classifyQrPayload(value) {
+    var data = String(value == null ? '' : value);
+    var trimmed = data.trim();
+    if (/^data:/i.test(trimmed)) {
+      try {
+        var parsed = parseDataUrl(trimmed);
+        return {
+          kind: parsed.mime === 'text/html' ? 'html-data-url' : 'data-url',
+          label: parsed.mime === 'text/html' ? 'HTML в data URL' : 'data URL (' + parsed.mime + ')',
+          isHtml: parsed.mime === 'text/html',
+          encoding: parsed.encoding
+        };
+      } catch (error) {
+        return { kind: 'data-url', label: 'Некорректный data URL', isHtml: false, encoding: null };
+      }
+    }
+    if (/^https?:\/\//i.test(trimmed)) return { kind: 'url', label: 'Веб-адрес', isHtml: false, encoding: null };
+    if (/^(?:<!doctype\s+html\b|<html\b|<head\b|<body\b|<meta\b|<style\b|<script\b)/i.test(trimmed)) {
+      return { kind: 'html', label: 'HTML-код', isHtml: true, encoding: null };
+    }
+    return { kind: 'text', label: 'Текст или двоичные данные', isHtml: false, encoding: null };
+  }
+
+  function qrDistance(first, second) {
+    if (!first || !second) return null;
+    var dx = Number(second.x) - Number(first.x);
+    var dy = Number(second.y) - Number(first.y);
+    if (!Number.isFinite(dx) || !Number.isFinite(dy)) return null;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function analyzeQrImage(decoded, image) {
+    decoded = decoded || {};
+    image = image || {};
+    var version = Math.max(1, Math.floor(Number(decoded.version) || 1));
+    var modules = 17 + version * 4;
+    var payload = classifyQrPayload(decoded.data);
+    var chunkModes = Array.isArray(decoded.chunks)
+      ? decoded.chunks.map(function (chunk) { return String(chunk && chunk.type || 'unknown'); }).filter(function (mode, index, list) { return list.indexOf(mode) === index; })
+      : [];
+    var decodeScale = Number(image.decodeScale);
+    if (!Number.isFinite(decodeScale) || decodeScale <= 0) decodeScale = 1;
+    var location = decoded.location || {};
+    var corners = [location.topLeftCorner, location.topRightCorner, location.bottomRightCorner, location.bottomLeftCorner].filter(Boolean);
+    var edges = [
+      qrDistance(location.topLeftCorner, location.topRightCorner),
+      qrDistance(location.topRightCorner, location.bottomRightCorner),
+      qrDistance(location.bottomRightCorner, location.bottomLeftCorner),
+      qrDistance(location.bottomLeftCorner, location.topLeftCorner)
+    ].filter(function (value) { return Number.isFinite(value) && value > 0; });
+    var averageEdge = edges.length ? edges.reduce(function (sum, value) { return sum + value; }, 0) / edges.length : null;
+    var modulePixels = averageEdge == null ? null : averageEdge / modules / decodeScale;
+    var codeWidth = edges.length === 4 ? (edges[0] + edges[2]) / 2 / decodeScale : null;
+    var codeHeight = edges.length === 4 ? (edges[1] + edges[3]) / 2 / decodeScale : null;
+    var perspectivePercent = edges.length === 4
+      ? (Math.max.apply(Math, edges) - Math.min.apply(Math, edges)) / averageEdge * 100
+      : null;
+    var marginPixels = null;
+    var marginModules = null;
+    var decodeWidth = Number(image.decodeWidth);
+    var decodeHeight = Number(image.decodeHeight);
+    if (corners.length === 4 && Number.isFinite(decodeWidth) && Number.isFinite(decodeHeight) && modulePixels) {
+      var xs = corners.map(function (point) { return Number(point.x); });
+      var ys = corners.map(function (point) { return Number(point.y); });
+      var marginAtDecodeScale = Math.min(
+        Math.min.apply(Math, xs), Math.min.apply(Math, ys),
+        decodeWidth - Math.max.apply(Math, xs), decodeHeight - Math.max.apply(Math, ys)
+      );
+      marginPixels = Math.max(0, marginAtDecodeScale / decodeScale);
+      marginModules = marginPixels / modulePixels;
+    }
+    var ecc = ['L', 'M', 'Q', 'H'].indexOf(decoded.errorCorrectionLevel) >= 0 ? decoded.errorCorrectionLevel : null;
+    var mask = Number(decoded.dataMask);
+    if (!Number.isInteger(mask) || mask < 0 || mask > 7) mask = null;
+    var payloadBytes = decoded.binaryData && Number.isFinite(decoded.binaryData.length)
+      ? decoded.binaryData.length
+      : byteLength(decoded.data || '');
+    var assessedModulePixels = modulePixels == null ? null : Math.round(modulePixels * 10) / 10;
+    var assessedMarginModules = marginModules == null ? null : Math.round(marginModules * 10) / 10;
+    var assessedPerspectivePercent = perspectivePercent == null ? null : Math.round(perspectivePercent * 10) / 10;
+    var observations = [{ status: 'good', text: 'Декодер jsQR восстановил содержимое изображения.' }];
+    if (assessedModulePixels != null && assessedModulePixels < 3) observations.push({ status: 'warn', text: 'В исходном изображении меньше 3 пикселей на модуль; масштабирование и размытие могут осложнить распознавание.' });
+    else if (assessedModulePixels != null) observations.push({ status: 'good', text: 'Размер модуля в исходном изображении не меньше 3 пикселей.' });
+    if (assessedMarginModules != null && assessedMarginModules < 4) observations.push({ status: 'warn', text: 'Поле до края изображения меньше рекомендуемых 4 модулей.' });
+    else if (assessedMarginModules != null && assessedMarginModules <= 16) observations.push({ status: 'good', text: 'До края изображения сохраняется поле не меньше 4 модулей.' });
+    else if (assessedMarginModules != null) observations.push({ status: 'info', text: 'QR находится внутри более крупного изображения; поле до края нельзя считать точной тихой зоной.' });
+    if (assessedPerspectivePercent != null && assessedPerspectivePercent > 12) observations.push({ status: 'warn', text: 'У изображения заметна перспективная деформация; результат зависит от устойчивости сканера.' });
+    if (image.inverted) observations.push({ status: 'warn', text: 'Код распознан только после инверсии светлых и тёмных областей.' });
+    if (version >= 20) observations.push({ status: 'info', text: 'Матрица содержит много модулей; при том же физическом размере каждый модуль будет меньше.' });
+    var emulatedQuiet = marginModules != null && marginModules <= 16 ? Math.round(marginModules) : 4;
+    return {
+      file: {
+        name: String(image.fileName || ''),
+        type: String(image.fileType || ''),
+        bytes: Math.max(0, Number(image.fileSize) || 0),
+        width: Math.max(1, Math.round(Number(image.width) || decodeWidth || 1)),
+        height: Math.max(1, Math.round(Number(image.height) || decodeHeight || 1)),
+        decodeScale: decodeScale
+      },
+      version: version,
+      modules: modules,
+      ecc: ecc,
+      mask: mask,
+      payload: payload,
+      payloadBytes: payloadBytes,
+      chunkModes: chunkModes,
+      inverted: !!image.inverted,
+      geometry: {
+        modulePixels: modulePixels,
+        codeWidth: codeWidth,
+        codeHeight: codeHeight,
+        marginPixels: marginPixels,
+        marginModules: marginModules,
+        perspectivePercent: perspectivePercent
+      },
+      emulation: {
+        ecc: ecc,
+        moduleScale: modulePixels == null ? 6 : Math.min(20, Math.max(1, Math.round(modulePixels))),
+        quietZone: Math.min(16, Math.max(0, emulatedQuiet))
+      },
+      observations: observations
+    };
+  }
+
   function fnv1a(value) {
     var bytes = utf8Bytes(value);
     var hash = 0x811c9dc5;
@@ -12007,6 +12174,8 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     setDifficulty: setDifficulty,
     getReductionToFit: getReductionToFit,
     fitQrDisplay: fitQrDisplay,
+    classifyQrPayload: classifyQrPayload,
+    analyzeQrImage: analyzeQrImage,
     checksum: checksum,
     validateSpec: validateSpec,
     findExternalResources: findExternalResources,
@@ -12442,8 +12611,8 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
       settings: {
         encoding: option(settings.encoding, ENCODINGS, option(specQr.encoding, ENCODINGS, 'base64')),
         ecc: option(settings.ecc, ECC_LEVELS, option(specQr.ecc, ECC_LEVELS, 'M')),
-        moduleScale: clamp(settings.moduleScale, 2, 16, 6),
-        quietZone: clamp(settings.quietZone, 4, 16, 4)
+        moduleScale: clamp(settings.moduleScale, 1, 20, 6),
+        quietZone: clamp(settings.quietZone, 0, 16, 4)
       },
       editor: {
         mode: simpleMode ? 'simple' : 'code',
@@ -12757,9 +12926,9 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     source: $('source'), spec: $('spec'), dataUrl: $('data-url'), encoding: $('encoding'), ecc: $('ecc'),
     moduleScale: $('module-scale'), quietZone: $('quiet-zone'), status: $('status'), canvas: $('qr-canvas'),
     placeholder: $('qr-placeholder'), qrZoom: $('qr-zoom'), qrZoomIcon: $('qr-zoom-icon'), htmlBytes: $('html-bytes'), urlBytes: $('url-bytes'),
-    qrVersion: $('qr-version'), qrMatrix: $('qr-matrix'), qrReserve: $('qr-reserve'), qrReserveLabel: $('qr-reserve-label'),
+    qrVersion: $('qr-version'), qrMatrix: $('qr-matrix'), qrMask: $('qr-mask'), qrReserve: $('qr-reserve'), qrReserveLabel: $('qr-reserve-label'),
     qrLOption: $('qr-l-option'), qrLOptionLabel: $('qr-l-option-label'), qrLReserve: $('qr-l-reserve'),
-    qrCorrectionCard: $('qr-correction-card'), qrCorrectionValue: $('qr-correction-value'), qrCorrectionNote: $('qr-correction-note'), checksum: $('checksum'),
+    qrCorrectionCard: $('qr-correction-card'), qrCorrectionLabel: $('qr-correction-label'), qrCorrectionValue: $('qr-correction-value'), qrCorrectionNote: $('qr-correction-note'), checksum: $('checksum'),
     roundtripPill: $('roundtrip-pill'), roundtripCard: $('roundtrip-card'), roundtripIcon: $('roundtrip-icon'),
     roundtripTitle: $('roundtrip-title'), roundtripDetail: $('roundtrip-detail'), validationSummary: $('validation-summary'),
     validationRemarks: $('validation-remarks'), validationToggle: $('validation-toggle'), validationDetails: $('validation-details'),
@@ -12787,13 +12956,20 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     specTouchSizeInput: $('spec-touch-size-input'), specGapInput: $('spec-gap-input'), specLabelsInput: $('spec-labels-input'),
     comparisonFiles: $('comparison-files'),
     addCurrentComparison: $('add-current-comparison'), downloadComparison: $('download-comparison'),
-    clearComparison: $('clear-comparison'), comparisonSummary: $('comparison-summary'), comparisonList: $('comparison-list')
+    clearComparison: $('clear-comparison'), comparisonSummary: $('comparison-summary'), comparisonList: $('comparison-list'),
+    qrImportAnalysis: $('qr-import-analysis'), qrImportFile: $('qr-import-file'), importedQrVersion: $('imported-qr-version'),
+    importedQrMatrix: $('imported-qr-matrix'), importedQrEcc: $('imported-qr-ecc'), importedQrMask: $('imported-qr-mask'),
+    importedQrPayload: $('imported-qr-payload'), importedQrModes: $('imported-qr-modes'), importedQrImage: $('imported-qr-image'),
+    importedQrModule: $('imported-qr-module'), importedQrMargin: $('imported-qr-margin'), importedQrPerspective: $('imported-qr-perspective'),
+    importedQrContrast: $('imported-qr-contrast'), importedQrType: $('imported-qr-type'), importedQrObservations: $('imported-qr-observations'),
+    importedQrData: $('imported-qr-data'), applyImportedQr: $('apply-imported-qr'), closeImportedQr: $('close-imported-qr'),
+    qrEmulationNote: $('qr-emulation-note'), qrEmulationText: $('qr-emulation-text'), clearQrEmulation: $('clear-qr-emulation')
   };
 
   var state = {
     html: '', spec: null, dataUrl: '', qr: null, checks: [], runtime: null, checksum: null,
     roundtrip: null, report: null, sizeAnalysis: null, optimization: null, previewToken: '', previewHtml: '', runtimeMessages: [],
-    iterations: [], comparisons: [], buildId: 0, mode: 'code', specEditorMode: 'form'
+    iterations: [], comparisons: [], buildId: 0, mode: 'code', specEditorMode: 'form', importedQrProfile: null, qrEmulation: null
   };
   var simpleBuildTimer = 0;
 
@@ -12828,7 +13004,90 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     return Number(value || 0).toLocaleString('ru-RU') + ' Б';
   }
 
-  function renderQrReserves(html, encoding, ecc) {
+  function formatDecimal(value, digits) {
+    return Number(value).toFixed(digits == null ? 1 : digits).replace('.', ',');
+  }
+
+  function formatQrModes(modes) {
+    var labels = { numeric: 'цифры', alphanumeric: 'алфавитно-цифровой', byte: 'байты', kanji: 'кандзи', eci: 'ECI' };
+    return (modes || []).map(function (mode) { return labels[mode] || mode; }).join(', ') || 'не указаны';
+  }
+
+  function renderQrEmulation() {
+    var profile = state.qrEmulation;
+    elements.qrEmulationNote.hidden = !profile;
+    if (!profile) {
+      elements.qrEmulationText.textContent = '';
+      return;
+    }
+    elements.qrEmulationText.textContent = 'Имитация загруженного QR: коррекция ' + profile.ecc + ', ' + profile.moduleScale + ' пикс./модуль, рамка ' + profile.quietZone + ' мод. Версия и маска будут рассчитаны заново.';
+  }
+
+  function clearQrEmulation(resetGeometry) {
+    state.qrEmulation = null;
+    if (resetGeometry) {
+      elements.moduleScale.value = '6';
+      elements.quietZone.value = '4';
+    }
+    renderQrEmulation();
+  }
+
+  function clearImportedQrAnalysis() {
+    state.importedQrProfile = null;
+    elements.qrImportAnalysis.hidden = true;
+    elements.importedQrData.value = '';
+  }
+
+  function renderImportedQrAnalysis(profile, data) {
+    state.importedQrProfile = profile;
+    var geometry = profile.geometry || {};
+    elements.qrImportFile.textContent = (profile.file.name || 'Изображение') + ' · ' + formatBytes(profile.file.bytes);
+    elements.importedQrVersion.textContent = String(profile.version);
+    elements.importedQrMatrix.textContent = profile.modules + '×' + profile.modules;
+    elements.importedQrEcc.textContent = profile.ecc || 'не определена';
+    elements.importedQrMask.textContent = profile.mask == null ? 'не определена' : String(profile.mask);
+    elements.importedQrPayload.textContent = formatBytes(profile.payloadBytes);
+    elements.importedQrModes.textContent = formatQrModes(profile.chunkModes);
+    elements.importedQrImage.textContent = profile.file.width + '×' + profile.file.height + ' px';
+    elements.importedQrModule.textContent = geometry.modulePixels == null ? 'не вычислен' : '≈' + formatDecimal(geometry.modulePixels, 1) + ' px';
+    elements.importedQrMargin.textContent = geometry.marginModules == null
+      ? 'не вычислено'
+      : '≈' + formatDecimal(geometry.marginModules, 1) + ' мод. · ' + Math.round(geometry.marginPixels) + ' px';
+    elements.importedQrPerspective.textContent = geometry.perspectivePercent == null ? 'не вычислена' : '≈' + formatDecimal(geometry.perspectivePercent, 1) + ' %';
+    elements.importedQrContrast.textContent = profile.inverted ? 'инвертированный' : 'обычный';
+    elements.importedQrType.textContent = profile.payload.label;
+    elements.importedQrObservations.replaceChildren();
+    (profile.observations || []).forEach(function (observation) {
+      var item = document.createElement('li');
+      item.className = observation.status || 'info';
+      item.textContent = observation.text;
+      elements.importedQrObservations.appendChild(item);
+    });
+    elements.importedQrData.value = String(data || '');
+    elements.applyImportedQr.disabled = !profile.ecc;
+    elements.qrImportAnalysis.hidden = false;
+  }
+
+  function applyImportedQrProfile() {
+    var profile = state.importedQrProfile;
+    if (!profile || !profile.ecc) return setStatus('Уровень коррекции загруженного QR не определён.', 'bad');
+    state.qrEmulation = {
+      ecc: profile.emulation.ecc,
+      moduleScale: profile.emulation.moduleScale,
+      quietZone: profile.emulation.quietZone,
+      sourceFile: profile.file.name,
+      sourceVersion: profile.version,
+      sourceMask: profile.mask
+    };
+    elements.moduleScale.value = String(state.qrEmulation.moduleScale);
+    elements.quietZone.value = String(state.qrEmulation.quietZone);
+    renderQrEmulation();
+    var controls = elements.qrEmulationNote.closest('details');
+    if (controls) controls.open = true;
+    setStatus('Параметры загруженного QR перенесены в генератор. Нажмите «Проверить и создать QR» для сравнения.', 'good');
+  }
+
+  function renderQrReserves(html, encoding, ecc, emulation) {
     var payloadBytes = core.byteLength(core.makeDataUrl(html, encoding));
     var currentLimit = core.getQrLimit(ecc);
     var currentReserve = currentLimit - payloadBytes;
@@ -12853,8 +13112,13 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     elements.qrLReserve.title = needsMReduction ? 'Минимальное сокращение для коррекции M.' : 'Вместимость QR при коррекции L: ' + lLimit + ' Б.';
     elements.qrLReserve.style.color = needsMReduction ? 'var(--warning)' : lReserve >= 0 ? 'var(--muted)' : 'var(--danger)';
     elements.qrCorrectionCard.className = 'correction-card ' + (lReserve < 0 ? 'danger' : usingL ? 'warning' : 'good');
+    elements.qrCorrectionLabel.textContent = emulation && emulation.active ? 'Имитация параметров' : 'Автокоррекция QR';
     elements.qrCorrectionValue.textContent = ecc;
-    elements.qrCorrectionNote.textContent = lReserve < 0
+    elements.qrCorrectionNote.textContent = emulation && emulation.active
+      ? emulation.eccApplied
+        ? 'Применён уровень ' + ecc + ' из загруженного QR; версия и маска рассчитаны кодировщиком заново.'
+        : 'Уровень ' + emulation.requestedEcc + ' не вместил текущую нагрузку; использован ' + ecc + '. Геометрия изображения сохранена.'
+      : lReserve < 0
       ? 'Даже L не вмещает нагрузку — необходимо уменьшить HTML.'
       : usingL
         ? 'Устойчивость к повреждениям снижена; ' + reductionText + ', чтобы вернуться к M.'
@@ -13507,6 +13771,7 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     elements.placeholder.style.display = '';
     elements.qrVersion.textContent = '—';
     elements.qrMatrix.textContent = '—';
+    elements.qrMask.textContent = '—';
     elements.qrReserve.textContent = '—';
     elements.qrReserveLabel.textContent = 'Запас при ' + elements.ecc.value;
     elements.qrReserve.parentElement.classList.remove('low-ecc');
@@ -13515,6 +13780,7 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     elements.qrLOptionLabel.textContent = 'Запас при L';
     elements.qrLReserve.textContent = '—';
     elements.qrCorrectionCard.className = 'correction-card';
+    elements.qrCorrectionLabel.textContent = 'Автокоррекция QR';
     elements.qrCorrectionValue.textContent = '—';
     elements.qrCorrectionNote.textContent = 'Уровень будет выбран после расчёта нагрузки.';
     elements.checksum.textContent = '—';
@@ -13731,21 +13997,36 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
       var encoding = 'base64';
       var dataUrl = core.makeDataUrl(html, encoding);
       var payloadBytes = core.byteLength(dataUrl);
-      var ecc = payloadBytes <= core.getQrLimit('M') ? 'M' : 'L';
-      var autoFallback = ecc === 'L' && payloadBytes <= core.getQrLimit('L');
+      var automaticEcc = payloadBytes <= core.getQrLimit('M') ? 'M' : 'L';
+      var requestedEcc = state.qrEmulation && state.qrEmulation.ecc;
+      var importedEccFits = !!requestedEcc && payloadBytes <= core.getQrLimit(requestedEcc);
+      var ecc = importedEccFits ? requestedEcc : automaticEcc;
+      var autoFallback = !requestedEcc && ecc === 'L' && payloadBytes <= core.getQrLimit('L');
       elements.ecc.value = ecc;
       spec.qr.encoding = encoding;
       spec.qr.ecc = ecc;
       elements.spec.value = JSON.stringify(spec, null, 2);
-      var physicalLimit = renderQrReserves(html, encoding, ecc);
+      var physicalLimit = renderQrReserves(html, encoding, ecc, {
+        active: !!requestedEcc,
+        requestedEcc: requestedEcc,
+        eccApplied: importedEccFits
+      });
       if (physicalLimit && payloadBytes > physicalLimit) {
         throw new Error('Данные не помещаются даже в QR с коррекцией L: ' + formatBytes(payloadBytes) + ' при вместимости ' + formatBytes(physicalLimit) + '. Уменьшите содержимое.');
       }
-      var scale = clamp(elements.moduleScale.value, 2, 16, 6);
-      var quiet = clamp(elements.quietZone.value, 4, 16, 4);
+      var scale = clamp(elements.moduleScale.value, 1, 20, 6);
+      var quiet = clamp(elements.quietZone.value, 0, 16, 4);
       renderSizeAnalysis(html, spec, encoding, ecc, optimization);
       var qr = renderQr(dataUrl, ecc, scale, quiet);
+      qr.emulation = state.qrEmulation ? {
+        sourceFile: state.qrEmulation.sourceFile,
+        sourceVersion: state.qrEmulation.sourceVersion,
+        sourceMask: state.qrEmulation.sourceMask,
+        requestedEcc: requestedEcc,
+        eccApplied: importedEccFits
+      } : null;
       var decoded = decodeRenderedQr();
+      qr.mask = decoded.dataMask == null ? null : decoded.dataMask;
       var sourceChecksum = await core.checksum(dataUrl);
       var decodedChecksum = await core.checksum(decoded.data);
       if (buildId !== state.buildId) return;
@@ -13763,6 +14044,7 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
       elements.urlBytes.textContent = formatBytes(core.byteLength(dataUrl));
       elements.qrVersion.textContent = String(qr.version);
       elements.qrMatrix.textContent = qr.modules + '×' + qr.modules;
+      elements.qrMask.textContent = qr.mask == null ? '—' : String(qr.mask);
       elements.checksum.textContent = sourceChecksum.value.slice(0, 12);
       elements.checksum.title = sourceChecksum.algorithm + ': ' + sourceChecksum.value;
 
@@ -13777,7 +14059,12 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
       var failed = core.summarizeChecks(state.checks).fail;
       var optimizationNote = optimization.savedBytes ? ' HTML сокращён на ' + formatBytes(optimization.savedBytes) + ' (' + optimization.savedPercent.toFixed(1).replace('.', ',') + ' %).' : ' HTML уже был компактным.';
       var fallbackNote = autoFallback ? ' Коррекция автоматически переключена с M на L.' : '';
-      setStatus((failed ? 'QR создан, но найдено нарушений: ' + failed + '.' : 'QR создан и автоматически проверен.') + fallbackNote + optimizationNote, failed ? 'bad' : 'good');
+      var emulationNote = requestedEcc
+        ? importedEccFits
+          ? ' Применена коррекция ' + requestedEcc + ' из профиля загруженного QR.'
+          : ' Коррекция ' + requestedEcc + ' из профиля не вместила нагрузку; использован уровень ' + ecc + '.'
+        : '';
+      setStatus((failed ? 'QR создан, но найдено нарушений: ' + failed + '.' : 'QR создан и автоматически проверен.') + fallbackNote + emulationNote + optimizationNote, failed ? 'bad' : 'good');
     } catch (error) {
       state.html = '';
       state.spec = null;
@@ -13857,6 +14144,8 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
 
   function resetWorkspace() {
     stopPreview();
+    clearImportedQrAnalysis();
+    clearQrEmulation(true);
     state.buildId++;
     state.html = '';
     state.spec = null;
@@ -14120,9 +14409,27 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
           var context = canvas.getContext('2d', { willReadFrequently: true });
           context.drawImage(image, 0, 0, canvas.width, canvas.height);
           var pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-          var decoded = window.jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'attemptBoth' });
+          var decoded = window.jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'dontInvert' });
+          var inverted = false;
+          if (!decoded) {
+            decoded = window.jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'onlyInvert' });
+            inverted = !!decoded;
+          }
           if (!decoded || !decoded.data) throw new Error('QR-код на изображении не распознан. Попробуйте более чёткое изображение с белым полем вокруг кода.');
-          resolve(decoded.data);
+          resolve({
+            decoded: decoded,
+            profile: core.analyzeQrImage(decoded, {
+              fileName: file.name,
+              fileType: file.type,
+              fileSize: file.size,
+              width: image.naturalWidth,
+              height: image.naturalHeight,
+              decodeWidth: pixels.width,
+              decodeHeight: pixels.height,
+              decodeScale: scale,
+              inverted: inverted
+            })
+          });
         } catch (error) { reject(error); }
         finally { URL.revokeObjectURL(url); }
       };
@@ -14140,14 +14447,21 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     input.value = '';
     if (file.type && !/^image\//i.test(file.type)) return setStatus('Выбранный файл не является изображением.', 'bad');
     if (file.size > 30 * 1024 * 1024) return setStatus('QR-изображение больше 30 МБ.', 'bad');
+    clearImportedQrAnalysis();
+    clearQrEmulation(true);
     setStatus('Декодирование QR-изображения…');
     try {
-      var decoded = await decodeQrImage(file);
-      var source = core.normalizeSource(decoded);
-      setMode('code', false);
-      elements.source.value = source;
-      refreshDifficultyEditor();
-      setStatus('QR-изображение декодировано: содержимое загружено в редактор.', 'good');
+      var result = await decodeQrImage(file);
+      renderImportedQrAnalysis(result.profile, result.decoded.data);
+      if (result.profile.payload.isHtml) {
+        var source = core.normalizeSource(result.decoded.data);
+        setMode('code', false);
+        elements.source.value = source;
+        refreshDifficultyEditor();
+        setStatus('QR-изображение декодировано и проанализировано: HTML загружен в редактор.', 'good');
+      } else {
+        setStatus('QR-изображение декодировано и проанализировано. Содержимое не является HTML и показано только в профиле.', 'good');
+      }
     } catch (error) { setStatus(error.message || 'Не удалось декодировать QR-изображение.', 'bad'); }
   }
 
@@ -14172,6 +14486,9 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
   elements.themeToggle.addEventListener('click', function () {
     applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light', true);
   });
+  elements.applyImportedQr.addEventListener('click', applyImportedQrProfile);
+  elements.closeImportedQr.addEventListener('click', function () { elements.qrImportAnalysis.hidden = true; setStatus('Профиль загруженного QR скрыт.'); });
+  elements.clearQrEmulation.addEventListener('click', function () { clearQrEmulation(true); setStatus('Возвращён автоматический выбор коррекции и стандартная геометрия QR.'); });
   elements.qrZoom.addEventListener('click', function () { setQrExpanded(!elements.qrZoom.classList.contains('expanded')); });
   window.addEventListener('resize', fitExpandedQr);
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && elements.qrZoom.classList.contains('expanded')) setQrExpanded(false); });

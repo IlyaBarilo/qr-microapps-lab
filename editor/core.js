@@ -446,6 +446,130 @@
     };
   }
 
+  function classifyQrPayload(value) {
+    var data = String(value == null ? '' : value);
+    var trimmed = data.trim();
+    if (/^data:/i.test(trimmed)) {
+      try {
+        var parsed = parseDataUrl(trimmed);
+        return {
+          kind: parsed.mime === 'text/html' ? 'html-data-url' : 'data-url',
+          label: parsed.mime === 'text/html' ? 'HTML в data URL' : 'data URL (' + parsed.mime + ')',
+          isHtml: parsed.mime === 'text/html',
+          encoding: parsed.encoding
+        };
+      } catch (error) {
+        return { kind: 'data-url', label: 'Некорректный data URL', isHtml: false, encoding: null };
+      }
+    }
+    if (/^https?:\/\//i.test(trimmed)) return { kind: 'url', label: 'Веб-адрес', isHtml: false, encoding: null };
+    if (/^(?:<!doctype\s+html\b|<html\b|<head\b|<body\b|<meta\b|<style\b|<script\b)/i.test(trimmed)) {
+      return { kind: 'html', label: 'HTML-код', isHtml: true, encoding: null };
+    }
+    return { kind: 'text', label: 'Текст или двоичные данные', isHtml: false, encoding: null };
+  }
+
+  function qrDistance(first, second) {
+    if (!first || !second) return null;
+    var dx = Number(second.x) - Number(first.x);
+    var dy = Number(second.y) - Number(first.y);
+    if (!Number.isFinite(dx) || !Number.isFinite(dy)) return null;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function analyzeQrImage(decoded, image) {
+    decoded = decoded || {};
+    image = image || {};
+    var version = Math.max(1, Math.floor(Number(decoded.version) || 1));
+    var modules = 17 + version * 4;
+    var payload = classifyQrPayload(decoded.data);
+    var chunkModes = Array.isArray(decoded.chunks)
+      ? decoded.chunks.map(function (chunk) { return String(chunk && chunk.type || 'unknown'); }).filter(function (mode, index, list) { return list.indexOf(mode) === index; })
+      : [];
+    var decodeScale = Number(image.decodeScale);
+    if (!Number.isFinite(decodeScale) || decodeScale <= 0) decodeScale = 1;
+    var location = decoded.location || {};
+    var corners = [location.topLeftCorner, location.topRightCorner, location.bottomRightCorner, location.bottomLeftCorner].filter(Boolean);
+    var edges = [
+      qrDistance(location.topLeftCorner, location.topRightCorner),
+      qrDistance(location.topRightCorner, location.bottomRightCorner),
+      qrDistance(location.bottomRightCorner, location.bottomLeftCorner),
+      qrDistance(location.bottomLeftCorner, location.topLeftCorner)
+    ].filter(function (value) { return Number.isFinite(value) && value > 0; });
+    var averageEdge = edges.length ? edges.reduce(function (sum, value) { return sum + value; }, 0) / edges.length : null;
+    var modulePixels = averageEdge == null ? null : averageEdge / modules / decodeScale;
+    var codeWidth = edges.length === 4 ? (edges[0] + edges[2]) / 2 / decodeScale : null;
+    var codeHeight = edges.length === 4 ? (edges[1] + edges[3]) / 2 / decodeScale : null;
+    var perspectivePercent = edges.length === 4
+      ? (Math.max.apply(Math, edges) - Math.min.apply(Math, edges)) / averageEdge * 100
+      : null;
+    var marginPixels = null;
+    var marginModules = null;
+    var decodeWidth = Number(image.decodeWidth);
+    var decodeHeight = Number(image.decodeHeight);
+    if (corners.length === 4 && Number.isFinite(decodeWidth) && Number.isFinite(decodeHeight) && modulePixels) {
+      var xs = corners.map(function (point) { return Number(point.x); });
+      var ys = corners.map(function (point) { return Number(point.y); });
+      var marginAtDecodeScale = Math.min(
+        Math.min.apply(Math, xs), Math.min.apply(Math, ys),
+        decodeWidth - Math.max.apply(Math, xs), decodeHeight - Math.max.apply(Math, ys)
+      );
+      marginPixels = Math.max(0, marginAtDecodeScale / decodeScale);
+      marginModules = marginPixels / modulePixels;
+    }
+    var ecc = ['L', 'M', 'Q', 'H'].indexOf(decoded.errorCorrectionLevel) >= 0 ? decoded.errorCorrectionLevel : null;
+    var mask = Number(decoded.dataMask);
+    if (!Number.isInteger(mask) || mask < 0 || mask > 7) mask = null;
+    var payloadBytes = decoded.binaryData && Number.isFinite(decoded.binaryData.length)
+      ? decoded.binaryData.length
+      : byteLength(decoded.data || '');
+    var assessedModulePixels = modulePixels == null ? null : Math.round(modulePixels * 10) / 10;
+    var assessedMarginModules = marginModules == null ? null : Math.round(marginModules * 10) / 10;
+    var assessedPerspectivePercent = perspectivePercent == null ? null : Math.round(perspectivePercent * 10) / 10;
+    var observations = [{ status: 'good', text: 'Декодер jsQR восстановил содержимое изображения.' }];
+    if (assessedModulePixels != null && assessedModulePixels < 3) observations.push({ status: 'warn', text: 'В исходном изображении меньше 3 пикселей на модуль; масштабирование и размытие могут осложнить распознавание.' });
+    else if (assessedModulePixels != null) observations.push({ status: 'good', text: 'Размер модуля в исходном изображении не меньше 3 пикселей.' });
+    if (assessedMarginModules != null && assessedMarginModules < 4) observations.push({ status: 'warn', text: 'Поле до края изображения меньше рекомендуемых 4 модулей.' });
+    else if (assessedMarginModules != null && assessedMarginModules <= 16) observations.push({ status: 'good', text: 'До края изображения сохраняется поле не меньше 4 модулей.' });
+    else if (assessedMarginModules != null) observations.push({ status: 'info', text: 'QR находится внутри более крупного изображения; поле до края нельзя считать точной тихой зоной.' });
+    if (assessedPerspectivePercent != null && assessedPerspectivePercent > 12) observations.push({ status: 'warn', text: 'У изображения заметна перспективная деформация; результат зависит от устойчивости сканера.' });
+    if (image.inverted) observations.push({ status: 'warn', text: 'Код распознан только после инверсии светлых и тёмных областей.' });
+    if (version >= 20) observations.push({ status: 'info', text: 'Матрица содержит много модулей; при том же физическом размере каждый модуль будет меньше.' });
+    var emulatedQuiet = marginModules != null && marginModules <= 16 ? Math.round(marginModules) : 4;
+    return {
+      file: {
+        name: String(image.fileName || ''),
+        type: String(image.fileType || ''),
+        bytes: Math.max(0, Number(image.fileSize) || 0),
+        width: Math.max(1, Math.round(Number(image.width) || decodeWidth || 1)),
+        height: Math.max(1, Math.round(Number(image.height) || decodeHeight || 1)),
+        decodeScale: decodeScale
+      },
+      version: version,
+      modules: modules,
+      ecc: ecc,
+      mask: mask,
+      payload: payload,
+      payloadBytes: payloadBytes,
+      chunkModes: chunkModes,
+      inverted: !!image.inverted,
+      geometry: {
+        modulePixels: modulePixels,
+        codeWidth: codeWidth,
+        codeHeight: codeHeight,
+        marginPixels: marginPixels,
+        marginModules: marginModules,
+        perspectivePercent: perspectivePercent
+      },
+      emulation: {
+        ecc: ecc,
+        moduleScale: modulePixels == null ? 6 : Math.min(20, Math.max(1, Math.round(modulePixels))),
+        quietZone: Math.min(16, Math.max(0, emulatedQuiet))
+      },
+      observations: observations
+    };
+  }
+
   function fnv1a(value) {
     var bytes = utf8Bytes(value);
     var hash = 0x811c9dc5;
@@ -949,6 +1073,8 @@
     setDifficulty: setDifficulty,
     getReductionToFit: getReductionToFit,
     fitQrDisplay: fitQrDisplay,
+    classifyQrPayload: classifyQrPayload,
+    analyzeQrImage: analyzeQrImage,
     checksum: checksum,
     validateSpec: validateSpec,
     findExternalResources: findExternalResources,

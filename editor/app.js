@@ -14,9 +14,9 @@
     source: $('source'), spec: $('spec'), dataUrl: $('data-url'), encoding: $('encoding'), ecc: $('ecc'),
     moduleScale: $('module-scale'), quietZone: $('quiet-zone'), status: $('status'), canvas: $('qr-canvas'),
     placeholder: $('qr-placeholder'), qrZoom: $('qr-zoom'), qrZoomIcon: $('qr-zoom-icon'), htmlBytes: $('html-bytes'), urlBytes: $('url-bytes'),
-    qrVersion: $('qr-version'), qrMatrix: $('qr-matrix'), qrReserve: $('qr-reserve'), qrReserveLabel: $('qr-reserve-label'),
+    qrVersion: $('qr-version'), qrMatrix: $('qr-matrix'), qrMask: $('qr-mask'), qrReserve: $('qr-reserve'), qrReserveLabel: $('qr-reserve-label'),
     qrLOption: $('qr-l-option'), qrLOptionLabel: $('qr-l-option-label'), qrLReserve: $('qr-l-reserve'),
-    qrCorrectionCard: $('qr-correction-card'), qrCorrectionValue: $('qr-correction-value'), qrCorrectionNote: $('qr-correction-note'), checksum: $('checksum'),
+    qrCorrectionCard: $('qr-correction-card'), qrCorrectionLabel: $('qr-correction-label'), qrCorrectionValue: $('qr-correction-value'), qrCorrectionNote: $('qr-correction-note'), checksum: $('checksum'),
     roundtripPill: $('roundtrip-pill'), roundtripCard: $('roundtrip-card'), roundtripIcon: $('roundtrip-icon'),
     roundtripTitle: $('roundtrip-title'), roundtripDetail: $('roundtrip-detail'), validationSummary: $('validation-summary'),
     validationRemarks: $('validation-remarks'), validationToggle: $('validation-toggle'), validationDetails: $('validation-details'),
@@ -44,13 +44,20 @@
     specTouchSizeInput: $('spec-touch-size-input'), specGapInput: $('spec-gap-input'), specLabelsInput: $('spec-labels-input'),
     comparisonFiles: $('comparison-files'),
     addCurrentComparison: $('add-current-comparison'), downloadComparison: $('download-comparison'),
-    clearComparison: $('clear-comparison'), comparisonSummary: $('comparison-summary'), comparisonList: $('comparison-list')
+    clearComparison: $('clear-comparison'), comparisonSummary: $('comparison-summary'), comparisonList: $('comparison-list'),
+    qrImportAnalysis: $('qr-import-analysis'), qrImportFile: $('qr-import-file'), importedQrVersion: $('imported-qr-version'),
+    importedQrMatrix: $('imported-qr-matrix'), importedQrEcc: $('imported-qr-ecc'), importedQrMask: $('imported-qr-mask'),
+    importedQrPayload: $('imported-qr-payload'), importedQrModes: $('imported-qr-modes'), importedQrImage: $('imported-qr-image'),
+    importedQrModule: $('imported-qr-module'), importedQrMargin: $('imported-qr-margin'), importedQrPerspective: $('imported-qr-perspective'),
+    importedQrContrast: $('imported-qr-contrast'), importedQrType: $('imported-qr-type'), importedQrObservations: $('imported-qr-observations'),
+    importedQrData: $('imported-qr-data'), applyImportedQr: $('apply-imported-qr'), closeImportedQr: $('close-imported-qr'),
+    qrEmulationNote: $('qr-emulation-note'), qrEmulationText: $('qr-emulation-text'), clearQrEmulation: $('clear-qr-emulation')
   };
 
   var state = {
     html: '', spec: null, dataUrl: '', qr: null, checks: [], runtime: null, checksum: null,
     roundtrip: null, report: null, sizeAnalysis: null, optimization: null, previewToken: '', previewHtml: '', runtimeMessages: [],
-    iterations: [], comparisons: [], buildId: 0, mode: 'code', specEditorMode: 'form'
+    iterations: [], comparisons: [], buildId: 0, mode: 'code', specEditorMode: 'form', importedQrProfile: null, qrEmulation: null
   };
   var simpleBuildTimer = 0;
 
@@ -85,7 +92,90 @@
     return Number(value || 0).toLocaleString('ru-RU') + ' Б';
   }
 
-  function renderQrReserves(html, encoding, ecc) {
+  function formatDecimal(value, digits) {
+    return Number(value).toFixed(digits == null ? 1 : digits).replace('.', ',');
+  }
+
+  function formatQrModes(modes) {
+    var labels = { numeric: 'цифры', alphanumeric: 'алфавитно-цифровой', byte: 'байты', kanji: 'кандзи', eci: 'ECI' };
+    return (modes || []).map(function (mode) { return labels[mode] || mode; }).join(', ') || 'не указаны';
+  }
+
+  function renderQrEmulation() {
+    var profile = state.qrEmulation;
+    elements.qrEmulationNote.hidden = !profile;
+    if (!profile) {
+      elements.qrEmulationText.textContent = '';
+      return;
+    }
+    elements.qrEmulationText.textContent = 'Имитация загруженного QR: коррекция ' + profile.ecc + ', ' + profile.moduleScale + ' пикс./модуль, рамка ' + profile.quietZone + ' мод. Версия и маска будут рассчитаны заново.';
+  }
+
+  function clearQrEmulation(resetGeometry) {
+    state.qrEmulation = null;
+    if (resetGeometry) {
+      elements.moduleScale.value = '6';
+      elements.quietZone.value = '4';
+    }
+    renderQrEmulation();
+  }
+
+  function clearImportedQrAnalysis() {
+    state.importedQrProfile = null;
+    elements.qrImportAnalysis.hidden = true;
+    elements.importedQrData.value = '';
+  }
+
+  function renderImportedQrAnalysis(profile, data) {
+    state.importedQrProfile = profile;
+    var geometry = profile.geometry || {};
+    elements.qrImportFile.textContent = (profile.file.name || 'Изображение') + ' · ' + formatBytes(profile.file.bytes);
+    elements.importedQrVersion.textContent = String(profile.version);
+    elements.importedQrMatrix.textContent = profile.modules + '×' + profile.modules;
+    elements.importedQrEcc.textContent = profile.ecc || 'не определена';
+    elements.importedQrMask.textContent = profile.mask == null ? 'не определена' : String(profile.mask);
+    elements.importedQrPayload.textContent = formatBytes(profile.payloadBytes);
+    elements.importedQrModes.textContent = formatQrModes(profile.chunkModes);
+    elements.importedQrImage.textContent = profile.file.width + '×' + profile.file.height + ' px';
+    elements.importedQrModule.textContent = geometry.modulePixels == null ? 'не вычислен' : '≈' + formatDecimal(geometry.modulePixels, 1) + ' px';
+    elements.importedQrMargin.textContent = geometry.marginModules == null
+      ? 'не вычислено'
+      : '≈' + formatDecimal(geometry.marginModules, 1) + ' мод. · ' + Math.round(geometry.marginPixels) + ' px';
+    elements.importedQrPerspective.textContent = geometry.perspectivePercent == null ? 'не вычислена' : '≈' + formatDecimal(geometry.perspectivePercent, 1) + ' %';
+    elements.importedQrContrast.textContent = profile.inverted ? 'инвертированный' : 'обычный';
+    elements.importedQrType.textContent = profile.payload.label;
+    elements.importedQrObservations.replaceChildren();
+    (profile.observations || []).forEach(function (observation) {
+      var item = document.createElement('li');
+      item.className = observation.status || 'info';
+      item.textContent = observation.text;
+      elements.importedQrObservations.appendChild(item);
+    });
+    elements.importedQrData.value = String(data || '');
+    elements.applyImportedQr.disabled = !profile.ecc;
+    elements.qrImportAnalysis.hidden = false;
+  }
+
+  function applyImportedQrProfile() {
+    var profile = state.importedQrProfile;
+    if (!profile || !profile.ecc) return setStatus('Уровень коррекции загруженного QR не определён.', 'bad');
+    state.qrEmulation = {
+      ecc: profile.emulation.ecc,
+      moduleScale: profile.emulation.moduleScale,
+      quietZone: profile.emulation.quietZone,
+      sourceFile: profile.file.name,
+      sourceVersion: profile.version,
+      sourceMask: profile.mask
+    };
+    elements.moduleScale.value = String(state.qrEmulation.moduleScale);
+    elements.quietZone.value = String(state.qrEmulation.quietZone);
+    renderQrEmulation();
+    var controls = elements.qrEmulationNote.closest('details');
+    if (controls) controls.open = true;
+    setStatus('Параметры загруженного QR перенесены в генератор. Нажмите «Проверить и создать QR» для сравнения.', 'good');
+  }
+
+  function renderQrReserves(html, encoding, ecc, emulation) {
     var payloadBytes = core.byteLength(core.makeDataUrl(html, encoding));
     var currentLimit = core.getQrLimit(ecc);
     var currentReserve = currentLimit - payloadBytes;
@@ -110,8 +200,13 @@
     elements.qrLReserve.title = needsMReduction ? 'Минимальное сокращение для коррекции M.' : 'Вместимость QR при коррекции L: ' + lLimit + ' Б.';
     elements.qrLReserve.style.color = needsMReduction ? 'var(--warning)' : lReserve >= 0 ? 'var(--muted)' : 'var(--danger)';
     elements.qrCorrectionCard.className = 'correction-card ' + (lReserve < 0 ? 'danger' : usingL ? 'warning' : 'good');
+    elements.qrCorrectionLabel.textContent = emulation && emulation.active ? 'Имитация параметров' : 'Автокоррекция QR';
     elements.qrCorrectionValue.textContent = ecc;
-    elements.qrCorrectionNote.textContent = lReserve < 0
+    elements.qrCorrectionNote.textContent = emulation && emulation.active
+      ? emulation.eccApplied
+        ? 'Применён уровень ' + ecc + ' из загруженного QR; версия и маска рассчитаны кодировщиком заново.'
+        : 'Уровень ' + emulation.requestedEcc + ' не вместил текущую нагрузку; использован ' + ecc + '. Геометрия изображения сохранена.'
+      : lReserve < 0
       ? 'Даже L не вмещает нагрузку — необходимо уменьшить HTML.'
       : usingL
         ? 'Устойчивость к повреждениям снижена; ' + reductionText + ', чтобы вернуться к M.'
@@ -764,6 +859,7 @@
     elements.placeholder.style.display = '';
     elements.qrVersion.textContent = '—';
     elements.qrMatrix.textContent = '—';
+    elements.qrMask.textContent = '—';
     elements.qrReserve.textContent = '—';
     elements.qrReserveLabel.textContent = 'Запас при ' + elements.ecc.value;
     elements.qrReserve.parentElement.classList.remove('low-ecc');
@@ -772,6 +868,7 @@
     elements.qrLOptionLabel.textContent = 'Запас при L';
     elements.qrLReserve.textContent = '—';
     elements.qrCorrectionCard.className = 'correction-card';
+    elements.qrCorrectionLabel.textContent = 'Автокоррекция QR';
     elements.qrCorrectionValue.textContent = '—';
     elements.qrCorrectionNote.textContent = 'Уровень будет выбран после расчёта нагрузки.';
     elements.checksum.textContent = '—';
@@ -988,21 +1085,36 @@
       var encoding = 'base64';
       var dataUrl = core.makeDataUrl(html, encoding);
       var payloadBytes = core.byteLength(dataUrl);
-      var ecc = payloadBytes <= core.getQrLimit('M') ? 'M' : 'L';
-      var autoFallback = ecc === 'L' && payloadBytes <= core.getQrLimit('L');
+      var automaticEcc = payloadBytes <= core.getQrLimit('M') ? 'M' : 'L';
+      var requestedEcc = state.qrEmulation && state.qrEmulation.ecc;
+      var importedEccFits = !!requestedEcc && payloadBytes <= core.getQrLimit(requestedEcc);
+      var ecc = importedEccFits ? requestedEcc : automaticEcc;
+      var autoFallback = !requestedEcc && ecc === 'L' && payloadBytes <= core.getQrLimit('L');
       elements.ecc.value = ecc;
       spec.qr.encoding = encoding;
       spec.qr.ecc = ecc;
       elements.spec.value = JSON.stringify(spec, null, 2);
-      var physicalLimit = renderQrReserves(html, encoding, ecc);
+      var physicalLimit = renderQrReserves(html, encoding, ecc, {
+        active: !!requestedEcc,
+        requestedEcc: requestedEcc,
+        eccApplied: importedEccFits
+      });
       if (physicalLimit && payloadBytes > physicalLimit) {
         throw new Error('Данные не помещаются даже в QR с коррекцией L: ' + formatBytes(payloadBytes) + ' при вместимости ' + formatBytes(physicalLimit) + '. Уменьшите содержимое.');
       }
-      var scale = clamp(elements.moduleScale.value, 2, 16, 6);
-      var quiet = clamp(elements.quietZone.value, 4, 16, 4);
+      var scale = clamp(elements.moduleScale.value, 1, 20, 6);
+      var quiet = clamp(elements.quietZone.value, 0, 16, 4);
       renderSizeAnalysis(html, spec, encoding, ecc, optimization);
       var qr = renderQr(dataUrl, ecc, scale, quiet);
+      qr.emulation = state.qrEmulation ? {
+        sourceFile: state.qrEmulation.sourceFile,
+        sourceVersion: state.qrEmulation.sourceVersion,
+        sourceMask: state.qrEmulation.sourceMask,
+        requestedEcc: requestedEcc,
+        eccApplied: importedEccFits
+      } : null;
       var decoded = decodeRenderedQr();
+      qr.mask = decoded.dataMask == null ? null : decoded.dataMask;
       var sourceChecksum = await core.checksum(dataUrl);
       var decodedChecksum = await core.checksum(decoded.data);
       if (buildId !== state.buildId) return;
@@ -1020,6 +1132,7 @@
       elements.urlBytes.textContent = formatBytes(core.byteLength(dataUrl));
       elements.qrVersion.textContent = String(qr.version);
       elements.qrMatrix.textContent = qr.modules + '×' + qr.modules;
+      elements.qrMask.textContent = qr.mask == null ? '—' : String(qr.mask);
       elements.checksum.textContent = sourceChecksum.value.slice(0, 12);
       elements.checksum.title = sourceChecksum.algorithm + ': ' + sourceChecksum.value;
 
@@ -1034,7 +1147,12 @@
       var failed = core.summarizeChecks(state.checks).fail;
       var optimizationNote = optimization.savedBytes ? ' HTML сокращён на ' + formatBytes(optimization.savedBytes) + ' (' + optimization.savedPercent.toFixed(1).replace('.', ',') + ' %).' : ' HTML уже был компактным.';
       var fallbackNote = autoFallback ? ' Коррекция автоматически переключена с M на L.' : '';
-      setStatus((failed ? 'QR создан, но найдено нарушений: ' + failed + '.' : 'QR создан и автоматически проверен.') + fallbackNote + optimizationNote, failed ? 'bad' : 'good');
+      var emulationNote = requestedEcc
+        ? importedEccFits
+          ? ' Применена коррекция ' + requestedEcc + ' из профиля загруженного QR.'
+          : ' Коррекция ' + requestedEcc + ' из профиля не вместила нагрузку; использован уровень ' + ecc + '.'
+        : '';
+      setStatus((failed ? 'QR создан, но найдено нарушений: ' + failed + '.' : 'QR создан и автоматически проверен.') + fallbackNote + emulationNote + optimizationNote, failed ? 'bad' : 'good');
     } catch (error) {
       state.html = '';
       state.spec = null;
@@ -1114,6 +1232,8 @@
 
   function resetWorkspace() {
     stopPreview();
+    clearImportedQrAnalysis();
+    clearQrEmulation(true);
     state.buildId++;
     state.html = '';
     state.spec = null;
@@ -1377,9 +1497,27 @@
           var context = canvas.getContext('2d', { willReadFrequently: true });
           context.drawImage(image, 0, 0, canvas.width, canvas.height);
           var pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-          var decoded = window.jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'attemptBoth' });
+          var decoded = window.jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'dontInvert' });
+          var inverted = false;
+          if (!decoded) {
+            decoded = window.jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'onlyInvert' });
+            inverted = !!decoded;
+          }
           if (!decoded || !decoded.data) throw new Error('QR-код на изображении не распознан. Попробуйте более чёткое изображение с белым полем вокруг кода.');
-          resolve(decoded.data);
+          resolve({
+            decoded: decoded,
+            profile: core.analyzeQrImage(decoded, {
+              fileName: file.name,
+              fileType: file.type,
+              fileSize: file.size,
+              width: image.naturalWidth,
+              height: image.naturalHeight,
+              decodeWidth: pixels.width,
+              decodeHeight: pixels.height,
+              decodeScale: scale,
+              inverted: inverted
+            })
+          });
         } catch (error) { reject(error); }
         finally { URL.revokeObjectURL(url); }
       };
@@ -1397,14 +1535,21 @@
     input.value = '';
     if (file.type && !/^image\//i.test(file.type)) return setStatus('Выбранный файл не является изображением.', 'bad');
     if (file.size > 30 * 1024 * 1024) return setStatus('QR-изображение больше 30 МБ.', 'bad');
+    clearImportedQrAnalysis();
+    clearQrEmulation(true);
     setStatus('Декодирование QR-изображения…');
     try {
-      var decoded = await decodeQrImage(file);
-      var source = core.normalizeSource(decoded);
-      setMode('code', false);
-      elements.source.value = source;
-      refreshDifficultyEditor();
-      setStatus('QR-изображение декодировано: содержимое загружено в редактор.', 'good');
+      var result = await decodeQrImage(file);
+      renderImportedQrAnalysis(result.profile, result.decoded.data);
+      if (result.profile.payload.isHtml) {
+        var source = core.normalizeSource(result.decoded.data);
+        setMode('code', false);
+        elements.source.value = source;
+        refreshDifficultyEditor();
+        setStatus('QR-изображение декодировано и проанализировано: HTML загружен в редактор.', 'good');
+      } else {
+        setStatus('QR-изображение декодировано и проанализировано. Содержимое не является HTML и показано только в профиле.', 'good');
+      }
     } catch (error) { setStatus(error.message || 'Не удалось декодировать QR-изображение.', 'bad'); }
   }
 
@@ -1429,6 +1574,9 @@
   elements.themeToggle.addEventListener('click', function () {
     applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light', true);
   });
+  elements.applyImportedQr.addEventListener('click', applyImportedQrProfile);
+  elements.closeImportedQr.addEventListener('click', function () { elements.qrImportAnalysis.hidden = true; setStatus('Профиль загруженного QR скрыт.'); });
+  elements.clearQrEmulation.addEventListener('click', function () { clearQrEmulation(true); setStatus('Возвращён автоматический выбор коррекции и стандартная геометрия QR.'); });
   elements.qrZoom.addEventListener('click', function () { setQrExpanded(!elements.qrZoom.classList.contains('expanded')); });
   window.addEventListener('resize', fitExpandedQr);
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && elements.qrZoom.classList.contains('expanded')) setQrExpanded(false); });
