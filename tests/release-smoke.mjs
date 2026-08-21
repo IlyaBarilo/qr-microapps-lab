@@ -72,6 +72,14 @@ if (/\n\s*push:/.test(pagesWorkflow)) errors.push('Pages не должен пу�
 if (!/npm --prefix tests run check/.test(pagesWorkflow)) errors.push('Pages должен проверять проект до упаковки.');
 if (!/cp pages\/index\.html _site\/index\.html/.test(pagesWorkflow)) errors.push('Pages должен брать стартовую страницу из pages/.');
 
+const standaloneBuilder = read('tools/build-standalone.mjs');
+if (!standaloneBuilder.includes('relative(root, fullPath)') || !standaloneBuilder.includes('isAbsolute(relativeToRoot)')) {
+  errors.push('Сборщик должен безопасно разрешать пути одинаково в Windows и Linux.');
+}
+if (standaloneBuilder.includes("replaceAll('/', '\\\\')")) {
+  errors.push('Сборщик не должен заменять разделители путей на Windows-специфичные.');
+}
+
 if (errors.length) {
   errors.forEach((message) => console.error(`ОШИБКА: ${message}`));
   process.exitCode = 1;

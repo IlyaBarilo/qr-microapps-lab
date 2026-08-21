@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -34,9 +34,11 @@ function build() {
   const scriptPattern = /  <script src="([^"]+)"><\/script>/g;
   let scriptsInlined = 0;
   html = html.replace(scriptPattern, (tag, relativePath) => {
-    const normalized = relativePath.replaceAll('/', '\\');
-    const fullPath = resolve(root, normalized);
-    if (!fullPath.startsWith(root + '\\')) throw new Error(`Недопустимый путь скрипта: ${relativePath}`);
+    const fullPath = resolve(root, ...relativePath.split('/'));
+    const relativeToRoot = relative(root, fullPath);
+    if (relativeToRoot === '..' || relativeToRoot.startsWith(`..${sep}`) || isAbsolute(relativeToRoot)) {
+      throw new Error(`Недопустимый путь скрипта: ${relativePath}`);
+    }
     if (!existsSync(fullPath)) throw new Error(`Не найден скрипт: ${relativePath}`);
     scriptsInlined += 1;
     let banner = `/* Встроенный исходный файл: ${relativePath}. */`;
