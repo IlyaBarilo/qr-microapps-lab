@@ -17,7 +17,7 @@
 
 - Назначение: декодирование пикселей сформированного QR-кода.
 - Исходный проект: [cozmo/jsQR](https://github.com/cozmo/jsQR).
-- Дистрибутив: npm-пакет `jsqr@1.4.0`; локальный файл побайтово совпадает с `dist/jsQR.js` из пакета.
+- Дистрибутив: jsQR 1.4.0 из npm-пакета `jsqr@1.4.0` (`dist/jsQR.js`).
 - Лицензия: [Apache-2.0](editor/vendor/jsQR.LICENSE).
 - Встроенный файл: `editor/vendor/jsQR.js`.
-- SHA-256: `bc40c8a15196236b2314db0856f72ca0b49980cd5413b8c852a7349f5fee0859`.
+- SHA-256: `aec81b459d4e3856885fca04b497474227396ab793daedf402fd80f7b9fcc337`.
