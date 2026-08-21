@@ -8,9 +8,9 @@
 :root{--bg:#06131c;--panel:#0c202c;--line:#244453;--text:#effbff;--muted:#9ab4c0;--accent:#5de4cf;--accent2:#5bb8ff;--danger:#ff7f85;--warning:#ffd166;--radius:20px;color-scheme:dark}*{box-sizing:border-box}[hidden]{display:none!important}html{min-width:320px;background:var(--bg)}body{margin:0;min-height:100vh;color:var(--text);background:radial-gradient(circle at 15% -10%,rgba(91,184,255,.17),transparent 36rem),radial-gradient(circle at 95% 0%,rgba(93,228,207,.12),transparent 34rem),var(--bg);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}button,label[for],select{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid rgba(91,184,255,.55);outline-offset:2px}.topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;max-width:1540px;margin:auto;padding:34px 24px 22px}.eyebrow,.step{margin:0 0 6px;color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.14em}h1{max-width:820px;margin:0;font-size:clamp(27px,4vw,44px);line-height:1.04;letter-spacing:-.035em}.lead{margin:12px 0 0;color:var(--muted);font-size:16px}.topbadges{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}.workspace{display:grid;grid-template-columns:minmax(460px,.95fr) minmax(600px,1.25fr);gap:16px;max-width:1540px;margin:auto;padding:0 24px 28px}.panel{min-width:0;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(180deg,rgba(16,42,56,.94),rgba(9,29,40,.96));box-shadow:0 18px 48px rgba(0,0,0,.19);padding:20px}.input-panel{grid-row:span 2}.validation-panel{grid-column:1/-1}.section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}h2{margin:0;font-size:21px;letter-spacing:-.02em}h3{margin:0 0 10px;font-size:15px}.file-actions,.primary-actions,.download-actions,.preview-actions{display:flex;flex-wrap:wrap;gap:8px}input[type=file]{position:fixed;left:-9999px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:42px;border:1px solid transparent;border-radius:12px;padding:9px 13px;color:var(--text);background:#193747;font-weight:750;text-decoration:none}.button:hover:not(:disabled){filter:brightness(1.1)}.button:disabled{cursor:not-allowed;opacity:.43}.button.primary{color:#022127;background:linear-gradient(135deg,var(--accent),#8cf1c5)}.button.subtle{border-color:var(--line);background:#132f3e}.button.danger{color:#ffdadd;border-color:#713b45;background:#40232c}.button.small{min-height:38px;padding:7px 11px}.field-label{display:block;margin:0 0 7px;color:#cfe2e9;font-size:12px;font-weight:750}.code,select,input[type=number]{width:100%;border:1px solid var(--line);border-radius:13px;color:var(--text);background:#061720}.code{resize:vertical;padding:13px;font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}.source-code{min-height:300px}.spec-code{min-height:210px}.data-url{min-height:84px;max-height:140px;resize:vertical;color:#b6ced7}select,input[type=number]{min-height:42px;margin-top:6px;padding:8px 10px}.spec-box{margin:14px 0;border:1px solid var(--line);border-radius:14px;background:rgba(3,19,27,.45)}.spec-box summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;cursor:pointer;list-style:none}.spec-box summary::-webkit-details-marker{display:none}.spec-box summary small{display:block;margin-top:2px;color:var(--muted);font-weight:400}.summary-hint,.text-action{color:var(--accent2);font-size:12px}.spec-content{padding:0 13px 13px}.field-topline{display:flex;justify-content:space-between;gap:10px}.settings,.preview-settings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}.settings label,.preview-settings label{color:var(--muted);font-size:11px;font-weight:700}.status{min-height:22px;margin:11px 0 0;color:var(--muted)}.status.good{color:var(--accent)}.status.bad{color:var(--danger)}.badge{display:inline-flex;align-items:center;min-height:28px;border:1px solid #376071;border-radius:999px;padding:4px 10px;color:#cce8f0;background:rgba(18,50,65,.8);font-size:11px;font-weight:800}.badge.good{border-color:#297164;color:#9df4d4}.badge.fail{border-color:#79414a;color:#ffb1b5}.badge.warn{border-color:#765e2d;color:#ffe19b}.badge.muted{border-color:var(--line);color:var(--muted)}.result-grid{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(310px,1.2fr);gap:18px}.qr-stage{display:grid;place-items:center;aspect-ratio:1;overflow:hidden;border-radius:16px;background:#fff;padding:12px}.qr-stage canvas{display:none;width:100%;height:auto;image-rendering:pixelated}.qr-stage p{max-width:190px;color:#55717c;text-align:center}.download-actions{margin-top:10px}.metrics-column{min-width:0}.metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.metric{min-width:0;border:1px solid var(--line);border-radius:13px;padding:11px;background:#0a1d27}.metric span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em}.metric strong{display:block;overflow:hidden;margin-top:4px;font-size:18px;text-overflow:ellipsis;white-space:nowrap}.roundtrip-card{display:flex;gap:12px;margin:10px 0 13px;border:1px solid var(--line);border-radius:14px;padding:12px;background:#0a1d27}.roundtrip-card.good{border-color:#297164;background:rgba(20,87,74,.2)}.roundtrip-card.fail{border-color:#79414a;background:rgba(109,45,56,.2)}.roundtrip-card p{margin:3px 0 0;color:var(--muted);font-size:12px}.roundtrip-icon{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;border-radius:50%;color:var(--accent);background:#153947;font-size:19px;font-weight:800}.preview-settings{grid-template-columns:1.6fr .7fr .7fr;max-width:590px}.preview-layout{display:grid;grid-template-columns:minmax(300px,1fr) 260px;align-items:start;gap:18px}.device-shell{width:360px;height:640px;max-width:100%;margin:auto;overflow:hidden;border:9px solid #06131c;border-radius:28px;background:#fff;box-shadow:0 14px 38px rgba(0,0,0,.3)}#preview{display:block;width:100%;height:100%;border:0;background:#fff}.runtime-box{border:1px solid var(--line);border-radius:14px;padding:13px;background:#0a1d27}.runtime-log{max-height:220px;overflow:auto;margin:0;padding:0;list-style:none}.runtime-log li{padding:7px 0;border-bottom:1px solid rgba(36,68,83,.6);color:#cfe2e9;font-size:12px}.runtime-log li:last-child{border-bottom:0}.runtime-log .error-item{color:#ffafb4}.runtime-log .warn-item{color:#ffe19b}.runtime-log .good-item{color:#9df4d4}.runtime-log .muted-item{color:var(--muted)}.security-note,.report-note{margin:12px 0 0;color:var(--muted);font-size:11px}.validation-summary{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:13px}.validation-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.check{display:grid;grid-template-columns:30px 1fr auto;align-items:start;gap:10px;min-width:0;border:1px solid var(--line);border-radius:14px;padding:12px;background:#0a1d27}.check-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#132f3e;font-weight:900}.check.pass .check-icon{color:var(--accent)}.check.fail .check-icon{color:var(--danger)}.check.warn .check-icon{color:var(--warning)}.check strong{display:block;margin-bottom:3px}.check p{margin:0;color:var(--muted);font-size:12px}.check details{grid-column:2/-1;color:var(--muted);font:11px/1.45 ui-monospace,monospace;white-space:pre-wrap}footer{display:flex;justify-content:space-between;gap:18px;max-width:1540px;margin:auto;padding:0 24px 30px;color:#728e9a;font-size:11px}@media(max-width:1120px){.workspace{grid-template-columns:1fr}.input-panel{grid-row:auto}.validation-panel{grid-column:auto}}@media(max-width:720px){.topbar{align-items:flex-start;flex-direction:column;padding:24px 14px 18px}.topbadges{justify-content:flex-start}.workspace{padding:0 10px 20px}.panel{padding:15px;border-radius:16px}.section-head{flex-direction:column}.settings{grid-template-columns:repeat(2,minmax(0,1fr))}.result-grid,.preview-layout{grid-template-columns:1fr}.preview-actions{width:100%}.preview-actions .button{flex:1}.validation-list{grid-template-columns:1fr}footer{flex-direction:column;padding:0 14px 22px}}@media(max-width:430px){.file-actions,.primary-actions{width:100%}.file-actions .button,.primary-actions .button{flex:1}.settings,.preview-settings{grid-template-columns:1fr}.metric-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:720px){.preview-layout{grid-template-columns:minmax(0,1fr)}.device-shell{width:100%!important}}
 .file-actions select{width:auto;min-width:155px;margin:0}
-.source-actions{display:flex;align-items:flex-end;flex-direction:column;gap:8px}.project-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}.project-actions .button{min-height:38px;padding:7px 11px}
+.source-actions{display:flex;align-items:flex-end;flex-direction:column;gap:8px}.project-actions,.game-spec-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}.project-actions .button,.game-spec-actions .button{min-height:38px;padding:7px 11px}
 .difficulty-editor{display:grid;grid-template-columns:minmax(0,1fr) 150px auto;align-items:end;gap:9px;margin:0 0 10px;border:1px solid #2b665e;border-radius:14px;padding:10px;background:rgba(27,91,79,.14)}.difficulty-editor.unavailable{border-color:var(--line);background:#0a1d27}.difficulty-editor.unavailable .difficulty-editor-copy{opacity:.62}.difficulty-editor-copy{align-self:center}.difficulty-editor-copy strong{display:block}.difficulty-editor-copy small{display:block;margin-top:2px;color:var(--muted);font-size:11px}.difficulty-editor label{color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.difficulty-editor select{margin:4px 0 0}.difficulty-editor .button{min-height:42px}
-.source-head{display:block}.source-head>div:first-child{margin-bottom:13px}.source-head .source-actions{align-items:stretch;width:100%}.source-head .file-actions{display:grid;grid-template-columns:auto minmax(260px,1fr);align-items:end;gap:8px}.example-picker{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px;min-width:0;border:1px solid var(--line);border-radius:13px;padding:8px;background:#0a1d27}.example-select-field{min-width:0;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.example-select-field select{width:100%;min-width:0;margin:4px 0 0}.example-picker .button{white-space:nowrap}.source-head .project-actions{justify-content:flex-start;border-top:1px solid rgba(36,68,83,.7);padding-top:8px}.action-group-label{flex:0 0 100%;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.source-head{display:block}.source-head>div:first-child{margin-bottom:13px}.source-head .source-actions{align-items:stretch;width:100%}.source-head .file-actions{display:grid;grid-template-columns:auto minmax(260px,1fr);align-items:end;gap:8px}.example-picker{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px;min-width:0;border:1px solid var(--line);border-radius:13px;padding:8px;background:#0a1d27}.example-select-field{min-width:0;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.example-select-field select{width:100%;min-width:0;margin:4px 0 0}.example-picker .button{white-space:nowrap}.source-head .project-actions,.source-head .game-spec-actions{justify-content:flex-start;border-top:1px solid rgba(36,68,83,.7);padding-top:8px}.action-group-label{flex:0 0 100%;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.game-spec-hint{flex:0 0 100%;margin:0;color:var(--muted);font-size:12px;line-height:1.45}
 .source-reset-actions{display:flex;justify-content:flex-end;margin-top:13px}.qr-controls{margin-bottom:16px;border:1px solid #2b665e;border-radius:15px;padding:13px;background:rgba(27,91,79,.13)}.qr-controls-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:9px}.qr-controls-head h3{margin:0}.qr-controls-head span{color:var(--muted);font-size:11px;text-align:right}.qr-controls .settings{margin:0 0 11px}.qr-action-row{display:flex;align-items:center;gap:12px}.qr-action-row .status{flex:1;margin:0}.qr-action-row .button{flex:0 0 auto}
 @media(max-width:520px){.source-head .file-actions{grid-template-columns:1fr}.example-picker{grid-template-columns:minmax(0,1fr) auto}.difficulty-editor{grid-template-columns:1fr 1fr}.difficulty-editor-copy{grid-column:1/-1}.difficulty-editor .button{align-self:end}}
 @media(max-width:720px){.qr-controls-head,.qr-action-row{align-items:stretch;flex-direction:column}.qr-controls-head span{text-align:left}.qr-action-row .button{width:100%}}
@@ -18,8 +18,8 @@
 @media(max-width:430px){.mode-switch,.simple-colors,.answer-grid{grid-template-columns:1fr}.simple-colors label{grid-template-columns:1fr 52px}.simple-estimate{align-items:flex-start;flex-direction:column}.simple-estimate strong{text-align:left}}
 .simple-question{display:block}.simple-question-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.simple-question-head strong{color:var(--accent);font-size:12px;font-weight:850}.simple-question-head button,.simple-answer-row>button{min-height:34px;border:1px solid var(--line);border-radius:9px;padding:5px 9px;color:var(--muted);background:#071923;font-weight:750}.simple-question-head button:disabled,.simple-answer-row>button:disabled{opacity:.4;cursor:not-allowed}.simple-answers{display:grid;gap:8px;margin-top:10px}.simple-answer-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:end;gap:8px}.simple-correct{display:flex!important;align-items:center;gap:6px;min-height:43px;padding:0 4px;color:var(--text)!important}.simple-correct input{width:18px;height:18px;margin:0;accent-color:var(--accent)}.simple-add-answer{min-height:38px;margin-top:9px;border:1px dashed #377266;border-radius:10px;padding:7px 10px;color:var(--accent);background:transparent;font-weight:800}.simple-list-actions{display:flex;align-items:center;gap:12px}.simple-list-actions span{color:var(--muted);font-size:11px;line-height:1.4}
 @media(max-width:430px){.simple-answer-row{grid-template-columns:1fr auto}.simple-answer-row>label:first-child{grid-column:1/-1}.simple-list-actions{align-items:flex-start;flex-direction:column}}
-@media(max-width:720px){.source-actions{align-items:stretch;width:100%}.project-actions{justify-content:flex-start}}
-@media(max-width:430px){.project-actions{width:100%}.project-actions .button{flex:1}}
+@media(max-width:720px){.source-actions{align-items:stretch;width:100%}.project-actions,.game-spec-actions{justify-content:flex-start}}
+@media(max-width:430px){.project-actions,.game-spec-actions{width:100%}.project-actions .button,.game-spec-actions .button{flex:1}}
 .size-analysis{margin:10px 0 13px;border:1px solid var(--line);border-radius:14px;background:#071923}.size-analysis>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;cursor:pointer;list-style:none;font-weight:800}.size-analysis>summary::-webkit-details-marker{display:none}.size-analysis>summary strong{color:var(--accent);font-size:12px}.size-breakdown{display:grid;gap:9px;padding:0 12px 10px}.size-row{display:grid;grid-template-columns:1fr auto;gap:4px 10px;color:#cfe2e9;font-size:11px}.size-row strong{font-size:11px}.size-track{grid-column:1/-1;height:7px;overflow:hidden;border-radius:99px;background:#163140}.size-fill{display:block;height:100%;min-width:2px;border-radius:inherit;background:var(--accent2)}.size-fill.css{background:#b38cff}.size-fill.javascript{background:#ffd166}.size-fill.content{background:#ff8ea1}.analysis-empty,.encoding-compare{margin:0;color:var(--muted);font-size:11px}.analysis-empty{padding:0 12px 10px}.encoding-compare{border-top:1px solid var(--line);padding:9px 12px}.optimization-hints{display:grid;gap:7px;padding:0 12px 12px}.optimization-hint{border-left:3px solid var(--accent2);border-radius:8px;padding:8px 9px;background:#0b2330}.optimization-hint.warn{border-color:var(--warning)}.optimization-hint.danger{border-color:var(--danger)}.optimization-hint strong{display:block;font-size:11px}.optimization-hint p{margin:2px 0 0;color:var(--muted);font-size:10px}
 .history-panel{grid-column:1/-1}.history-actions{display:flex;flex-wrap:wrap;gap:8px}.history-note{margin:-6px 0 13px;color:var(--muted);font-size:11px}.history-summary{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}.iteration-history{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.iteration-history>.analysis-empty{grid-column:1/-1;padding:8px 0}.iteration-card{min-width:0;border:1px solid var(--line);border-radius:14px;padding:12px;background:#0a1d27}.iteration-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.iteration-head strong{display:block}.iteration-head small{display:block;margin-top:2px;color:var(--muted)}.iteration-number{color:var(--accent);font-weight:900}.iteration-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px}.iteration-metric{border-radius:9px;padding:7px 8px;background:#071923}.iteration-metric span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase}.iteration-metric b{font-size:12px}.iteration-validation{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}.iteration-validation .badge{min-height:24px;padding:2px 8px}.iteration-delta{margin:9px 0 0;color:var(--muted);font-size:10px}.iteration-delta.good{color:var(--accent)}.iteration-delta.bad{color:var(--danger)}
 @media(max-width:1120px){.iteration-history{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -309,6 +309,278 @@ Apache License
    See the License for the specific language governing permissions and
    limitations under the License.
   </script>
+  <template id="embedded-game-spec" data-purpose="game-creation-specification"><pre># Спецификация автономных HTML-микроигр для QR / `data:` URL
+
+## Шаблон промпта
+
+Скопируйте этот блок, заполните известные поля и приложите данную спецификацию.
+
+```text
+Создай автономную HTML-микроигру по приложенной спецификации.
+
+Идея: [краткое описание игры]
+Сложность: [1–5, по умолчанию 3]
+Ориентация: [портретная / альбомная / любая; по умолчанию портретная]
+Язык интерфейса: [по умолчанию русский]
+Управление: [особые пожелания или «выбери сам»]
+Компактность: [максимальная / обычная; по умолчанию максимальная]
+Дополнительные условия: [необязательно]
+
+Верни только один полный HTML-документ, начиная с &lt;!doctype html&gt;.
+Не используй Markdown и не добавляй пояснения до или после HTML.
+
+Целевой уровень коррекции QR — M. Рассматривай L только как крайний вариант,
+если законченная основная механика после упрощения действительно не помещается в M.
+
+Если поле не заполнено, выбери самый компактный работоспособный вариант.
+При конфликте требований соблюдай приоритеты из спецификации.
+Не добавляй тесты, отладочный интерфейс, внешние ресурсы и возможности,
+которые не нужны для описанной игры.
+```
+
+---
+
+## 1. Назначение и приоритеты
+
+Спецификация предназначена для создания небольших игр, которые сохраняются в
+одном HTML-файле, кодируются в `data:` URL и запускаются офлайн после
+сканирования QR-кода.
+
+Если требования конфликтуют, приоритет следующий:
+
+1. автономный запуск и работоспособность;
+2. управление и читаемость на смартфоне;
+3. попадание в доступный размер QR;
+4. сохранение основной игровой механики;
+5. оформление и дополнительные эффекты.
+
+Необязательное оформление и функции нужно сокращать раньше игровой механики.
+
+## 2. Результат
+
+Если явно не запрошено иное, результат должен содержать только:
+
+- один полный HTML-документ;
+- встроенные CSS и JavaScript;
+- готовую к запуску игру без сборки и установки зависимостей.
+
+Не нужно возвращать отдельно описание, инструкцию, список параметров, тесты,
+отладочную версию или готовый `data:` URL. Оптимизацию, кодирование и создание QR
+выполняет QR Microapps Lab.
+
+## 3. Обязательные требования
+
+Игра должна:
+
+- начинаться с единственного `&lt;!doctype html&gt;`;
+- полностью работать без интернета;
+- состоять из одного HTML-файла;
+- не обращаться к CDN, API, серверу или другим файлам;
+- не использовать внешние библиотеки, шрифты, изображения, аудио и импорты;
+- содержать `&lt;meta charset=utf-8&gt;`;
+- содержать мобильный viewport как минимум с
+  `width=device-width,initial-scale=1`;
+- запускаться прямым открытием файла и из `data:` URL;
+- не открывать внешние адреса, новые окна и не перенаправлять пользователя;
+- считать смартфон и управление пальцем основной средой;
+- не требовать клавиатуру, мышь или наведение указателя;
+- помещать игровое поле и основные элементы в доступную область экрана;
+- не создавать прокрутку, если она не является частью механики;
+- сохранять читаемый текст и достаточно крупные цели касания;
+- иметь понятную цель, состояние завершения и возможность повторного запуска.
+- запускаться без ошибок JavaScript, необработанных Promise и заблокированных
+  попыток загрузить ресурсы или обратиться к сети.
+
+Клавиатурное управление и поддержка старых браузеров добавляются только по
+явному запросу.
+
+## 4. Сложность
+
+Сложность задаётся целым числом от `1` до `5`:
+
+- `1` — очень легко;
+- `2` — легко;
+- `3` — средняя сложность и значение по умолчанию;
+- `4` — сложно;
+- `5` — очень сложно.
+
+Правила реализации:
+
+- объявить в JavaScript ровно одну глобальную переменную `var $d=3;`;
+- считать `$d` зарезервированной переменной сложности, которую QR Microapps Lab
+  изменяет при подготовке разных вариантов QR-кода;
+- использовать выбранное в промпте значение вместо `3`, сохраняя диапазон `1..5`;
+- не переименовывать `$d`, не объявлять её повторно и не присваивать ей другое
+  значение во время игры;
+- считать весь префикс `$` зарезервированным для переменных формата QR Microapps
+  Lab: разработчик не должен объявлять собственные переменные, параметры или
+  функции с именами, начинающимися с `$`;
+- использовать `$d` как единственное разрешённое разработчику системное имя с
+  этим префиксом; в будущих версиях формат может определить другие переменные `$…`;
+- менять через неё только значимые параметры баланса: скорость, время, частоту,
+  число целей, размер безопасной зоны, количество попыток или допустимых ошибок;
+- не создавать пять копий уровней, если параметры можно вычислить компактно;
+- не добавлять видимый выбор сложности, настройки или отдельное меню без запроса;
+- не усложнять код и оформление только из-за более высокого уровня сложности.
+
+На уровне `3` игра должна быть проходимой без предварительного знания механики,
+но требовать внимания или нескольких осмысленных действий.
+
+## 5. Ввод
+
+Для единой поддержки пальца, стилуса и мыши предпочтительно использовать
+Pointer Events как основной канал ввода.
+
+Обязательные свойства:
+
+- одно физическое касание вызывает одно игровое действие;
+- не следует одновременно подключать pointer-, touch- и mouse-обработчики к
+  одной механике без явной дедупликации;
+- нажатие кнопки интерфейса не должно одновременно запускать действие на игровом поле;
+- системные жесты, выделение текста и контекстное меню нужно отключать только
+  там, где они мешают управлению;
+- для перетаскивания или удержания применять Pointer Capture либо равноценную
+  компактную логику, если без неё управление теряется за пределами элемента;
+- обрабатывать отмену активного непрерывного ввода, если она может оставить
+  игру в зависшем состоянии.
+
+Не нужно добавлять отдельные Touch Events и Mouse Events как запасной вариант,
+если целевые браузеры поддерживают Pointer Events.
+
+## 6. Экран и масштабирование
+
+Игра должна корректно выглядеть прежде всего на вертикальном экране смартфона,
+если в запросе не выбрана другая ориентация.
+
+- не привязывать важные элементы к единственному разрешению;
+- учитывать изменение доступного размера и ориентации, если от них зависит поле;
+- сохранять игровые объекты, текст и управление внутри видимой области;
+- не вводить обязательный базовый макет, сложную систему масштаба или безопасные
+  поля, если простая адаптивная вёрстка решает задачу;
+- не использовать жёсткие ограничения, делающие игру слишком мелкой на большом экране.
+
+Для canvas требования применяются только при его использовании:
+
+- координаты отрисовки и координаты касания должны соответствовать друг другу;
+- изменение размера не должно ломать положение и столкновения объектов;
+- учитывать `devicePixelRatio`, когда без этого заметно страдают чёткость текста
+  или игровой процесс;
+- не добавлять универсальный масштабатор, если достаточно короткого пересчёта размеров.
+
+## 7. Игровой цикл и завершение
+
+- Для непрерывной анимации использовать `requestAnimationFrame`.
+- Скорость движения, таймеры и другие зависящие от времени процессы рассчитывать
+  по прошедшему времени, а не по количеству кадров.
+- Это правило не требует игрового цикла в викторинах, пошаговых и событийных играх.
+- После победы или поражения игровая логика и управление должны прекратиться.
+- Если ведётся счёт, итоговое значение должно оставаться видимым до перезапуска.
+- Повторный запуск должен полностью восстановить начальное состояние без дублей
+  таймеров, циклов и обработчиков.
+
+Не требуются определённые имена функций, классы или архитектурные слои. Важен
+наблюдаемый результат, а не внутренняя структура программы.
+
+Нативные `alert`, `confirm` и `prompt` не использовать как основной игровой
+интерфейс. Компактный экран результата внутри игры предпочтительнее.
+
+## 8. Экономия размера
+
+Размер оценивается не по числу символов в исходнике, а по байтам
+оптимизированного HTML и полного Base64 `data:` URL. Окончательный расчёт всегда
+выполняет QR Microapps Lab, но при создании игры нужно придерживаться следующих
+ориентиров для QR версии 40:
+
+- основной и предпочтительный уровень — коррекция **M**;
+- рекомендуемый объём оптимизированного HTML для M — не более **1600 байт**,
+  чтобы оставить запас на упаковку и небольшие изменения;
+- технический предел используемого лабораторией Base64 `data:` URL при M —
+  **2331 байт**, что соответствует примерно **1719 байтам HTML**;
+- не следует заранее заполнять весь предел M: меньший код обычно создаёт менее
+  плотную матрицу и легче считывается с экрана;
+- коррекция **L** допустима только как запасной, нежелательный вариант, когда
+  основную законченную механику невозможно сохранить в M после разумного
+  упрощения;
+- предел Base64 `data:` URL при L — **2953 байта**, или примерно **2187 байт
+  HTML**; даже при L желательно оставлять запас;
+- L содержит меньше данных для исправления повреждений, поэтому такой QR менее
+  устойчив к дефектам, бликам, недостаточной чёткости и сложнее считывается в
+  реальных условиях;
+- если игра не помещается и в L, её нужно упростить: один автономный QR не должен
+  создаваться ценой превышения стандартной вместимости.
+
+Значения HTML являются предварительными ориентирами для текущего префикса и
+Base64-упаковки QR Microapps Lab. Решение о M или L принимается только по
+измеренному размеру итогового `data:` URL в лаборатории.
+
+Для экономии кода:
+
+- реализовать только основную законченную механику;
+- не добавлять универсальный движок и абстракции «на будущее»;
+- не дублировать разметку, стили, данные и обработчики;
+- использовать компактные структуры данных;
+- для викторин не создавать отдельную HTML-разметку для каждого вопроса;
+- не встраивать крупные изображения, шрифты, аудио, SVG и таблицы данных без запроса;
+- не добавлять заставки, обучение, настройки, таблицу рекордов, частицы и сложные
+  эффекты, если они не нужны идее игры;
+- не добавлять комментарии, диагностические сообщения и код, не влияющий на игру;
+- не создавать вторую, тестовую или расширенную версию;
+- не помещать внутрь игры генератор `data:` URL или QR-кода.
+
+Компактность не должна достигаться ценой синтаксических ошибок, неработающего
+управления или невозможности перезапустить игру. Финальную механическую
+оптимизацию исходника выполняет лаборатория.
+
+## 9. Условные требования
+
+Добавлять только когда этого требует идея игры:
+
+- обработку `resize` — если размеры влияют на поле или ввод;
+- Pointer Capture — для drag, удержания и непрерывного ведения;
+- расчёт `dt` — для движения и таймеров;
+- отдельный экран результата — если завершение иначе непонятно;
+- звук — только по явному запросу, автономно и после пользовательского действия;
+- локализацию — только для реально требуемых языков, без отдельного фреймворка;
+- сложный HUD — только для значимых счёта, времени или ресурсов;
+- специальный сценарий первого препятствия — только если старт иначе получается пустым;
+- сохранение результата — только по явному запросу.
+
+## 10. Тестирование
+
+Тесты выполняются снаружи — средствами QR Microapps Lab и ручным запуском на
+целевых устройствах. В HTML игры по умолчанию запрещено добавлять:
+
+- test mode и self-check;
+- тестовые функции и публичные хуки;
+- отладочные панели и журналы;
+- дублирующую dev/test-версию;
+- код, существующий только ради тестовой архитектуры.
+
+Спецификация требует проверяемого поведения, но не предписывает структуру кода.
+
+## 11. Минимальный чек-лист приёмки
+
+Этот список предназначен для внешней проверки и не должен встраиваться в игру:
+
+- открывается одним HTML-файлом без сети;
+- не содержит внешних запросов и зависимостей;
+- начинается с `&lt;!doctype html&gt;` и содержит UTF-8 и корректный мобильный viewport;
+- запускается из подготовленного лабораторией `data:` URL;
+- запускается в изолированном предпросмотре без ошибок и заблокированных операций;
+- основные действия выполняются пальцем;
+- одно касание не срабатывает дважды;
+- на целевом экране нет случайной прокрутки и недоступных элементов;
+- движение и таймеры не зависят от FPS, если они есть;
+- завершение останавливает игру и сохраняет итоговый результат;
+- повторный запуск полностью сбрасывает состояние;
+- в JavaScript ровно один раз объявлена `var $d=3;` или другое выбранное значение
+  из диапазона `1..5`;
+- собственные идентификаторы разработчика не начинаются с зарезервированного
+  префикса `$`;
+- итоговый Base64 `data:` URL предпочтительно помещается в M; L используется
+  только после попытки сократить код без потери основной механики и сопровождается
+  предупреждением о меньшей устойчивости QR.
+</pre></template>
 </head>
 <body>
   <header class="topbar">
@@ -345,7 +617,13 @@ Apache License
             <label class="button subtle" for="project-file">Открыть проект</label>
             <input id="project-file" type="file" accept=".json,.qrapp.json,application/json">
             <button id="download-project" class="button subtle" type="button">Сохранить проект</button>
-            <button id="download-spec" class="button subtle" type="button">Скачать профиль</button>
+            <button id="download-spec" class="button subtle" type="button">Скачать профиль проверки</button>
+          </div>
+          <div class="game-spec-actions" aria-label="Материалы для создания игр">
+            <span class="action-group-label">Создание игр</span>
+            <p class="game-spec-hint">Спецификация предназначена для создания игр с помощью ИИ: приложите её к промпту. Готовый шаблон промпта находится в начале файла.</p>
+            <button id="download-game-spec" class="button subtle" type="button">Скачать спецификацию</button>
+            <button id="copy-game-spec" class="button subtle" type="button">Копировать текст</button>
           </div>
         </div>
       </div>
@@ -12462,7 +12740,8 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     optimizationSummary: $('optimization-summary'), optimizationSaving: $('optimization-saving'), optimizationDetail: $('optimization-detail'),
     historySummary: $('history-summary'), iterationHistory: $('iteration-history'), downloadHistory: $('download-history'),
     clearHistory: $('clear-history'), projectFile: $('project-file'), downloadProject: $('download-project'),
-    downloadSpec: $('download-spec'), specForm: $('spec-form'), specJsonEditor: $('spec-json-editor'),
+    downloadSpec: $('download-spec'), downloadGameSpec: $('download-game-spec'), copyGameSpec: $('copy-game-spec'),
+    specForm: $('spec-form'), specJsonEditor: $('spec-json-editor'),
     specModeForm: $('spec-mode-form'), specModeJson: $('spec-mode-json'), specTitleInput: $('spec-title-input'),
     specIdInput: $('spec-id-input'), specTypeInput: $('spec-type-input'), specSingleFileInput: $('spec-single-file-input'),
     specExternalInput: $('spec-external-input'), specNetworkInput: $('spec-network-input'),
@@ -13604,6 +13883,47 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     } catch (error) { setStatus(error.message, 'bad'); }
   }
 
+  function embeddedGameSpecification() {
+    var template = $('embedded-game-spec');
+    var content = template && template.content ? template.content.querySelector('pre') : null;
+    if (!content || !content.textContent.trim()) throw new Error('Встроенная спецификация создания игр недоступна.');
+    return content.textContent.replace(/\r?\n/g, '\r\n').replace(/(?:\r\n)*$/, '\r\n');
+  }
+
+  function downloadGameSpecification() {
+    try {
+      downloadBlob(embeddedGameSpecification(), 'text/markdown;charset=utf-8', 'spec_game_creation_ru.md');
+      setStatus('Спецификация создания игр сохранена локально.', 'good');
+    } catch (error) { setStatus(error.message, 'bad'); }
+  }
+
+  async function copyPlainText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return;
+      } catch (error) {}
+    }
+    var field = document.createElement('textarea');
+    field.value = text;
+    field.setAttribute('readonly', '');
+    field.style.position = 'fixed';
+    field.style.left = '-9999px';
+    document.body.appendChild(field);
+    field.focus();
+    field.select();
+    var copied = document.execCommand('copy');
+    field.remove();
+    if (!copied) throw new Error('Команда копирования недоступна.');
+  }
+
+  async function copyGameSpecification() {
+    try {
+      await copyPlainText(embeddedGameSpecification());
+      setStatus('Текст спецификации создания игр скопирован.', 'good');
+    } catch (error) { setStatus('Не удалось скопировать спецификацию: ' + error.message, 'bad'); }
+  }
+
   function equalJson(left, right) {
     return JSON.stringify(left) === JSON.stringify(right);
   }
@@ -13654,12 +13974,7 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
   async function copyDataUrl() {
     if (!state.dataUrl) return;
     try {
-      if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(state.dataUrl);
-      else {
-        elements.dataUrl.focus();
-        elements.dataUrl.select();
-        if (!document.execCommand('copy')) throw new Error('Команда копирования недоступна.');
-      }
+      await copyPlainText(state.dataUrl);
       setStatus('Data URL скопирован.', 'good');
     } catch (error) { setStatus('Не удалось скопировать: ' + error.message, 'bad'); }
   }
@@ -13809,6 +14124,8 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
   elements.validationToggle.addEventListener('click', function () { setValidationExpanded(elements.validationDetails.hidden); });
   elements.downloadProject.addEventListener('click', downloadCurrentProject);
   elements.downloadSpec.addEventListener('click', downloadCurrentSpec);
+  elements.downloadGameSpec.addEventListener('click', downloadGameSpecification);
+  elements.copyGameSpec.addEventListener('click', copyGameSpecification);
   elements.addCurrentComparison.addEventListener('click', addCurrentToComparison);
   elements.comparisonFiles.addEventListener('change', function () { loadComparisonReports(this); });
   elements.downloadComparison.addEventListener('click', function () { if (state.comparisons.length) downloadBlob('\ufeff' + comparisonApi.toCsv(state.comparisons), 'text/csv;charset=utf-8', 'qr-microapps-comparison.csv'); });

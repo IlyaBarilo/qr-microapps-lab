@@ -15,6 +15,10 @@ function escapeInlineScript(source) {
   return source.replace(/<\/script/gi, '<\\/script');
 }
 
+function escapeHtmlText(source) {
+  return source.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 function licenseBlock() {
   const entries = [
     ['QR MICROAPPS LAB — MIT LICENSE', read('LICENSE')],
@@ -23,6 +27,11 @@ function licenseBlock() {
   ];
   const text = entries.map(([title, license]) => `${title}\n${'='.repeat(title.length)}\n${license.trim()}`).join('\n\n');
   return `  <script type="text/plain" id="embedded-license-notices" data-purpose="license-notices">\n${text}\n  <\/script>\n`;
+}
+
+function gameSpecificationBlock() {
+  const markdown = read('spec_game_creation_ru.md').replace(/\r\n/g, '\n').replace(/\n*$/, '\n');
+  return `  <template id="embedded-game-spec" data-purpose="game-creation-specification"><pre>${escapeHtmlText(markdown)}</pre></template>\n`;
 }
 
 function localDisplayVersion() {
@@ -62,11 +71,12 @@ function build() {
   if (releaseVersionTokens.length !== 1) throw new Error(`Ожидалась одна релизная метка версии, найдено: ${releaseVersionTokens.length}.`);
   html = html.replaceAll('__LOCAL_VERSION__', localDisplayVersion());
 
-  html = html.replace('</head>', `${licenseBlock()}</head>`);
+  html = html.replace('</head>', () => `${licenseBlock()}${gameSpecificationBlock()}</head>`);
   if (/<script\b[^>]*\bsrc=/i.test(html) || /<link\b[^>]*\brel="stylesheet"/i.test(html)) {
     throw new Error('В итоговом HTML остались внешние ссылки на стили или скрипты.');
   }
   if (!html.includes('id="embedded-license-notices"')) throw new Error('В итоговый HTML не встроены лицензионные уведомления.');
+  if (!html.includes('id="embedded-game-spec"')) throw new Error('В итоговый HTML не встроена спецификация создания игр.');
   return html.replace(/\r\n/g, '\n').replace(/\s*$/, '\n');
 }
 

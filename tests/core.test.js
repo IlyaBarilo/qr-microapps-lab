@@ -1026,6 +1026,10 @@ test('импорт проекта отклоняет чужой формат, н
   assert.match(editorPage, /editor\/project\.js/);
   assert.match(editorPage, /id="project-file"/);
   assert.match(editorPage, /id="download-spec"/);
+  assert.match(editorPage, /id="download-game-spec"/);
+  assert.match(editorPage, /id="copy-game-spec"/);
+  assert.match(editorPage, /Спецификация предназначена для создания игр с помощью ИИ/);
+  assert.match(editorPage, /id="embedded-game-spec"/);
   const appSource = fs.readFileSync(path.join(__dirname, '../editor/app.js'), 'utf8');
   const openProjectSource = appSource.slice(appSource.indexOf('async function openProject'), appSource.indexOf('async function copyDataUrl'));
   assert.ok(openProjectSource.length > 200);

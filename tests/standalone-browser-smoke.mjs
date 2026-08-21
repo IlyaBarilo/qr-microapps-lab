@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const standaloneUrl = pathToFileURL(resolve(root, 'qr-microapps-lab.html')).href;
+const expectedGameSpecification = readFileSync(resolve(root, 'spec_game_creation_ru.md'), 'utf8')
+  .replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\n*$/, '\n');
 const browser = await chromium.launch({ headless: true });
 
 try {
@@ -30,6 +33,7 @@ try {
     lReserveColor: getComputedStyle(document.querySelector('#qr-l-reserve')).color,
     hiddenSettings: document.querySelector('#encoding')?.type === 'hidden' && document.querySelector('#ecc')?.type === 'hidden',
     appVersions: [...document.querySelectorAll('[data-app-version]')].map((element) => element.textContent),
+    gameSpecification: document.querySelector('#embedded-game-spec')?.content.querySelector('pre')?.textContent || '',
     difficultyVisible: !document.querySelector('#difficulty-editor')?.hidden,
     difficultyDisabled: document.querySelector('#code-difficulty')?.disabled && document.querySelector('#apply-difficulty')?.disabled,
     previewDifficulty: document.querySelector('#preview-difficulty')?.textContent || ''
@@ -44,9 +48,19 @@ try {
   assert.equal(result.hiddenSettings, true);
   assert.equal(new Set(result.appVersions).size, 1, 'В заголовке и подвале должна отображаться одна версия программы.');
   assert.match(result.appVersions[0], /^v\d+\.\d+(?:\.\d+)?(?:-[0-9A-Za-z.-]+)?$/, 'Локальная версия должна иметь публичный формат тега.');
+  assert.equal(result.gameSpecification, expectedGameSpecification, 'Встроенная Markdown-спецификация должна точно совпадать с исходным файлом.');
   assert.equal(result.difficultyVisible, true, 'Блок сложности должен быть виден для любого кода.');
   assert.equal(result.difficultyDisabled, false, 'У стартовой игры с $d управление сложностью должно быть активно.');
   assert.equal(result.previewDifficulty, 'Сложность: 3 — средняя');
+
+  const specificationDownloadPromise = page.waitForEvent('download');
+  await page.click('#download-game-spec');
+  const specificationDownload = await specificationDownloadPromise;
+  assert.equal(specificationDownload.suggestedFilename(), 'spec_game_creation_ru.md');
+  assert.equal(readFileSync(await specificationDownload.path(), 'utf8'), expectedGameSpecification.replace(/\n/g, '\r\n'), 'Скачанная спецификация должна сохранять полный текст в CRLF.');
+  await page.click('#copy-game-spec');
+  await page.waitForFunction(() => document.querySelector('#status')?.textContent !== 'Спецификация создания игр сохранена локально.');
+  assert.equal(await page.locator('#status').textContent(), 'Текст спецификации создания игр скопирован.');
 
   const generatedQr = Buffer.from(await page.locator('#qr-canvas').evaluate((canvas) => canvas.toDataURL('image/png').split(',')[1]), 'base64');
   await page.fill('#source', '');

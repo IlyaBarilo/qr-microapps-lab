@@ -33,7 +33,8 @@
     optimizationSummary: $('optimization-summary'), optimizationSaving: $('optimization-saving'), optimizationDetail: $('optimization-detail'),
     historySummary: $('history-summary'), iterationHistory: $('iteration-history'), downloadHistory: $('download-history'),
     clearHistory: $('clear-history'), projectFile: $('project-file'), downloadProject: $('download-project'),
-    downloadSpec: $('download-spec'), specForm: $('spec-form'), specJsonEditor: $('spec-json-editor'),
+    downloadSpec: $('download-spec'), downloadGameSpec: $('download-game-spec'), copyGameSpec: $('copy-game-spec'),
+    specForm: $('spec-form'), specJsonEditor: $('spec-json-editor'),
     specModeForm: $('spec-mode-form'), specModeJson: $('spec-mode-json'), specTitleInput: $('spec-title-input'),
     specIdInput: $('spec-id-input'), specTypeInput: $('spec-type-input'), specSingleFileInput: $('spec-single-file-input'),
     specExternalInput: $('spec-external-input'), specNetworkInput: $('spec-network-input'),
@@ -1175,6 +1176,47 @@
     } catch (error) { setStatus(error.message, 'bad'); }
   }
 
+  function embeddedGameSpecification() {
+    var template = $('embedded-game-spec');
+    var content = template && template.content ? template.content.querySelector('pre') : null;
+    if (!content || !content.textContent.trim()) throw new Error('Встроенная спецификация создания игр недоступна.');
+    return content.textContent.replace(/\r?\n/g, '\r\n').replace(/(?:\r\n)*$/, '\r\n');
+  }
+
+  function downloadGameSpecification() {
+    try {
+      downloadBlob(embeddedGameSpecification(), 'text/markdown;charset=utf-8', 'spec_game_creation_ru.md');
+      setStatus('Спецификация создания игр сохранена локально.', 'good');
+    } catch (error) { setStatus(error.message, 'bad'); }
+  }
+
+  async function copyPlainText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return;
+      } catch (error) {}
+    }
+    var field = document.createElement('textarea');
+    field.value = text;
+    field.setAttribute('readonly', '');
+    field.style.position = 'fixed';
+    field.style.left = '-9999px';
+    document.body.appendChild(field);
+    field.focus();
+    field.select();
+    var copied = document.execCommand('copy');
+    field.remove();
+    if (!copied) throw new Error('Команда копирования недоступна.');
+  }
+
+  async function copyGameSpecification() {
+    try {
+      await copyPlainText(embeddedGameSpecification());
+      setStatus('Текст спецификации создания игр скопирован.', 'good');
+    } catch (error) { setStatus('Не удалось скопировать спецификацию: ' + error.message, 'bad'); }
+  }
+
   function equalJson(left, right) {
     return JSON.stringify(left) === JSON.stringify(right);
   }
@@ -1225,12 +1267,7 @@
   async function copyDataUrl() {
     if (!state.dataUrl) return;
     try {
-      if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(state.dataUrl);
-      else {
-        elements.dataUrl.focus();
-        elements.dataUrl.select();
-        if (!document.execCommand('copy')) throw new Error('Команда копирования недоступна.');
-      }
+      await copyPlainText(state.dataUrl);
       setStatus('Data URL скопирован.', 'good');
     } catch (error) { setStatus('Не удалось скопировать: ' + error.message, 'bad'); }
   }
@@ -1380,6 +1417,8 @@
   elements.validationToggle.addEventListener('click', function () { setValidationExpanded(elements.validationDetails.hidden); });
   elements.downloadProject.addEventListener('click', downloadCurrentProject);
   elements.downloadSpec.addEventListener('click', downloadCurrentSpec);
+  elements.downloadGameSpec.addEventListener('click', downloadGameSpecification);
+  elements.copyGameSpec.addEventListener('click', copyGameSpecification);
   elements.addCurrentComparison.addEventListener('click', addCurrentToComparison);
   elements.comparisonFiles.addEventListener('change', function () { loadComparisonReports(this); });
   elements.downloadComparison.addEventListener('click', function () { if (state.comparisons.length) downloadBlob('\ufeff' + comparisonApi.toCsv(state.comparisons), 'text/csv;charset=utf-8', 'qr-microapps-comparison.csv'); });
