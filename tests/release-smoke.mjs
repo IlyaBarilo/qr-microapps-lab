@@ -18,7 +18,7 @@ function read(relativePath) {
 
 [
   'pages/index.html', 'pages/.nojekyll', 'qr-microapps-lab.html', 'editor/source.html', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'spec_game_creation_ru.md',
-  '.github/workflows/ci.yml', '.github/workflows/pages.yml',
+  '.github/workflows/ci.yml', '.github/workflows/pages.yml', '.github/workflows/release.yml',
   'tests/package.json', 'tests/package-lock.json', 'tests/playwright.config.js', 'tests/e2e/lab.spec.js', 'tests/standalone-browser-smoke.mjs',
   'tools/build-standalone.mjs'
 ].forEach(requireFile);
@@ -71,6 +71,13 @@ if (!/workflow_dispatch:/.test(pagesWorkflow)) errors.push('Pages должен �
 if (!/push:\s*\n\s*branches:\s*\[main\]/.test(pagesWorkflow)) errors.push('Pages должен автоматически публиковаться после push в main.');
 if (!/npm --prefix tests run check/.test(pagesWorkflow)) errors.push('Pages должен проверять проект до упаковки.');
 if (!/cp pages\/index\.html _site\/index\.html/.test(pagesWorkflow)) errors.push('Pages должен брать стартовую страницу из pages/.');
+
+const releaseWorkflow = read('.github/workflows/release.yml');
+if (!/release:\s*\n\s*types:\s*\[published\]/.test(releaseWorkflow)) errors.push('Release workflow должен запускаться при публикации релиза.');
+if (!/workflow_dispatch:/.test(releaseWorkflow) || !/Existing release tag/.test(releaseWorkflow)) errors.push('Release workflow должен позволять обработать существующий релиз по тегу.');
+if (!/contents:\s*write/.test(releaseWorkflow)) errors.push('Release workflow должен иметь разрешение на добавление файла в релиз.');
+if (!/fetch-depth:\s*0/.test(releaseWorkflow) || !/git show .*qr-microapps-lab\.html/.test(releaseWorkflow)) errors.push('Ручной запуск release workflow должен брать HTML из указанного тега.');
+if (!/gh release upload .*qr-microapps-lab\.html --clobber/.test(releaseWorkflow)) errors.push('Release workflow должен прикладывать автономный HTML.');
 
 const standaloneBuilder = read('tools/build-standalone.mjs');
 if (!standaloneBuilder.includes('relative(root, fullPath)') || !standaloneBuilder.includes('isAbsolute(relativeToRoot)')) {
