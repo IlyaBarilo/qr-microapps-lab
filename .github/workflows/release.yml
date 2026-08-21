@@ -34,6 +34,10 @@ jobs:
         env:
           RELEASE_TAG: ${{ inputs.tag }}
         run: git show "${RELEASE_TAG}:qr-microapps-lab.html" > qr-microapps-lab.html
+      - name: Inject release version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: node tools/set-standalone-version.mjs --version "$RELEASE_TAG"
       - name: Upload standalone HTML
         env:
           GH_TOKEN: ${{ github.token }}

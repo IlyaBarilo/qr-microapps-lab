@@ -313,7 +313,7 @@ Apache License
 <body>
   <header class="topbar">
     <div>
-      <p class="eyebrow">QR MICROAPPS LAB · V0.1</p>
+      <p class="eyebrow">QR MICROAPPS LAB · <span data-app-version>v0.1</span></p>
       <h1>Проверка и упаковка автономных HTML-микроприложений</h1>
       <p class="lead">HTML → автоматическая проверка → QR-код → обратное декодирование</p>
     </div>
@@ -620,7 +620,16 @@ Apache License
     </section>
   </main>
 
-  <footer><span>QR Microapps Lab · локальная версия 0.1</span><span>QR — один из способов упаковки, а не гарантия запуска штатной камерой любого телефона.</span></footer>
+  <footer><span>QR Microapps Lab · версия <span data-app-version>v0.1</span></span><span>QR — один из способов упаковки, а не гарантия запуска штатной камерой любого телефона.</span></footer>
+
+  <script>
+    (function () {
+      var version = '__APP_VERSION__';
+      if (!/^v\d+\.\d+(?:\.\d+)?(?:-[0-9A-Za-z.-]+)?$/.test(version)) version = 'v0.1';
+      var nodes = document.querySelectorAll('[data-app-version]');
+      for (var i = 0; i < nodes.length; i++) nodes[i].textContent = version;
+    })();
+  </script>
 
   <script data-source="editor/vendor/qrcode.min.js">
 /*! QRCode.js 1.0.0 | Copyright (c) 2012 davidshimjs | MIT License */

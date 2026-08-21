@@ -8,7 +8,7 @@
   <a href="https://ilyabarilo.github.io/qr-microapps-lab/"><img src="https://img.shields.io/badge/демо-открыть-2ea44f?style=for-the-badge" alt="Открыть QR Microapps Lab"></a>
 </p>
 <p align="center">
-  <a href="https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest"><img src="https://img.shields.io/github/v/release/IlyaBarilo/qr-microapps-lab?display_name=tag&amp;label=релиз&amp;color=blue&amp;style=for-the-badge" alt="Последний релиз"></a>
+  <a href="https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest"><img src="https://img.shields.io/github/v/release/IlyaBarilo/qr-microapps-lab?display_name=tag&amp;label=%D1%80%D0%B5%D0%BB%D0%B8%D0%B7&amp;color=blue&amp;style=for-the-badge" alt="Последний релиз"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="Лицензия MIT"></a>
   <a href="https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/IlyaBarilo/qr-microapps-lab/ci.yml?branch=main&amp;style=for-the-badge&amp;label=CI" alt="Статус автоматических проверок"></a>
   <a href="https://github.com/IlyaBarilo/qr-microapps-lab/actions/workflows/pages.yml"><img src="https://img.shields.io/github/actions/workflow/status/IlyaBarilo/qr-microapps-lab/pages.yml?branch=main&amp;style=for-the-badge&amp;label=pages" alt="Статус GitHub Pages"></a>
@@ -105,11 +105,11 @@ npm --prefix tests run check:all
 
 ## GitHub Pages
 
-Workflow `Deploy GitHub Pages` автоматически запускается после каждого push в `main`; при необходимости его также можно запустить вручную. Он проверяет проект, копирует `pages/index.html` в корень статического сайта и добавляет автономный `qr-microapps-lab.html`. Исходный каталог `pages/` не нужен для локального запуска лаборатории.
+Workflow `Deploy GitHub Pages` автоматически запускается после каждого push в `main`; при необходимости его также можно запустить вручную. Он проверяет проект, подставляет в интерфейс тег последнего опубликованного GitHub Release, копирует `pages/index.html` в корень статического сайта и добавляет автономный `qr-microapps-lab.html`. Если релизов ещё нет, используется версия из `tests/package.json`. Исходный каталог `pages/` не нужен для локального запуска лаборатории.
 
 ## Релизы
 
-При публикации GitHub Release workflow `Attach standalone HTML to release` автоматически добавляет к релизу готовый `qr-microapps-lab.html`. Создаваемые GitHub архивы `Source code` остаются доступны отдельно.
+При публикации GitHub Release workflow `Attach standalone HTML to release` подставляет тег релиза в интерфейс и автоматически добавляет готовый `qr-microapps-lab.html`. Создаваемые GitHub архивы `Source code` остаются доступны отдельно.
 
 В отображаемых версиях и тегах конечный нулевой номер исправления опускается: `v0.1` вместо `v0.1.0`, `v1.2` вместо `v1.2.0`. Ненулевой номер сохраняется полностью, например `v0.1.2`.
 

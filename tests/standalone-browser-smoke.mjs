@@ -29,6 +29,7 @@ try {
     correction: document.querySelector('#qr-correction-value')?.textContent || '',
     lReserveColor: getComputedStyle(document.querySelector('#qr-l-reserve')).color,
     hiddenSettings: document.querySelector('#encoding')?.type === 'hidden' && document.querySelector('#ecc')?.type === 'hidden',
+    appVersions: [...document.querySelectorAll('[data-app-version]')].map((element) => element.textContent),
     difficultyVisible: !document.querySelector('#difficulty-editor')?.hidden,
     difficultyDisabled: document.querySelector('#code-difficulty')?.disabled && document.querySelector('#apply-difficulty')?.disabled,
     previewDifficulty: document.querySelector('#preview-difficulty')?.textContent || ''
@@ -41,6 +42,8 @@ try {
   assert.equal(result.correction, 'M');
   assert.equal(result.lReserveColor, 'rgb(154, 180, 192)', 'Резерв L при выбранной M должен быть серым.');
   assert.equal(result.hiddenSettings, true);
+  assert.equal(new Set(result.appVersions).size, 1, 'В заголовке и подвале должна отображаться одна версия программы.');
+  assert.match(result.appVersions[0], /^v\d+\.\d+(?:\.\d+)?(?:-[0-9A-Za-z.-]+)?$/, 'Локальная версия должна иметь публичный формат тега.');
   assert.equal(result.difficultyVisible, true, 'Блок сложности должен быть виден для любого кода.');
   assert.equal(result.difficultyDisabled, false, 'У стартовой игры с $d управление сложностью должно быть активно.');
   assert.equal(result.previewDifficulty, 'Сложность: 3 — средняя');

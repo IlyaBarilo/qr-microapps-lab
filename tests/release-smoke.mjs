@@ -2,6 +2,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, extname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { formatPackageVersion, injectAppVersion } from '../tools/set-standalone-version.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const errors = [];
@@ -21,7 +22,7 @@ function read(relativePath) {
   'docs/images/qr-microapps-lab.webp',
   '.github/workflows/ci.yml', '.github/workflows/pages.yml', '.github/workflows/release.yml',
   'tests/package.json', 'tests/package-lock.json', 'tests/playwright.config.js', 'tests/e2e/lab.spec.js', 'tests/standalone-browser-smoke.mjs',
-  'tools/build-standalone.mjs'
+  'tools/build-standalone.mjs', 'tools/set-standalone-version.mjs'
 ].forEach(requireFile);
 
 const firstPartyScripts = readdirSync(join(root, 'editor'))
@@ -32,7 +33,7 @@ for (const file of firstPartyScripts) {
   if (result.status !== 0) errors.push(`Ошибка синтаксиса ${file}: ${(result.stderr || result.stdout).trim()}`);
 }
 
-['tests/playwright.config.js', 'tests/e2e/lab.spec.js', 'tests/standalone-browser-smoke.mjs', 'tools/build-standalone.mjs'].forEach((relativePath) => {
+['tests/playwright.config.js', 'tests/e2e/lab.spec.js', 'tests/standalone-browser-smoke.mjs', 'tools/build-standalone.mjs', 'tools/set-standalone-version.mjs'].forEach((relativePath) => {
   const result = spawnSync(process.execPath, ['--check', join(root, relativePath)], { encoding: 'utf8' });
   if (result.status !== 0) errors.push(`Ошибка синтаксиса ${relativePath}: ${(result.stderr || result.stdout).trim()}`);
 });
@@ -63,6 +64,19 @@ if (/<script\b[^>]*\bsrc=/i.test(standaloneHtml)) errors.push('Автономн�
 if (/<link\b[^>]*\brel="stylesheet"/i.test(standaloneHtml)) errors.push('Автономный HTML содержит внешнюю таблицу стилей.');
 if (!standaloneHtml.includes('id="embedded-license-notices"')) errors.push('В автономный HTML не встроены лицензионные уведомления.');
 if (!standaloneHtml.includes('QRCode.js 1.0.0') || !standaloneHtml.includes('jsQR 1.4.0')) errors.push('В автономном HTML не обозначены встроенные QR-библиотеки.');
+if ((standaloneHtml.match(/__APP_VERSION__/g) || []).length !== 1) errors.push('Автономный HTML должен содержать ровно одну релизную метку версии.');
+if (standaloneHtml.includes('__LOCAL_VERSION__')) errors.push('В автономном HTML осталась несобранная локальная метка версии.');
+if ((standaloneHtml.match(/data-app-version/g) || []).length < 2) errors.push('Версия программы не отображается в заголовке и подвале.');
+try {
+  const packageVersion = JSON.parse(read('tests/package.json')).version;
+  const expectedLocalVersion = formatPackageVersion(packageVersion);
+  if (!standaloneHtml.includes(`data-app-version>${expectedLocalVersion}</span>`)) errors.push('Локальная сборка показывает версию, не совпадающую с tests/package.json.');
+  const injected = injectAppVersion(standaloneHtml, 'v9.8.7');
+  if (!injected.includes("var version = 'v9.8.7'")) errors.push('Инструмент не подставляет номер версии в автономный HTML.');
+  if (injected.includes('__APP_VERSION__')) errors.push('После подстановки в HTML осталась релизная метка версии.');
+} catch (error) {
+  errors.push(`Ошибка проверки механизма версии: ${error.message}`);
+}
 if (!read('editor/app.js').includes("elements.preview.src = 'data:text/html;charset=utf-8,'")) errors.push('Предпросмотр должен использовать data: URL для безопасного запуска из file://.');
 
 const ciWorkflow = read('.github/workflows/ci.yml');
@@ -76,6 +90,7 @@ if (!/workflow_dispatch:/.test(pagesWorkflow)) errors.push('Pages должен �
 if (!/push:\s*\n\s*branches:\s*\[main\]/.test(pagesWorkflow)) errors.push('Pages должен автоматически публиковаться после push в main.');
 if (!/npm --prefix tests run check/.test(pagesWorkflow)) errors.push('Pages должен проверять проект до упаковки.');
 if (!/cp pages\/index\.html _site\/index\.html/.test(pagesWorkflow)) errors.push('Pages должен брать стартовую страницу из pages/.');
+if (!/releases\/latest/.test(pagesWorkflow) || !/set-standalone-version\.mjs --version/.test(pagesWorkflow)) errors.push('Pages должен подставлять номер последнего опубликованного релиза.');
 
 const releaseWorkflow = read('.github/workflows/release.yml');
 if (!/release:\s*\n\s*types:\s*\[published\]/.test(releaseWorkflow)) errors.push('Release workflow должен запускаться при публикации релиза.');
@@ -83,6 +98,7 @@ if (!/workflow_dispatch:/.test(releaseWorkflow) || !/Existing release tag/.test(
 if (!/contents:\s*write/.test(releaseWorkflow)) errors.push('Release workflow должен иметь разрешение на добавление файла в релиз.');
 if (!/fetch-depth:\s*0/.test(releaseWorkflow) || !/git show .*qr-microapps-lab\.html/.test(releaseWorkflow)) errors.push('Ручной запуск release workflow должен брать HTML из указанного тега.');
 if (!/gh release upload .*qr-microapps-lab\.html --clobber/.test(releaseWorkflow)) errors.push('Release workflow должен прикладывать автономный HTML.');
+if (!/set-standalone-version\.mjs --version/.test(releaseWorkflow)) errors.push('Release workflow должен подставлять тег в автономный HTML.');
 
 const standaloneBuilder = read('tools/build-standalone.mjs');
 if (!standaloneBuilder.includes('relative(root, fullPath)') || !standaloneBuilder.includes('isAbsolute(relativeToRoot)')) {
