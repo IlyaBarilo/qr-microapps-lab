@@ -1,4 +1,4 @@
-name: Deploy GitHub Pages
+name: Publish release
 
 on:
   release:
@@ -14,14 +14,17 @@ permissions:
   contents: read
 
 concurrency:
-  group: pages
+  group: publish-release
   cancel-in-progress: false
 
 jobs:
-  build:
+  prepare:
+    name: Prepare release and Pages
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout release tag
         uses: actions/checkout@v6
         with:
           ref: ${{ github.event.release.tag_name || inputs.tag }}
@@ -40,8 +43,13 @@ jobs:
           if grep -q "__APP_VERSION__" qr-microapps-lab.html; then
             node tools/set-standalone-version.mjs --version "$RELEASE_TAG"
           fi
+      - name: Attach standalone HTML to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: gh release upload "$RELEASE_TAG" qr-microapps-lab.html --clobber
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Prepare static artifact
         run: |
           mkdir _site
@@ -49,7 +57,7 @@ jobs:
           cp pages/.nojekyll _site/.nojekyll
           cp qr-microapps-lab.html _site/qr-microapps-lab.html
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./_site
 
@@ -61,8 +69,8 @@ jobs:
       pages: write
       id-token: write
     runs-on: ubuntu-latest
-    needs: build
+    needs: prepare
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

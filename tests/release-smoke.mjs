@@ -20,7 +20,7 @@ function read(relativePath) {
 [
   'pages/index.html', 'pages/.nojekyll', 'qr-microapps-lab.html', 'editor/source.html', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'spec_game_creation_ru.md',
   'docs/images/qr-microapps-lab.webp',
-  '.github/workflows/ci.yml', '.github/workflows/pages.yml', '.github/workflows/release.yml',
+  '.github/workflows/ci.yml', '.github/workflows/pages.yml',
   'tests/package.json', 'tests/package-lock.json', 'tests/playwright.config.js', 'tests/e2e/lab.spec.js', 'tests/standalone-browser-smoke.mjs',
   'tools/build-standalone.mjs', 'tools/set-standalone-version.mjs'
 ].forEach(requireFile);
@@ -87,22 +87,19 @@ if (!/playwright install --with-deps chromium/.test(ciWorkflow)) errors.push('CI
 if (!/permissions:\s*\n\s*contents: read/.test(ciWorkflow)) errors.push('CI должен использовать минимальное разрешение contents: read.');
 
 const pagesWorkflow = read('.github/workflows/pages.yml');
-if (!/workflow_dispatch:/.test(pagesWorkflow)) errors.push('Pages должен поддерживать ручной запуск.');
-if (!/release:\s*\n\s*types:\s*\[published\]/.test(pagesWorkflow)) errors.push('Pages должен автоматически публиковаться при публикации релиза.');
+if (!/name:\s*Publish release/.test(pagesWorkflow)) errors.push('Единый workflow публикации должен иметь понятное имя.');
+if (!/workflow_dispatch:/.test(pagesWorkflow)) errors.push('Публикация должна поддерживать ручной запуск.');
+if (!/release:\s*\n\s*types:\s*\[published\]/.test(pagesWorkflow)) errors.push('Публикация должна автоматически запускаться при публикации релиза.');
 if (/push:\s*\n\s*branches:\s*\[main\]/.test(pagesWorkflow)) errors.push('Pages не должен публиковать непроверенную версию из последнего push в main.');
-if (!/Existing release tag/.test(pagesWorkflow)) errors.push('Ручной запуск Pages должен принимать существующий тег релиза.');
-if (!/ref:.*github\.event\.release\.tag_name.*inputs\.tag/.test(pagesWorkflow)) errors.push('Pages должен извлекать файлы выбранного тега релиза.');
-if (!/npm --prefix tests run check/.test(pagesWorkflow)) errors.push('Pages должен проверять проект до упаковки.');
+if (!/Existing release tag/.test(pagesWorkflow)) errors.push('Ручной запуск должен принимать существующий тег релиза.');
+if (!/ref:.*github\.event\.release\.tag_name.*inputs\.tag/.test(pagesWorkflow)) errors.push('Workflow должен извлекать файлы выбранного тега релиза.');
+if ((pagesWorkflow.match(/npm --prefix tests run check/g) || []).length !== 1) errors.push('Проект должен проверяться ровно один раз за публикацию.');
+if (!/contents:\s*write/.test(pagesWorkflow)) errors.push('Workflow должен иметь разрешение на добавление файла в релиз.');
+if (!/gh release upload .*qr-microapps-lab\.html --clobber/.test(pagesWorkflow)) errors.push('Workflow должен прикладывать автономный HTML к релизу.');
 if (!/cp pages\/index\.html _site\/index\.html/.test(pagesWorkflow)) errors.push('Pages должен брать стартовую страницу из pages/.');
-if (!/grep -q "__APP_VERSION__"/.test(pagesWorkflow) || !/set-standalone-version\.mjs --version/.test(pagesWorkflow)) errors.push('Pages должен подставлять выбранный тег с поддержкой старых релизов без метки версии.');
-
-const releaseWorkflow = read('.github/workflows/release.yml');
-if (!/release:\s*\n\s*types:\s*\[published\]/.test(releaseWorkflow)) errors.push('Release workflow должен запускаться при публикации релиза.');
-if (!/workflow_dispatch:/.test(releaseWorkflow) || !/Existing release tag/.test(releaseWorkflow)) errors.push('Release workflow должен позволять обработать существующий релиз по тегу.');
-if (!/contents:\s*write/.test(releaseWorkflow)) errors.push('Release workflow должен иметь разрешение на добавление файла в релиз.');
-if (!/fetch-depth:\s*0/.test(releaseWorkflow) || !/git show .*qr-microapps-lab\.html/.test(releaseWorkflow)) errors.push('Ручной запуск release workflow должен брать HTML из указанного тега.');
-if (!/gh release upload .*qr-microapps-lab\.html --clobber/.test(releaseWorkflow)) errors.push('Release workflow должен прикладывать автономный HTML.');
-if (!/set-standalone-version\.mjs --version/.test(releaseWorkflow)) errors.push('Release workflow должен подставлять тег в автономный HTML.');
+if (!/configure-pages@v6/.test(pagesWorkflow) || !/upload-pages-artifact@v5/.test(pagesWorkflow) || !/deploy-pages@v5/.test(pagesWorkflow)) errors.push('Workflow должен использовать актуальные Pages actions на Node.js 24.');
+if (!/grep -q "__APP_VERSION__"/.test(pagesWorkflow) || !/set-standalone-version\.mjs --version/.test(pagesWorkflow)) errors.push('Workflow должен подставлять выбранный тег с поддержкой старых релизов без метки версии.');
+if (existsSync(join(root, '.github/workflows/release.yml'))) errors.push('Отдельный дублирующий workflow релиза должен быть удалён.');
 
 const standaloneBuilder = read('tools/build-standalone.mjs');
 if (!standaloneBuilder.includes('relative(root, fullPath)') || !standaloneBuilder.includes('isAbsolute(relativeToRoot)')) {
