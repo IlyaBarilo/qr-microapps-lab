@@ -16,13 +16,13 @@
 
 [Открыть онлайн](https://ilyabarilo.github.io/qr-microapps-lab/) · [Скачать автономный HTML](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest/download/qr-microapps-lab.html) · [Последний релиз](https://github.com/IlyaBarilo/qr-microapps-lab/releases/latest) · [Практический кейс](docs/case-study-ru.md) · [Спецификация игр](spec_game_creation_ru.md)
 
+> **Статус:** рабочий экспериментальный инструмент. Публичное демо соответствует последнему опубликованному релизу.
+
 [![Интерфейс QR Microapps Lab: исходный HTML, QR-код и изолированный предпросмотр игры](docs/images/qr-microapps-lab.webp)](docs/images/qr-microapps-lab.webp)
 
 ```text
 HTML → оптимизация → автоматические проверки → QR → обратное декодирование → предпросмотр
 ```
-
-> **Статус:** рабочий экспериментальный инструмент. Публичное демо соответствует последнему опубликованному релизу.
 
 ## Попробовать за 2 минуты
 
