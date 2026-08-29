@@ -10,6 +10,76 @@ const specBuilder = require('../editor/spec-builder.js');
 const history = require('../editor/history.js');
 const projectFile = require('../editor/project.js');
 const comparison = require('../editor/comparison.js');
+const deviceTest = require('../editor/device-test.js');
+
+test('тест устройства формирует самостоятельный быстрый лист и три страницы полного набора', () => {
+  const simpleGame = sample.getById('tiny-quiz');
+  const brickGame = sample.getById('brick-breaker');
+  const suite = deviceTest.createTestSuite({ simpleHtml: simpleGame.html, brickHtml: brickGame.html });
+  assert.equal(suite.quick.length, 1);
+  assert.deepEqual(suite.full.map((page) => [page.id, page.items.length]), [
+    ['overview', 4],
+    ['threshold', 4],
+    ['correction', 4]
+  ]);
+  assert.deepEqual(suite.quick[0].items.map((item) => item.id), ['Q1', 'Q2', 'Q3', 'Q4']);
+  assert.deepEqual(suite.full[0].items.map((item) => item.id), ['A1', 'A2', 'A3', 'A4']);
+  assert.deepEqual(suite.full[1].items.map((item) => item.id), ['B1', 'B2', 'B3', 'B4']);
+  assert.deepEqual(suite.full[2].items.map((item) => item.id), ['C1', 'C2', 'C3', 'C4']);
+
+  const quickItems = suite.quick[0].items;
+  assert.equal(quickItems[0].payload, 'https://github.com/IlyaBarilo/qr-microapps-lab');
+  assert.match(quickItems[1].payload, /^https:\/\/github\.com\/IlyaBarilo\/qr-microapps-lab#/);
+  assert.equal(quickItems[1].payloadBytes, quickItems[3].payloadBytes);
+  assert.equal(core.parseDataUrl(quickItems[2].payload).text, simpleGame.html, 'HTML мини-теста нельзя изменять или дополнять.');
+  assert.equal(core.parseDataUrl(quickItems[3].payload).text, brickGame.html, 'HTML игры «Разбей блоки» нельзя изменять или дополнять.');
+  assert.equal(core.parseDataUrl(suite.full[0].items[2].payload).text, simpleGame.html);
+  assert.equal(core.parseDataUrl(suite.full[0].items[3].payload).text, brickGame.html);
+  assert.ok(suite.full[1].items.every((item) => item.payload === quickItems[3].payload));
+  assert.ok(suite.full[2].items.every((item) => item.payload.startsWith('https://github.com/IlyaBarilo/qr-microapps-lab#')));
+  assert.deepEqual(suite.full[1].items.map((item) => item.moduleMm), [0.50, 0.40, 0.32, 0.25]);
+  assert.deepEqual(suite.full[2].items.map((item) => item.ecc), ['L', 'M', 'Q', 'H']);
+});
+
+test('метка печати содержит локальные дату и время с секундами', () => {
+  assert.equal(deviceTest.formatPrintTimestamp(new Date(2026, 7, 29, 14, 5, 6)), '29.08.2026 14:05:06');
+  assert.equal(deviceTest.formatPrintTimestamp('не дата'), '');
+});
+
+test('калибровка экрана считает CSS-пиксели, буфер и целые пиксели на модуль', () => {
+  const calibration = deviceTest.calculateCalibration(428, 2);
+  assert.equal(calibration.cssPxPerMm, 5);
+  assert.equal(calibration.cssPpi, 127);
+  assert.equal(calibration.devicePpi, 254);
+
+  assert.deepEqual(deviceTest.calculateScreenRender(177, 4, 512, 2, 5), {
+    totalModules: 185,
+    modulePixels: 6,
+    backingSize: 1110,
+    cssSize: 555,
+    physicalMm: 111,
+    quality: {
+      id: 'good',
+      label: 'Хороший запас',
+      detail: 'Не менее 4 пикселей экрана на модуль.'
+    }
+  });
+  assert.deepEqual(deviceTest.calculateScreenCapacity(177, 4, 700, 2), {
+    totalModules: 185,
+    modulePixels: 7,
+    backingSize: 1295,
+    cssSize: 647.5
+  });
+  assert.equal(deviceTest.classifyModulePixels(3).id, 'warn');
+  assert.equal(deviceTest.classifyModulePixels(2).id, 'bad');
+
+  const print = deviceTest.calculatePrintGeometry(177, 4, 0.50, 30);
+  assert.equal(print.totalModules, 185);
+  assert.equal(print.sizeMm, 92.5);
+  assert.equal(print.moduleMm, 0.5);
+  assert.ok(Math.abs(print.printerDots300 - 5.9055) < 0.001);
+  assert.ok(Math.abs(print.printerDots600 - 11.8110) < 0.001);
+});
 
 test('base64 data URL сохраняет Unicode побайтово', () => {
   const html = '<!doctype html><h1>Привет, QR!</h1>';
@@ -800,6 +870,10 @@ test('упрощённый конструктор создаёт валидны�
   assert.match(editorPage, /class="validation-inline"[\s\S]*id="validation-summary"[\s\S]*id="validation-remarks"[\s\S]*id="validation-toggle"[\s\S]*id="validation-details"[\s\S]*class="preview-layout"/);
   assert.match(editorPage, /id="validation-toggle"[^>]*class="[^"]*validation-toggle[^"]*summary-hint[^"]*"[^>]*>показать<\/button>/);
   assert.doesNotMatch(editorPage, /class="panel validation-panel"/);
+  assert.match(editorPage, /id="open-quick-device-test"[\s\S]*id="open-full-device-test"/);
+  assert.match(editorPage, /id="device-test-overlay"[\s\S]*id="device-test-pages"[\s\S]*id="device-test-screen-view"/);
+  assert.match(editorPage, /id="device-card-ruler"[\s\S]*id="device-card-width"[\s\S]*id="device-screen-module-pixels"/);
+  assert.match(editorPage, /<script data-source="editor\/device-test\.js">[\s\S]*<script data-source="editor\/app\.js">/);
   const editorStyles = fs.readFileSync(path.join(__dirname, '../editor/styles.css'), 'utf8');
   assert.match(editorStyles, /\.topbar,\.workspace,footer\{width:100%;max-width:none\}/);
   assert.match(editorStyles, /grid-template-columns:clamp\(320px,22vw,420px\) clamp\(360px,25vw,480px\) minmax\(0,1fr\)/);
@@ -827,6 +901,9 @@ test('упрощённый конструктор создаёт валидны�
   assert.match(editorStyles, /\.qr-open-help\{display:grid;grid-template-columns:32px minmax\(0,1fr\)/);
   assert.match(editorStyles, /\.fallback-metric strong\{color:var\(--muted\)\}/);
   assert.match(editorStyles, /\.fallback-metric\.recovery[^{]*\{[^}]*border-color:#765e2d/);
+  assert.match(editorStyles, /\.device-print-page\{[^}]*width:210mm;[^}]*min-height:297mm/);
+  assert.match(editorStyles, /\.device-test-screen-view\{display:grid;grid-template-columns:340px minmax\(0,1fr\)/);
+  assert.match(editorStyles, /@page\{size:A4 portrait;margin:0\}/);
   const editorApp = fs.readFileSync(path.join(__dirname, '../editor/app.js'), 'utf8');
   const htmlIds = new Set([...editorPage.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
   for (const match of editorApp.matchAll(/\$\('([^']+)'\)/g)) assert.ok(htmlIds.has(match[1]), 'в HTML отсутствует #' + match[1]);
@@ -846,6 +923,11 @@ test('упрощённый конструктор создаёт валидны�
   assert.match(editorApp, /core\.analyzeQrImage\(decoded/);
   assert.match(editorApp, /inversionAttempts: 'onlyInvert'/);
   assert.match(editorApp, /var importedEccFits = !!requestedEcc/);
+  assert.match(editorApp, /deviceTestApi\.createController/);
+  const deviceTestSource = fs.readFileSync(path.join(__dirname, '../editor/device-test.js'), 'utf8');
+  for (const match of deviceTestSource.matchAll(/\$\('([^']+)'\)/g)) assert.ok(htmlIds.has(match[1]), 'в HTML отсутствует #' + match[1]);
+  assert.match(deviceTestSource, /CARD_WIDTH_MM = 85\.60/);
+  assert.match(deviceTestSource, /modulePixels = Math\.max\(1, Math\.round\(targetCss \* dpr \/ totalModules\)\)/);
   const jsQrSource = fs.readFileSync(path.join(__dirname, '../editor/vendor/jsQR.js'), 'utf8');
   assert.match(jsQrSource, /decoded\.errorCorrectionLevel = \["L", "M", "Q", "H"\]/);
   assert.match(jsQrSource, /dataMask: decoded\.dataMask/);

@@ -66,6 +66,7 @@ if (!standaloneHtml.includes('id="embedded-license-notices"')) errors.push('В �
 if (!standaloneHtml.includes('QRCode.js 1.0.0') || !standaloneHtml.includes('jsQR 1.4.0')) errors.push('В автономном HTML не обозначены встроенные QR-библиотеки.');
 if (!standaloneHtml.includes('id="embedded-game-spec"') || !standaloneHtml.includes('data-purpose="game-creation-specification"')) errors.push('В автономный HTML не встроена Markdown-спецификация создания игр.');
 if (!standaloneHtml.includes('id="download-game-spec"') || !standaloneHtml.includes('id="copy-game-spec"')) errors.push('В интерфейсе отсутствуют действия со спецификацией создания игр.');
+if (!standaloneHtml.includes('id="device-test-overlay"') || !standaloneHtml.includes('QR Microapps Lab · тест устройства')) errors.push('В автономный HTML не встроен тест QR на экране и бумаге.');
 if ((standaloneHtml.match(/__APP_VERSION__/g) || []).length !== 1) errors.push('Автономный HTML должен содержать ровно одну релизную метку версии.');
 if (standaloneHtml.includes('__LOCAL_VERSION__')) errors.push('В автономном HTML осталась несобранная локальная метка версии.');
 if ((standaloneHtml.match(/data-app-version>/g) || []).length !== 2) errors.push('Для версии программы должны быть подготовлены места в заголовке и подвале.');

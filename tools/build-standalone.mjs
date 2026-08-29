@@ -55,7 +55,7 @@ function build() {
     if (relativePath === 'editor/vendor/jsQR.js') banner = '/*! jsQR 1.4.0 | Apache License 2.0 | Полный текст лицензии встроен в этот HTML. */';
     return `  <script data-source="${relativePath}">\n${banner}\n${escapeInlineScript(readFileSync(fullPath, 'utf8').replace(/^\uFEFF/, '').trim())}\n  <\/script>`;
   });
-  if (scriptsInlined !== 10) throw new Error(`Ожидалось 10 локальных скриптов, встроено: ${scriptsInlined}.`);
+  if (scriptsInlined !== 11) throw new Error(`Ожидалось 11 локальных скриптов, встроено: ${scriptsInlined}.`);
 
   const releaseVersionTokens = html.match(/__APP_VERSION__/g) || [];
   if (releaseVersionTokens.length !== 1) throw new Error(`Ожидалась одна релизная метка версии, найдено: ${releaseVersionTokens.length}.`);
@@ -66,14 +66,14 @@ function build() {
   }
   if (!html.includes('id="embedded-license-notices"')) throw new Error('В итоговый HTML не встроены лицензионные уведомления.');
   if (!html.includes('id="embedded-game-spec"')) throw new Error('В итоговый HTML не встроена спецификация создания игр.');
-  return html.replace(/\r\n/g, '\n').replace(/\s*$/, '\n');
+  return html.replace(/\r\n/g, '\n').replace(/\s*$/, '\n').replace(/\n/g, '\r\n');
 }
 
 const output = build();
 if (checkOnly) {
   for (const outputPath of outputPaths) {
     if (!existsSync(outputPath)) throw new Error(`Автономный HTML ещё не собран: ${outputPath}. Выполните npm --prefix tests run build:standalone.`);
-    const current = readFileSync(outputPath, 'utf8').replace(/\r\n/g, '\n');
+    const current = readFileSync(outputPath, 'utf8');
     if (current !== output) throw new Error(`Автономный HTML устарел: ${outputPath}. Выполните npm --prefix tests run build:standalone.`);
   }
   console.log(`Автономный HTML актуален: ${output.length.toLocaleString('ru-RU')} символов.`);

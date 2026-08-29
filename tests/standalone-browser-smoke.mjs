@@ -10,6 +10,10 @@ const expectedGameSpecification = readFileSync(resolve(root, 'spec_game_creation
   .replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\n*$/, '\n');
 const browser = await chromium.launch({ headless: true });
 
+function countPdfPages(pdf) {
+  return (pdf.toString('latin1').match(/\/Type\s*\/Page\b/g) || []).length;
+}
+
 try {
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
   const pageErrors = [];
@@ -58,6 +62,70 @@ try {
   assert.equal(result.previewDifficulty, 'Сложность: 3 — средняя');
   assert.equal(result.theme, 'dark', 'Рабочая сборка должна открываться в тёмной теме по умолчанию.');
   assert.equal(result.themeLabel, 'Светлая тема');
+
+  await page.click('#open-full-device-test');
+  await page.waitForFunction(() => document.querySelectorAll('.device-print-page').length === 3 && document.querySelectorAll('.device-print-code').length === 12);
+  const devicePages = await page.evaluate(() => ({
+    pageCount: document.querySelectorAll('.device-print-page').length,
+    codeCount: document.querySelectorAll('.device-print-code').length,
+    pageTitles: [...document.querySelectorAll('.device-print-page h3')].map((element) => element.textContent),
+    codeIds: [...document.querySelectorAll('.device-print-code')].map((element) => element.dataset.testCodeId),
+    labels: [...document.querySelectorAll('.device-print-code-copy strong')].map((element) => element.textContent),
+    timestamps: [...document.querySelectorAll('[data-print-timestamp]')].map((element) => element.textContent),
+    brickPayload: document.querySelector('[data-test-code-id="A4"] canvas')?.width || 0
+  }));
+  assert.equal(devicePages.pageCount, 3, 'Полный тест устройства должен содержать три листа A4.');
+  assert.equal(devicePages.codeCount, 12, 'Полный тест устройства должен содержать 12 QR-кодов.');
+  assert.deepEqual(devicePages.pageTitles.map((title) => title.slice(0, 6)), ['Лист A', 'Лист B', 'Лист C']);
+  assert.deepEqual(devicePages.codeIds, ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4', 'C1', 'C2', 'C3', 'C4']);
+  assert.ok(devicePages.labels.some((label) => label.includes('Игра «ИТ-мини-тест»')), 'Обзорный лист должен включать точный мини-тест.');
+  assert.ok(devicePages.labels.some((label) => label.includes('Игра «Разбей блоки»')), 'Обзорный лист должен включать точную игру «Разбей блоки».');
+  assert.equal(devicePages.timestamps.length, 3, 'Каждый печатный лист должен содержать метку времени.');
+  assert.ok(devicePages.timestamps.every((timestamp) => timestamp === devicePages.timestamps[0] && /^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}$/.test(timestamp)), 'На всех листах должна быть одна корректная дата печати.');
+  assert.ok(devicePages.brickPayload > 0, 'Тестовые QR должны быть отрисованы в предпросмотре листа.');
+  await page.evaluate(() => document.querySelectorAll('[data-print-timestamp]').forEach((element) => { element.textContent = 'ожидание печати'; }));
+  const fullPrintPdf = await page.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true });
+  assert.equal(countPdfPages(fullPrintPdf), 3, 'Полный набор должен печататься ровно на трёх листах без пустых страниц.');
+  const timestampsAfterPrint = await page.locator('[data-print-timestamp]').allTextContents();
+  assert.ok(timestampsAfterPrint.every((timestamp) => timestamp === timestampsAfterPrint[0] && /^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}$/.test(timestamp)), 'Событие печати должно обновлять дату одновременно на всех листах.');
+
+  await page.selectOption('#device-test-set', 'quick');
+  await page.waitForFunction(() => document.querySelectorAll('.device-print-page').length === 1 && document.querySelector('[data-test-code-id="Q4"]'));
+  const quickPrintPdf = await page.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true });
+  assert.equal(countPdfPages(quickPrintPdf), 1, 'Быстрый набор должен печататься ровно на одном листе.');
+  await page.selectOption('#device-test-set', 'full');
+  await page.waitForFunction(() => document.querySelectorAll('.device-print-page').length === 3 && document.querySelector('[data-test-code-id="A3"]'));
+  const decodedDeviceCodes = await page.evaluate(() => [...document.querySelectorAll('.device-print-code canvas')].map((canvas) => {
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    return !!jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'dontInvert' });
+  }));
+  assert.ok(decodedDeviceCodes.every(Boolean), 'Все 12 тестовых QR должны независимо декодироваться из пикселей.');
+
+  await page.click('[data-test-code-id="A3"]');
+  await page.waitForFunction(() => !document.querySelector('#device-test-screen-view')?.hidden && document.querySelector('#device-screen-code')?.value === 'A3' && document.querySelector('#device-screen-canvas')?.width > 0);
+  const screenQr = await page.evaluate(() => ({
+    selected: document.querySelector('#device-screen-code')?.value,
+    cssSize: document.querySelector('#device-screen-css-size')?.textContent || '',
+    buffer: document.querySelector('#device-screen-buffer-size')?.textContent || '',
+    modulePixels: document.querySelector('#device-screen-module-pixels')?.textContent || '',
+    physical: document.querySelector('#device-screen-physical-size')?.textContent || ''
+  }));
+  assert.equal(screenQr.selected, 'A3');
+  assert.match(screenQr.cssSize, /CSS px/);
+  assert.match(screenQr.buffer, /px/);
+  assert.match(screenQr.modulePixels, /^\d+ px\/модуль$/);
+  assert.match(screenQr.physical, /^≈/);
+
+  await page.locator('#device-card-width').fill('428');
+  await page.click('#device-calibration-save');
+  assert.match(await page.locator('#device-calibration-result').textContent(), /Сохранено: 5,00 CSS px\/мм/);
+  assert.doesNotMatch(await page.locator('#device-screen-physical-size').textContent(), /^≈/);
+  await page.click('#device-screen-only');
+  assert.equal(await page.locator('#device-test-overlay').evaluate((element) => element.classList.contains('qr-only')), true, 'Режим «Только QR» должен скрывать элементы управления.');
+  await page.click('#device-screen-only-exit');
+  await page.click('#device-test-close');
+  assert.equal(await page.locator('#device-test-overlay').isHidden(), true);
 
   const decodedCorrectionLevels = await page.evaluate(() => ['L', 'M', 'Q', 'H'].map((level) => {
     const holder = document.createElement('div');

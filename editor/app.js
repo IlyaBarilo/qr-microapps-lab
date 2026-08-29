@@ -8,6 +8,7 @@
   var projectApi = window.QRMicroappsProject;
   var comparisonApi = window.QRMicroappsComparison;
   var sample = window.QRMicroappsSample;
+  var deviceTestApi = window.QRMicroappsDeviceTest;
   var $ = function (id) { return document.getElementById(id); };
   var elements = {
     themeToggle: $('theme-toggle'), themeToggleIcon: $('theme-toggle-icon'), themeToggleLabel: $('theme-toggle-label'),
@@ -1635,6 +1636,19 @@
   applyPreviewSize();
   renderHistory();
   renderComparison();
+  if (deviceTestApi) {
+    deviceTestApi.createController({
+      QRCode: window.QRCode,
+      getCurrent: function () {
+        var simpleGame = sample.getById('tiny-quiz');
+        var brickGame = sample.getById('brick-breaker');
+        return {
+          simpleHtml: simpleGame.html,
+          brickHtml: brickGame.html
+        };
+      }
+    });
+  }
   if (simpleBuilder) writeSimpleConfig(simpleBuilder.DEFAULT_CONFIG);
   populateExamples();
   loadSample(sample.defaultId);

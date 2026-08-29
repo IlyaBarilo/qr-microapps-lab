@@ -96,6 +96,14 @@
 :root[data-theme=light] .qr-import-analysis{background:#eef9f6}
 :root[data-theme=light] .source-head .project-actions,:root[data-theme=light] .source-head .game-spec-actions{border-top-color:rgba(135,164,173,.55)}
 :root[data-theme=light] footer{color:#607b85}
+
+.device-test-panel{grid-column:1/-1}.device-test-intro{max-width:920px;margin:0;color:var(--muted);font-size:13px}.device-test-intro code{color:var(--accent);font-weight:800}.device-test-launch-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
+body.device-test-open,body.device-code-focus-open{overflow:hidden}.device-test-overlay{position:fixed;inset:0;z-index:1050;overflow:auto;padding:18px;background:rgba(2,13,19,.88);backdrop-filter:blur(9px)}.device-test-dialog{width:min(1500px,100%);min-height:calc(100vh - 36px);margin:auto;border:1px solid var(--line);border-radius:22px;padding:18px;background:var(--bg);box-shadow:0 28px 90px rgba(0,0,0,.55)}.device-test-dialog-head,.device-test-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px}.device-test-dialog-head{margin-bottom:13px}.device-test-dialog-actions,.device-screen-nav,.device-calibration-actions{display:flex;flex-wrap:wrap;gap:8px}.device-test-toolbar{position:sticky;top:-18px;z-index:5;margin:0 -18px 15px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:11px 18px;background:rgba(6,19,28,.96);backdrop-filter:blur(10px)}.device-test-tabs{display:flex;gap:6px;border-radius:13px;padding:4px;background:#071923}.device-test-set-field{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:11px;font-weight:800}.device-test-set-field select{width:auto;min-width:220px;margin:0}.device-test-pages-note{max-width:210mm;margin:0 auto 12px;border:1px solid #765e2d;border-radius:12px;padding:10px 12px;color:#ffe19b;background:rgba(118,94,45,.18);font-size:12px}.device-test-pages{display:grid;justify-content:center;gap:18px;overflow-x:auto;padding:2px 2px 18px}.device-print-page{display:flex;flex-direction:column;width:210mm;min-width:210mm;min-height:297mm;margin:0 auto;padding:10mm;color:#111;background:#fff;box-shadow:0 16px 45px rgba(0,0,0,.32);font-family:Arial,sans-serif}.device-print-head{display:flex;justify-content:space-between;gap:10mm;border-bottom:.35mm solid #111;padding-bottom:3mm}.device-print-head b{font-size:9pt}.device-print-head h3{margin:1mm 0 0;font-size:16pt}.device-print-head p{margin:1mm 0 0;font-size:8.5pt}.device-print-fields{font-size:8pt;line-height:1.8;white-space:nowrap}.device-print-grid{display:grid;grid-template-columns:repeat(2,1fr);align-items:start;justify-items:center;gap:3mm;margin-top:4mm}.device-print-code{display:flex;align-items:center;flex-direction:column;width:100%;min-height:0;border:0;padding:0;color:#111;background:#fff;cursor:zoom-in}.device-print-code:hover{outline:1mm solid #bcefe5;outline-offset:1mm}.device-print-code canvas{display:block;flex:0 0 auto;max-width:none;background:#fff;image-rendering:pixelated}.device-print-code-copy{display:grid;justify-items:center;gap:.6mm;margin-top:1.5mm;text-align:center}.device-print-code-copy strong{font-size:9pt}.device-print-code-copy span,.device-print-code-copy small{font-size:7.5pt}.device-print-code-copy em{font-size:7pt;font-style:normal}.device-print-page-threshold .device-print-grid,.device-print-page-correction .device-print-grid{align-content:start}.device-print-footer{display:flex;align-items:flex-end;justify-content:space-between;gap:10mm;margin-top:auto;border-top:.25mm solid #777;padding-top:3mm}.device-print-footer>div{display:grid;gap:1mm;font-size:7pt}.device-print-footer i{display:block;width:50mm;border-top:.5mm solid #111}.device-print-footer p{max-width:90mm;margin:0;font-size:7pt;text-align:right}
+.device-test-screen-view{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;min-height:calc(100vh - 170px)}.device-screen-sidebar{min-width:0;overflow:auto;border:1px solid var(--line);border-radius:16px;padding:14px;background:#091d28}.device-screen-label{margin:0 0 5px;color:var(--muted);font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.device-screen-nav{display:grid;grid-template-columns:1fr 1fr;margin-top:9px}.device-screen-presets{margin-top:16px}.device-screen-presets .device-screen-label:not(:first-child){margin-top:12px}.device-screen-preset-buttons{display:flex;flex-wrap:wrap;gap:6px}.device-screen-preset{min-height:32px;border:1px solid var(--line);border-radius:9px;padding:5px 8px;color:var(--text);background:#132f3e;font-size:11px;font-weight:800}.device-screen-preset.active{border-color:var(--accent);color:#022127;background:var(--accent)}.device-calibration{margin-top:16px;border:1px solid var(--line);border-radius:13px;background:#061720}.device-calibration>summary{padding:11px;cursor:pointer;font-weight:850}.device-calibration>p{margin:0;padding:0 11px 9px;color:var(--muted);font-size:11px}.device-card-ruler-wrap{max-width:100%;overflow:auto;padding:5px 11px 10px}.device-card-ruler{display:grid;place-items:center;border:2px solid var(--accent2);border-radius:10px;color:var(--accent2);background:repeating-linear-gradient(135deg,rgba(91,184,255,.07) 0,rgba(91,184,255,.07) 8px,transparent 8px,transparent 16px);font:800 11px ui-monospace,monospace}.device-calibration label{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:0 11px;color:var(--muted);font-size:10px;font-weight:800}.device-calibration input[type=range]{grid-column:1/-1;width:100%}.device-calibration output{color:var(--text)}.device-calibration-actions{padding:10px 11px 0}.device-calibration-result{margin:0!important;padding:9px 11px 11px!important;color:var(--warning)!important}.device-calibration-result.good{color:var(--accent)!important}.device-screen-metrics{display:grid;gap:6px;margin:14px 0 0}.device-screen-metrics div{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px;border-bottom:1px solid rgba(36,68,83,.58);padding:0 0 6px}.device-screen-metrics dt{color:var(--muted);font-size:10px}.device-screen-metrics dd{margin:0;text-align:right;font-size:11px;font-weight:800}.device-screen-quality{display:grid;gap:2px;margin:12px 0 0;border:1px solid var(--line);border-radius:11px;padding:9px 10px}.device-screen-quality strong{font-size:12px}.device-screen-quality span{color:var(--muted);font-size:10px}.device-screen-quality.good{border-color:#297164;background:rgba(20,87,74,.2)}.device-screen-quality.good strong{color:var(--accent)}.device-screen-quality.warn{border-color:#765e2d;background:rgba(118,94,45,.18)}.device-screen-quality.warn strong{color:var(--warning)}.device-screen-quality.bad{border-color:#79414a;background:rgba(109,45,56,.2)}.device-screen-quality.bad strong{color:var(--danger)}.device-screen-stage{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;min-width:0;min-height:70vh;overflow:auto;border-radius:16px;padding:16px;background:#fff}.device-screen-stage canvas{display:block;flex:0 0 auto;max-width:none;background:#fff;image-rendering:pixelated}.device-screen-caption{display:grid;justify-items:center;gap:2px;margin-top:9px;color:#102832;text-align:center}.device-screen-caption strong{font-size:14px}.device-screen-caption span{font-size:11px}.device-screen-stage>#device-screen-only{position:sticky;right:10px;bottom:10px;align-self:flex-end;margin-top:9px}.device-screen-only-exit{display:none;position:fixed;top:16px;right:16px;z-index:1200;width:48px;height:48px;border:1px solid #777;border-radius:50%;color:#111;background:rgba(255,255,255,.92);font-size:30px;line-height:1}.device-test-overlay.qr-only{padding:0;background:#fff}.device-test-overlay.qr-only .device-test-dialog{width:100%;min-height:100vh;border:0;border-radius:0;padding:0;background:#fff;box-shadow:none}.device-test-overlay.qr-only .device-test-dialog-head,.device-test-overlay.qr-only .device-test-toolbar,.device-test-overlay.qr-only .device-screen-sidebar{display:none}.device-test-overlay.qr-only .device-test-screen-view{display:block;min-height:100vh}.device-test-overlay.qr-only .device-screen-stage{width:100%;min-height:100vh;border-radius:0}.device-test-overlay.qr-only .device-screen-caption,.device-test-overlay.qr-only #device-screen-only{display:none}.device-test-overlay.qr-only .device-screen-only-exit{display:block!important}
+:root[data-theme=light] .device-test-toolbar{background:rgba(237,244,245,.96)}:root[data-theme=light] .device-test-tabs,:root[data-theme=light] .device-screen-sidebar,:root[data-theme=light] .device-calibration{background:#edf4f6}:root[data-theme=light] .device-screen-preset{color:var(--text);background:#dbe9ed}:root[data-theme=light] .device-screen-preset.active{color:#fff;background:var(--accent)}
+@media(max-width:850px){.device-test-overlay{padding:0}.device-test-dialog{min-height:100vh;border:0;border-radius:0}.device-test-dialog-head,.device-test-toolbar{align-items:stretch;flex-direction:column}.device-test-toolbar{top:0;margin:0 -18px 15px}.device-test-tabs{display:grid;grid-template-columns:1fr 1fr}.device-test-set-field{justify-content:space-between}.device-test-screen-view{grid-template-columns:1fr}.device-screen-sidebar{max-height:none}.device-screen-stage{min-height:75vh}.device-test-pages{justify-content:start}.device-test-launch-actions .button{flex:1}}
+@media(max-width:520px){.device-test-dialog-actions,.device-test-launch-actions{display:grid;grid-template-columns:1fr;width:100%}.device-test-set-field{align-items:stretch;flex-direction:column}.device-test-set-field select{width:100%;min-width:0}.device-screen-nav{grid-template-columns:1fr}.device-screen-metrics div{grid-template-columns:1fr}.device-screen-metrics dd{text-align:left}}
+@page{size:A4 portrait;margin:0}@media print{html,body{min-width:0!important;background:#fff!important}.topbar,.workspace,body>footer,.device-test-dialog-head,.device-test-toolbar,.device-test-pages-note{display:none!important}.device-test-overlay{position:static!important;display:block!important;overflow:visible!important;padding:0!important;background:#fff!important}body:not(.device-test-open) .device-test-overlay{display:none!important}.device-test-dialog{width:auto!important;min-height:0!important;border:0!important;border-radius:0!important;padding:0!important;background:#fff!important;box-shadow:none!important}.device-test-pages-view,.device-test-pages{display:block!important;padding:0!important}.device-print-page{height:296mm!important;min-height:296mm!important;max-height:296mm!important;overflow:hidden!important;break-after:auto;page-break-after:auto;margin:0!important;box-shadow:none!important}.device-print-page+.device-print-page{break-before:page;page-break-before:always}.device-print-code{outline:0!important}.device-print-footer p{display:block!important}}
   </style>
   <script type="text/plain" id="embedded-license-notices" data-purpose="license-notices">
 QR MICROAPPS LAB — MIT LICENSE
@@ -967,7 +975,92 @@ Base64-упаковки QR Microapps Lab. Решение о M или L прин�
       <div id="comparison-summary" class="comparison-summary"><span class="badge muted">Добавьте текущую сборку или загрузите отчёты</span></div>
       <div id="comparison-list" class="comparison-list"><p class="analysis-empty">Результаты сравнения появятся здесь.</p></div>
     </section>
+
+    <section class="panel device-test-panel" aria-labelledby="device-test-title">
+      <div class="section-head">
+        <div><p class="step">07 · ТЕСТ УСТРОЙСТВА</p><h2 id="device-test-title">Проверка QR на экране и бумаге</h2></div>
+        <span class="badge good">Без Интернета</span>
+      </div>
+      <p class="device-test-intro">Быстрый лист Q проверяет ссылку на репозиторий и точные встроенные игры «ИТ-мини-тест» и «Разбей блоки». Полный набор A–C добавляет порог 0,50–0,25 мм и сравнение коррекции ошибок.</p>
+      <div class="device-test-launch-actions">
+        <button id="open-quick-device-test" class="button primary" type="button">Быстрый тест · лист Q</button>
+        <button id="open-full-device-test" class="button subtle" type="button">Полный тест · листы A–C</button>
+      </div>
+    </section>
   </main>
+
+  <section id="device-test-overlay" class="device-test-overlay" role="dialog" aria-modal="true" aria-labelledby="device-test-dialog-title" hidden>
+    <div class="device-test-dialog">
+      <header class="device-test-dialog-head">
+        <div><p class="step">ТЕСТ QR-КОДОВ</p><h2 id="device-test-dialog-title">Проверка устройства</h2></div>
+        <div class="device-test-dialog-actions">
+          <button id="device-test-print" class="button primary small" type="button">Печать</button>
+          <button id="device-test-close" class="button subtle small" type="button">Закрыть</button>
+        </div>
+      </header>
+
+      <div class="device-test-toolbar">
+        <div class="device-test-tabs" role="tablist" aria-label="Режим проверки">
+          <button id="device-test-pages-tab" class="mode-button active" type="button" role="tab" aria-selected="true">Листы A4</button>
+          <button id="device-test-screen-tab" class="mode-button" type="button" role="tab" aria-selected="false">Проверка с экрана</button>
+        </div>
+        <label class="device-test-set-field">Набор<select id="device-test-set"><option value="quick">Быстрый · лист Q</option><option value="full">Полный · листы A–C</option></select></label>
+      </div>
+
+      <section id="device-test-pages-view" class="device-test-pages-view" aria-label="Предпросмотр листов A4">
+        <div class="device-test-pages-note"><strong>Перед печатью:</strong> выберите масштаб 100% и отключите «Вписать в страницу». Контрольная линия на каждом листе должна иметь длину ровно 50 мм.</div>
+        <div id="device-test-pages" class="device-test-pages"></div>
+      </section>
+
+      <section id="device-test-screen-view" class="device-test-screen-view" aria-label="Проверка QR с экрана" hidden>
+        <aside class="device-screen-sidebar">
+          <div>
+            <p class="device-screen-label">Тестовый код</p>
+            <select id="device-screen-code" aria-label="Выбор тестового QR-кода"></select>
+          </div>
+          <div class="device-screen-nav">
+            <button id="device-screen-prev" class="button subtle small" type="button">← Предыдущий</button>
+            <button id="device-screen-next" class="button subtle small" type="button">Следующий →</button>
+          </div>
+          <div class="device-screen-presets">
+            <p class="device-screen-label">Размер в CSS-пикселях</p>
+            <div id="device-screen-pixel-presets" class="device-screen-preset-buttons"></div>
+            <p class="device-screen-label">Физический размер после калибровки</p>
+            <div id="device-screen-mm-presets" class="device-screen-preset-buttons"></div>
+          </div>
+
+          <details id="device-calibration" class="device-calibration" open>
+            <summary>Калибровка банковской картой</summary>
+            <p>Приложите карту к контуру и изменяйте ширину, пока края не совпадут. Расчёт использует размер 85,60 × 53,98 мм.</p>
+            <div class="device-card-ruler-wrap"><div id="device-card-ruler" class="device-card-ruler"><span>85,60 × 53,98 мм</span></div></div>
+            <label>Ширина контура, CSS px<input id="device-card-width" type="range" min="180" max="700" step="1" value="324"><output id="device-card-width-output">324 px</output></label>
+            <div class="device-calibration-actions">
+              <button id="device-calibration-save" class="button primary small" type="button">Сохранить калибровку</button>
+              <button id="device-calibration-reset" class="button subtle small" type="button">Сбросить</button>
+            </div>
+            <p id="device-calibration-result" class="device-calibration-result"></p>
+          </details>
+
+          <dl class="device-screen-metrics">
+            <div><dt>QR</dt><dd id="device-screen-qr-metrics">—</dd></div>
+            <div><dt>На экране</dt><dd id="device-screen-css-size">—</dd></div>
+            <div><dt>Буфер</dt><dd id="device-screen-buffer-size">—</dd></div>
+            <div><dt>Физический размер</dt><dd id="device-screen-physical-size">—</dd></div>
+            <div><dt>Пикселей на модуль</dt><dd id="device-screen-module-pixels">—</dd></div>
+            <div><dt>Вместимость экрана</dt><dd id="device-screen-capacity">—</dd></div>
+          </dl>
+          <p id="device-screen-quality" class="device-screen-quality"></p>
+        </aside>
+
+        <div id="device-screen-stage" class="device-screen-stage">
+          <canvas id="device-screen-canvas" aria-label="QR-код для проверки с экрана"></canvas>
+          <div id="device-screen-caption" class="device-screen-caption"></div>
+          <button id="device-screen-only" class="button subtle small" type="button">Только QR</button>
+          <button id="device-screen-only-exit" class="device-screen-only-exit" type="button" hidden aria-label="Вернуть элементы управления">×</button>
+        </div>
+      </section>
+    </div>
+  </section>
 
   <footer><span>QR Microapps Lab<span data-app-version-wrap hidden> · версия <span data-app-version></span></span></span><span>QR — один из способов упаковки, а не гарантия запуска штатной камерой любого телефона.</span></footer>
 
@@ -12932,6 +13025,543 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
   };
 });
   </script>
+  <script data-source="editor/device-test.js">
+/* Встроенный исходный файл: editor/device-test.js. */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.QRMicroappsDeviceTest = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  var CARD_WIDTH_MM = 85.60;
+  var CARD_HEIGHT_MM = 53.98;
+  var DEFAULT_CSS_PX_PER_MM = 96 / 25.4;
+  var STORAGE_KEY = 'qr-microapps-lab-screen-calibration';
+  var REPOSITORY_URL = 'https://github.com/IlyaBarilo/qr-microapps-lab';
+  var PIXEL_PRESETS = [256, 384, 512, 768, 1024];
+  var MM_PRESETS = [35, 45, 55, 70];
+
+  function byteLength(value) {
+    value = String(value || '');
+    if (typeof TextEncoder === 'function') return new TextEncoder().encode(value).length;
+    if (typeof Buffer !== 'undefined') return Buffer.byteLength(value, 'utf8');
+    return unescape(encodeURIComponent(value)).length;
+  }
+
+  function encodeBase64(value) {
+    value = String(value || '');
+    if (typeof btoa === 'function') return btoa(unescape(encodeURIComponent(value)));
+    return Buffer.from(value, 'utf8').toString('base64');
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
+    });
+  }
+
+  function formatPrintTimestamp(value) {
+    var date = new Date(value == null ? Date.now() : value);
+    if (Number.isNaN(date.getTime())) return '';
+    var two = function (part) { return String(part).padStart(2, '0'); };
+    return two(date.getDate()) + '.' + two(date.getMonth() + 1) + '.' + date.getFullYear() + ' ' + two(date.getHours()) + ':' + two(date.getMinutes()) + ':' + two(date.getSeconds());
+  }
+
+  function makeUrlPayload(id, targetBytes) {
+    var prefix = REPOSITORY_URL + '#qr-device-test-' + id + '-';
+    return prefix + 'A'.repeat(Math.max(0, targetBytes - byteLength(prefix)));
+  }
+
+  function makeHtmlDataUrl(html) {
+    return 'data:text/html;charset=utf-8;base64,' + encodeBase64(String(html || ''));
+  }
+
+  function item(id, title, purpose, payload, ecc, printMm, type, moduleMm) {
+    return {
+      id: id,
+      title: title,
+      purpose: purpose,
+      payload: payload,
+      payloadBytes: byteLength(payload),
+      ecc: ecc,
+      quietZone: 4,
+      printMm: printMm,
+      moduleMm: moduleMm || 0,
+      type: type
+    };
+  }
+
+  function createOverviewPage(id, letter, codePrefix, simplePayload, brickPayload) {
+    return {
+      id: id,
+      letter: letter,
+      number: letter,
+      title: id === 'quick' ? 'Быстрый отдельный тест' : 'Ссылки и автономные игры',
+      description: 'GitHub-ссылки и неизменённые встроенные игры при печатном модуле около 0,50 мм',
+      items: [
+        item(codePrefix + '1', 'Репозиторий', 'Прямая ссылка на QR Microapps Lab', REPOSITORY_URL, 'M', 0, 'URL', 0.50),
+        item(codePrefix + '2', 'Репозиторий · плотный URL', 'Ссылка той же длины, что QR игры «Разбей блоки»', makeUrlPayload(codePrefix + '2', byteLength(brickPayload)), 'M', 0, 'URL', 0.50),
+        item(codePrefix + '3', 'Игра «ИТ-мини-тест»', 'Встроенная игра без изменений', simplePayload, 'M', 0, 'DATA', 0.50),
+        item(codePrefix + '4', 'Игра «Разбей блоки»', 'Встроенная игра без изменений', brickPayload, 'M', 0, 'DATA', 0.50)
+      ]
+    };
+  }
+
+  function createTestSuite(content) {
+    content = content || {};
+    if (!content.simpleHtml || !content.brickHtml) throw new Error('Не найдены встроенные игры для тестовых QR.');
+    var simpleHtml = String(content.simpleHtml);
+    var brickHtml = String(content.brickHtml);
+    var simplePayload = makeHtmlDataUrl(simpleHtml);
+    var brickPayload = makeHtmlDataUrl(brickHtml);
+    if (byteLength(simplePayload) > 2331 || byteLength(brickPayload) > 2331) throw new Error('Встроенная тестовая игра больше вместимости QR с коррекцией M.');
+
+    var quick = createOverviewPage('quick', 'Q', 'Q', simplePayload, brickPayload);
+    var overview = createOverviewPage('overview', 'A', 'A', simplePayload, brickPayload);
+    var brickBytes = byteLength(brickPayload);
+
+    var threshold = {
+      id: 'threshold',
+      letter: 'B',
+      number: 'B',
+      title: 'Порог печати игры «Разбей блоки»',
+      description: 'Один и тот же неизменённый data: URL, размер каждого модуля от 0,50 до 0,25 мм',
+      items: [0.50, 0.40, 0.32, 0.25].map(function (moduleMm, index) {
+        return item('B' + (index + 1), '«Разбей блоки» · модуль ' + moduleMm.toFixed(2).replace('.', ',') + ' мм', brickBytes + ' байт · ECC M', brickPayload, 'M', 0, 'DATA', moduleMm);
+      })
+    };
+
+    var correctionPayload = makeUrlPayload('C', 800);
+    var correction = {
+      id: 'correction',
+      letter: 'C',
+      number: 'C',
+      title: 'Коррекция ошибок',
+      description: 'Одна GitHub-ссылка и модуль 0,45 мм, разные уровни L, M, Q и H',
+      items: ['L', 'M', 'Q', 'H'].map(function (ecc, index) {
+        return item('C' + (index + 1), 'Коррекция ' + ecc, 'GitHub URL · 800 байт · модуль 0,45 мм', correctionPayload, ecc, 0, 'URL', 0.45);
+      })
+    };
+
+    return { quick: [quick], full: [overview, threshold, correction] };
+  }
+
+  function calculateCalibration(cardCssWidth, devicePixelRatio) {
+    var width = Math.max(1, Number(cardCssWidth) || 1);
+    var dpr = Math.max(0.25, Number(devicePixelRatio) || 1);
+    var cssPxPerMm = width / CARD_WIDTH_MM;
+    return {
+      cardCssWidth: width,
+      cssPxPerMm: cssPxPerMm,
+      cssPpi: cssPxPerMm * 25.4,
+      devicePxPerMm: cssPxPerMm * dpr,
+      devicePpi: cssPxPerMm * 25.4 * dpr,
+      devicePixelRatio: dpr
+    };
+  }
+
+  function classifyModulePixels(modulePixels) {
+    if (modulePixels >= 4) return { id: 'good', label: 'Хороший запас', detail: 'Не менее 4 пикселей экрана на модуль.' };
+    if (modulePixels >= 3) return { id: 'warn', label: 'Пограничный режим', detail: '3 пикселя экрана на модуль; нужна проверка камерой.' };
+    return { id: 'bad', label: 'Слишком мелко', detail: 'Меньше 3 пикселей экрана на модуль.' };
+  }
+
+  function calculateScreenRender(modules, quietZone, requestedCssSize, devicePixelRatio, cssPxPerMm) {
+    var totalModules = Math.max(1, Number(modules) + Math.max(0, Number(quietZone) || 0) * 2);
+    var dpr = Math.max(0.25, Number(devicePixelRatio) || 1);
+    var targetCss = Math.max(1, Number(requestedCssSize) || 1);
+    var modulePixels = Math.max(1, Math.round(targetCss * dpr / totalModules));
+    var backingSize = totalModules * modulePixels;
+    var cssSize = backingSize / dpr;
+    var scale = Math.max(0.01, Number(cssPxPerMm) || DEFAULT_CSS_PX_PER_MM);
+    return {
+      totalModules: totalModules,
+      modulePixels: modulePixels,
+      backingSize: backingSize,
+      cssSize: cssSize,
+      physicalMm: cssSize / scale,
+      quality: classifyModulePixels(modulePixels)
+    };
+  }
+
+  function calculateScreenCapacity(modules, quietZone, availableCssSize, devicePixelRatio) {
+    var totalModules = Math.max(1, Number(modules) + Math.max(0, Number(quietZone) || 0) * 2);
+    var dpr = Math.max(0.25, Number(devicePixelRatio) || 1);
+    var modulePixels = Math.max(0, Math.floor(Math.max(0, Number(availableCssSize) || 0) * dpr / totalModules));
+    return {
+      totalModules: totalModules,
+      modulePixels: modulePixels,
+      backingSize: totalModules * modulePixels,
+      cssSize: totalModules * modulePixels / dpr
+    };
+  }
+
+  function calculatePrintGeometry(modules, quietZone, targetModuleMm, minimumSizeMm) {
+    var totalModules = Math.max(1, Number(modules) + Math.max(0, Number(quietZone) || 0) * 2);
+    var target = Math.max(0.01, Number(targetModuleMm) || 0.01);
+    var sizeMm = Math.max(Math.max(0, Number(minimumSizeMm) || 0), totalModules * target);
+    var moduleMm = sizeMm / totalModules;
+    return {
+      totalModules: totalModules,
+      sizeMm: sizeMm,
+      moduleMm: moduleMm,
+      printerDots300: moduleMm * 300 / 25.4,
+      printerDots600: moduleMm * 600 / 25.4
+    };
+  }
+
+  function createQrModel(QRCodeConstructor, payload, ecc, documentObject) {
+    var holder = documentObject.createElement('div');
+    holder.hidden = true;
+    documentObject.body.appendChild(holder);
+    var instance;
+    try {
+      instance = new QRCodeConstructor(holder, {
+        text: payload,
+        width: 256,
+        height: 256,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCodeConstructor.CorrectLevel[ecc]
+      });
+    } finally { holder.remove(); }
+    if (!instance || !instance._oQRCode) throw new Error('QR-кодировщик не вернул матрицу.');
+    return instance._oQRCode;
+  }
+
+  function drawModel(canvas, model, quietZone, modulePixels) {
+    var modules = model.getModuleCount();
+    var quiet = Math.max(0, Number(quietZone) || 0);
+    var scale = Math.max(1, Math.round(Number(modulePixels) || 1));
+    var size = (modules + quiet * 2) * scale;
+    canvas.width = size;
+    canvas.height = size;
+    var context = canvas.getContext('2d');
+    context.imageSmoothingEnabled = false;
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, size, size);
+    context.fillStyle = '#000000';
+    for (var row = 0; row < modules; row++) {
+      for (var column = 0; column < modules; column++) {
+        if (model.isDark(row, column)) context.fillRect((column + quiet) * scale, (row + quiet) * scale, scale, scale);
+      }
+    }
+    return { modules: modules, version: (modules - 17) / 4, totalModules: modules + quiet * 2, pixels: size };
+  }
+
+  function createController(options) {
+    options = options || {};
+    var documentObject = options.document || document;
+    var windowObject = options.window || window;
+    var QRCodeConstructor = options.QRCode || windowObject.QRCode;
+    var getCurrent = typeof options.getCurrent === 'function' ? options.getCurrent : function () { return {}; };
+    var $ = function (id) { return documentObject.getElementById(id); };
+    var elements = {
+      overlay: $('device-test-overlay'), dialog: documentObject.querySelector('.device-test-dialog'), pages: $('device-test-pages'), pagesView: $('device-test-pages-view'), screenView: $('device-test-screen-view'),
+      pagesTab: $('device-test-pages-tab'), screenTab: $('device-test-screen-tab'), set: $('device-test-set'), close: $('device-test-close'), print: $('device-test-print'),
+      openQuick: $('open-quick-device-test'), openFull: $('open-full-device-test'), screenCode: $('device-screen-code'), prev: $('device-screen-prev'), next: $('device-screen-next'),
+      pixelPresets: $('device-screen-pixel-presets'), mmPresets: $('device-screen-mm-presets'), cardRuler: $('device-card-ruler'), cardWidth: $('device-card-width'),
+      cardWidthOutput: $('device-card-width-output'), calibrationSave: $('device-calibration-save'), calibrationReset: $('device-calibration-reset'), calibrationResult: $('device-calibration-result'),
+      screenStage: $('device-screen-stage'), screenCanvas: $('device-screen-canvas'), screenCaption: $('device-screen-caption'), screenOnly: $('device-screen-only'), screenOnlyExit: $('device-screen-only-exit'),
+      qrMetrics: $('device-screen-qr-metrics'), cssSize: $('device-screen-css-size'), bufferSize: $('device-screen-buffer-size'), physicalSize: $('device-screen-physical-size'),
+      modulePixels: $('device-screen-module-pixels'), capacity: $('device-screen-capacity'), quality: $('device-screen-quality')
+    };
+    if (!elements.overlay || !QRCodeConstructor) return null;
+
+    var state = {
+      set: 'quick', view: 'pages', pages: [], items: [], selectedId: '', targetUnit: 'px', targetValue: 512,
+      calibration: null, modelCache: {}, lastFocus: null
+    };
+
+    function formatDecimal(value, digits) {
+      return Number(value).toFixed(digits == null ? 1 : digits).replace('.', ',');
+    }
+
+    function loadCalibration() {
+      try {
+        var saved = JSON.parse(windowObject.localStorage.getItem(STORAGE_KEY) || 'null');
+        if (saved && saved.cardCssWidth >= 180 && saved.cardCssWidth <= 700) return calculateCalibration(saved.cardCssWidth, windowObject.devicePixelRatio || 1);
+      } catch (error) { /* Локальный файл может запрещать хранилище. */ }
+      return null;
+    }
+
+    function saveCalibration(calibration) {
+      try { windowObject.localStorage.setItem(STORAGE_KEY, JSON.stringify({ cardCssWidth: calibration.cardCssWidth })); }
+      catch (error) { /* Локальный файл может запрещать хранилище. */ }
+    }
+
+    function clearSavedCalibration() {
+      try { windowObject.localStorage.removeItem(STORAGE_KEY); }
+      catch (error) { /* Локальный файл может запрещать хранилище. */ }
+    }
+
+    function getModel(testItem) {
+      var key = testItem.id + '|' + testItem.ecc + '|' + testItem.payloadBytes;
+      if (!state.modelCache[key]) state.modelCache[key] = createQrModel(QRCodeConstructor, testItem.payload, testItem.ecc, documentObject);
+      return state.modelCache[key];
+    }
+
+    function currentCssPxPerMm() {
+      return state.calibration ? state.calibration.cssPxPerMm : DEFAULT_CSS_PX_PER_MM;
+    }
+
+    function setView(view) {
+      state.view = view === 'screen' ? 'screen' : 'pages';
+      var screen = state.view === 'screen';
+      elements.pagesView.hidden = screen;
+      elements.screenView.hidden = !screen;
+      elements.pagesTab.classList.toggle('active', !screen);
+      elements.screenTab.classList.toggle('active', screen);
+      elements.pagesTab.setAttribute('aria-selected', String(!screen));
+      elements.screenTab.setAttribute('aria-selected', String(screen));
+      elements.print.disabled = screen;
+      if (screen) windowObject.requestAnimationFrame(renderScreen);
+    }
+
+    function flattenItems(pages) {
+      var result = [];
+      pages.forEach(function (page) { page.items.forEach(function (testItem) { result.push(testItem); }); });
+      return result;
+    }
+
+    function renderPage(testPage) {
+      var page = documentObject.createElement('article');
+      page.className = 'device-print-page device-print-page-' + testPage.id;
+      page.dataset.pageNumber = String(testPage.number);
+      var head = documentObject.createElement('header');
+      head.className = 'device-print-head';
+      head.innerHTML = '<div><b>QR Microapps Lab · тест устройства</b><h3>Лист ' + escapeHtml(testPage.letter) + ' · ' + escapeHtml(testPage.title) + '</h3><p>' + escapeHtml(testPage.description) + '</p></div><div class="device-print-fields">Устройство: ____________________<br>Камера / ОС: ___________________<br>Печать: <span data-print-timestamp></span></div>';
+      var grid = documentObject.createElement('div');
+      grid.className = 'device-print-grid';
+      testPage.items.forEach(function (testItem) {
+        var model = getModel(testItem);
+        var modules = model.getModuleCount();
+        var version = (modules - 17) / 4;
+        var printGeometry = calculatePrintGeometry(modules, testItem.quietZone, testItem.moduleMm || testItem.printMm / (modules + testItem.quietZone * 2), 30);
+        var printMm = printGeometry.sizeMm;
+        var card = documentObject.createElement('button');
+        card.type = 'button';
+        card.className = 'device-print-code';
+        card.dataset.testCodeId = testItem.id;
+        card.setAttribute('aria-label', 'Открыть ' + testItem.id + ' на экране');
+        var canvas = documentObject.createElement('canvas');
+        canvas.style.width = printMm + 'mm';
+        canvas.style.height = printMm + 'mm';
+        drawModel(canvas, model, testItem.quietZone, 8);
+        var copy = documentObject.createElement('div');
+        copy.className = 'device-print-code-copy';
+        copy.innerHTML = '<strong>' + escapeHtml(testItem.id) + ' · ' + escapeHtml(testItem.title) + '</strong><span>' + escapeHtml(testItem.type) + ' · ' + testItem.payloadBytes + ' Б · QR v' + version + ' · ECC ' + escapeHtml(testItem.ecc) + '</span><small>' + formatDecimal(printMm, 1) + ' мм · модуль ' + formatDecimal(printGeometry.moduleMm, 2) + ' мм</small><small>' + formatDecimal(printGeometry.printerDots300, 1) + ' точки при 300 dpi · ' + formatDecimal(printGeometry.printerDots600, 1) + ' при 600 dpi</small><small>' + escapeHtml(testItem.purpose) + '</small><em>□ найден &nbsp; □ предложено действие &nbsp; □ открыто</em>';
+        card.append(canvas, copy);
+        grid.appendChild(card);
+      });
+      var footer = documentObject.createElement('footer');
+      footer.className = 'device-print-footer';
+      footer.innerHTML = '<div><span>Контроль 50 мм</span><i></i></div><p>Печать: масштаб 100%, без «Вписать в страницу». Контрольные URL ведут на github.com/IlyaBarilo/qr-microapps-lab; длинный фрагмент не меняет страницу репозитория.</p>';
+      page.append(head, grid, footer);
+      return page;
+    }
+
+    function populateScreenCodes() {
+      elements.screenCode.replaceChildren();
+      state.items.forEach(function (testItem) {
+        var option = documentObject.createElement('option');
+        option.value = testItem.id;
+        option.textContent = testItem.id + ' · ' + testItem.title;
+        elements.screenCode.appendChild(option);
+      });
+      if (!state.items.some(function (testItem) { return testItem.id === state.selectedId; })) state.selectedId = state.items[0] ? state.items[0].id : '';
+      elements.screenCode.value = state.selectedId;
+    }
+
+    function renderPages() {
+      elements.pages.replaceChildren();
+      state.pages.forEach(function (testPage) { elements.pages.appendChild(renderPage(testPage)); });
+      updatePrintTimestamps();
+      populateScreenCodes();
+    }
+
+    function updatePrintTimestamps() {
+      var timestamp = formatPrintTimestamp(new Date());
+      elements.pages.querySelectorAll('[data-print-timestamp]').forEach(function (output) { output.textContent = timestamp; });
+      return timestamp;
+    }
+
+    function selectSet(setName) {
+      state.set = setName === 'full' ? 'full' : 'quick';
+      elements.set.value = state.set;
+      var suite = createTestSuite(getCurrent());
+      state.pages = suite[state.set];
+      state.items = flattenItems(state.pages);
+      state.modelCache = {};
+      renderPages();
+      if (state.view === 'screen') renderScreen();
+    }
+
+    function selectedItem() {
+      return state.items.find(function (testItem) { return testItem.id === state.selectedId; }) || state.items[0];
+    }
+
+    function renderCalibration() {
+      var width = Number(elements.cardWidth.value) || 324;
+      var live = calculateCalibration(width, windowObject.devicePixelRatio || 1);
+      elements.cardRuler.style.width = width + 'px';
+      elements.cardRuler.style.height = width * CARD_HEIGHT_MM / CARD_WIDTH_MM + 'px';
+      elements.cardWidthOutput.value = Math.round(width) + ' px';
+      if (state.calibration) {
+        elements.calibrationResult.className = 'device-calibration-result good';
+        elements.calibrationResult.textContent = 'Сохранено: ' + formatDecimal(state.calibration.cssPxPerMm, 2) + ' CSS px/мм · ≈' + Math.round(state.calibration.cssPpi) + ' CSS ppi · DPR ' + formatDecimal(windowObject.devicePixelRatio || 1, 2) + '.';
+      } else {
+        elements.calibrationResult.className = 'device-calibration-result';
+        elements.calibrationResult.textContent = 'Пока не сохранено. Текущее совпадение дало бы ' + formatDecimal(live.cssPxPerMm, 2) + ' CSS px/мм; физические размеры QR сейчас приблизительные.';
+      }
+    }
+
+    function availableStageSize() {
+      var width = Math.max(0, elements.screenStage.clientWidth - 32);
+      var height = Math.max(0, elements.screenStage.clientHeight - (elements.overlay.classList.contains('qr-only') ? 32 : 96));
+      return Math.min(width, height);
+    }
+
+    function renderScreen() {
+      var testItem = selectedItem();
+      if (!testItem) return;
+      state.selectedId = testItem.id;
+      elements.screenCode.value = testItem.id;
+      var model = getModel(testItem);
+      var modules = model.getModuleCount();
+      var dpr = windowObject.devicePixelRatio || 1;
+      var pxPerMm = currentCssPxPerMm();
+      var requestedCss = state.targetUnit === 'mm' ? state.targetValue * pxPerMm : state.targetValue;
+      var metrics = calculateScreenRender(modules, testItem.quietZone, requestedCss, dpr, pxPerMm);
+      var drawing = drawModel(elements.screenCanvas, model, testItem.quietZone, metrics.modulePixels);
+      elements.screenCanvas.style.width = metrics.cssSize + 'px';
+      elements.screenCanvas.style.height = metrics.cssSize + 'px';
+      elements.screenCaption.innerHTML = '<strong>' + escapeHtml(testItem.id) + ' · ' + escapeHtml(testItem.title) + '</strong><span>' + testItem.payloadBytes + ' Б · QR v' + drawing.version + ' · ECC ' + escapeHtml(testItem.ecc) + '</span>';
+      elements.qrMetrics.textContent = 'v' + drawing.version + ' · ' + modules + '×' + modules + ' + поля = ' + metrics.totalModules;
+      elements.cssSize.textContent = Math.round(metrics.cssSize) + ' × ' + Math.round(metrics.cssSize) + ' CSS px';
+      elements.bufferSize.textContent = metrics.backingSize + ' × ' + metrics.backingSize + ' px';
+      elements.physicalSize.textContent = (state.calibration ? '' : '≈') + formatDecimal(metrics.physicalMm, 1) + ' × ' + formatDecimal(metrics.physicalMm, 1) + ' мм';
+      elements.modulePixels.textContent = metrics.modulePixels + ' px/модуль';
+      var capacity = calculateScreenCapacity(modules, testItem.quietZone, availableStageSize(), dpr);
+      elements.capacity.textContent = capacity.modulePixels ? 'до ' + capacity.modulePixels + ' px/модуль без прокрутки' : 'код целиком не помещается';
+      elements.quality.className = 'device-screen-quality ' + metrics.quality.id;
+      elements.quality.innerHTML = '<strong>' + metrics.quality.label + '</strong><span>' + metrics.quality.detail + (metrics.cssSize > availableStageSize() ? ' Выбранный размер больше доступной области экрана.' : '') + '</span>';
+      Array.prototype.forEach.call(elements.pixelPresets.children, function (button) { button.classList.toggle('active', state.targetUnit === 'px' && Number(button.dataset.value) === state.targetValue); });
+      Array.prototype.forEach.call(elements.mmPresets.children, function (button) { button.classList.toggle('active', state.targetUnit === 'mm' && Number(button.dataset.value) === state.targetValue); });
+    }
+
+    function createPresetButtons(holder, values, unit) {
+      values.forEach(function (value) {
+        var button = documentObject.createElement('button');
+        button.type = 'button';
+        button.className = 'device-screen-preset';
+        button.dataset.value = String(value);
+        button.textContent = value + ' ' + unit;
+        button.addEventListener('click', function () {
+          state.targetUnit = unit;
+          state.targetValue = value;
+          renderScreen();
+        });
+        holder.appendChild(button);
+      });
+    }
+
+    function changeSelection(offset) {
+      var index = state.items.findIndex(function (testItem) { return testItem.id === state.selectedId; });
+      if (index < 0) index = 0;
+      index = (index + offset + state.items.length) % state.items.length;
+      state.selectedId = state.items[index].id;
+      renderScreen();
+    }
+
+    function setQrOnly(enabled) {
+      elements.overlay.classList.toggle('qr-only', !!enabled);
+      elements.screenOnlyExit.hidden = !enabled;
+      documentObject.body.classList.toggle('device-code-focus-open', !!enabled);
+      windowObject.requestAnimationFrame(renderScreen);
+    }
+
+    function open(setName) {
+      state.lastFocus = documentObject.activeElement;
+      elements.overlay.hidden = false;
+      documentObject.body.classList.add('device-test-open');
+      selectSet(setName);
+      setView('pages');
+      elements.close.focus();
+    }
+
+    function close() {
+      setQrOnly(false);
+      elements.overlay.hidden = true;
+      documentObject.body.classList.remove('device-test-open');
+      if (state.lastFocus && typeof state.lastFocus.focus === 'function') state.lastFocus.focus();
+    }
+
+    createPresetButtons(elements.pixelPresets, PIXEL_PRESETS, 'px');
+    createPresetButtons(elements.mmPresets, MM_PRESETS, 'mm');
+    state.calibration = loadCalibration();
+    elements.cardWidth.value = String(Math.round(state.calibration ? state.calibration.cardCssWidth : CARD_WIDTH_MM * DEFAULT_CSS_PX_PER_MM));
+    renderCalibration();
+
+    elements.openQuick.addEventListener('click', function () { open('quick'); });
+    elements.openFull.addEventListener('click', function () { open('full'); });
+    elements.close.addEventListener('click', close);
+    elements.pagesTab.addEventListener('click', function () { setView('pages'); });
+    elements.screenTab.addEventListener('click', function () { setView('screen'); });
+    elements.set.addEventListener('change', function () { selectSet(elements.set.value); });
+    elements.print.addEventListener('click', function () { setView('pages'); updatePrintTimestamps(); windowObject.requestAnimationFrame(function () { windowObject.print(); }); });
+    elements.pages.addEventListener('click', function (event) {
+      var card = event.target.closest('[data-test-code-id]');
+      if (!card) return;
+      state.selectedId = card.dataset.testCodeId;
+      setView('screen');
+    });
+    elements.screenCode.addEventListener('change', function () { state.selectedId = elements.screenCode.value; renderScreen(); });
+    elements.prev.addEventListener('click', function () { changeSelection(-1); });
+    elements.next.addEventListener('click', function () { changeSelection(1); });
+    elements.cardWidth.addEventListener('input', function () { state.calibration = null; renderCalibration(); });
+    elements.calibrationSave.addEventListener('click', function () {
+      state.calibration = calculateCalibration(elements.cardWidth.value, windowObject.devicePixelRatio || 1);
+      saveCalibration(state.calibration);
+      renderCalibration();
+      renderScreen();
+    });
+    elements.calibrationReset.addEventListener('click', function () {
+      state.calibration = null;
+      clearSavedCalibration();
+      elements.cardWidth.value = String(Math.round(CARD_WIDTH_MM * DEFAULT_CSS_PX_PER_MM));
+      renderCalibration();
+      renderScreen();
+    });
+    elements.screenOnly.addEventListener('click', function () { setQrOnly(true); });
+    elements.screenOnlyExit.addEventListener('click', function () { setQrOnly(false); });
+    windowObject.addEventListener('resize', function () { if (!elements.overlay.hidden && state.view === 'screen') renderScreen(); });
+    windowObject.addEventListener('beforeprint', updatePrintTimestamps);
+    documentObject.addEventListener('keydown', function (event) {
+      if (elements.overlay.hidden || event.key !== 'Escape') return;
+      if (elements.overlay.classList.contains('qr-only')) setQrOnly(false);
+      else close();
+    });
+
+    return { open: open, close: close, selectSet: selectSet, setView: setView, renderScreen: renderScreen, state: state };
+  }
+
+  return {
+    CARD_WIDTH_MM: CARD_WIDTH_MM,
+    CARD_HEIGHT_MM: CARD_HEIGHT_MM,
+    DEFAULT_CSS_PX_PER_MM: DEFAULT_CSS_PX_PER_MM,
+    formatPrintTimestamp: formatPrintTimestamp,
+    createTestSuite: createTestSuite,
+    calculateCalibration: calculateCalibration,
+    calculateScreenRender: calculateScreenRender,
+    calculateScreenCapacity: calculateScreenCapacity,
+    calculatePrintGeometry: calculatePrintGeometry,
+    classifyModulePixels: classifyModulePixels,
+    drawModel: drawModel,
+    createController: createController
+  };
+});
+  </script>
   <script data-source="editor/app.js">
 /* Встроенный исходный файл: editor/app.js. */
 (function () {
@@ -12944,6 +13574,7 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
   var projectApi = window.QRMicroappsProject;
   var comparisonApi = window.QRMicroappsComparison;
   var sample = window.QRMicroappsSample;
+  var deviceTestApi = window.QRMicroappsDeviceTest;
   var $ = function (id) { return document.getElementById(id); };
   var elements = {
     themeToggle: $('theme-toggle'), themeToggleIcon: $('theme-toggle-icon'), themeToggleLabel: $('theme-toggle-label'),
@@ -14571,6 +15202,19 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
   applyPreviewSize();
   renderHistory();
   renderComparison();
+  if (deviceTestApi) {
+    deviceTestApi.createController({
+      QRCode: window.QRCode,
+      getCurrent: function () {
+        var simpleGame = sample.getById('tiny-quiz');
+        var brickGame = sample.getById('brick-breaker');
+        return {
+          simpleHtml: simpleGame.html,
+          brickHtml: brickGame.html
+        };
+      }
+    });
+  }
   if (simpleBuilder) writeSimpleConfig(simpleBuilder.DEFAULT_CONFIG);
   populateExamples();
   loadSample(sample.defaultId);

@@ -357,7 +357,92 @@
       <div id="comparison-summary" class="comparison-summary"><span class="badge muted">Добавьте текущую сборку или загрузите отчёты</span></div>
       <div id="comparison-list" class="comparison-list"><p class="analysis-empty">Результаты сравнения появятся здесь.</p></div>
     </section>
+
+    <section class="panel device-test-panel" aria-labelledby="device-test-title">
+      <div class="section-head">
+        <div><p class="step">07 · ТЕСТ УСТРОЙСТВА</p><h2 id="device-test-title">Проверка QR на экране и бумаге</h2></div>
+        <span class="badge good">Без Интернета</span>
+      </div>
+      <p class="device-test-intro">Быстрый лист Q проверяет ссылку на репозиторий и точные встроенные игры «ИТ-мини-тест» и «Разбей блоки». Полный набор A–C добавляет порог 0,50–0,25 мм и сравнение коррекции ошибок.</p>
+      <div class="device-test-launch-actions">
+        <button id="open-quick-device-test" class="button primary" type="button">Быстрый тест · лист Q</button>
+        <button id="open-full-device-test" class="button subtle" type="button">Полный тест · листы A–C</button>
+      </div>
+    </section>
   </main>
+
+  <section id="device-test-overlay" class="device-test-overlay" role="dialog" aria-modal="true" aria-labelledby="device-test-dialog-title" hidden>
+    <div class="device-test-dialog">
+      <header class="device-test-dialog-head">
+        <div><p class="step">ТЕСТ QR-КОДОВ</p><h2 id="device-test-dialog-title">Проверка устройства</h2></div>
+        <div class="device-test-dialog-actions">
+          <button id="device-test-print" class="button primary small" type="button">Печать</button>
+          <button id="device-test-close" class="button subtle small" type="button">Закрыть</button>
+        </div>
+      </header>
+
+      <div class="device-test-toolbar">
+        <div class="device-test-tabs" role="tablist" aria-label="Режим проверки">
+          <button id="device-test-pages-tab" class="mode-button active" type="button" role="tab" aria-selected="true">Листы A4</button>
+          <button id="device-test-screen-tab" class="mode-button" type="button" role="tab" aria-selected="false">Проверка с экрана</button>
+        </div>
+        <label class="device-test-set-field">Набор<select id="device-test-set"><option value="quick">Быстрый · лист Q</option><option value="full">Полный · листы A–C</option></select></label>
+      </div>
+
+      <section id="device-test-pages-view" class="device-test-pages-view" aria-label="Предпросмотр листов A4">
+        <div class="device-test-pages-note"><strong>Перед печатью:</strong> выберите масштаб 100% и отключите «Вписать в страницу». Контрольная линия на каждом листе должна иметь длину ровно 50 мм.</div>
+        <div id="device-test-pages" class="device-test-pages"></div>
+      </section>
+
+      <section id="device-test-screen-view" class="device-test-screen-view" aria-label="Проверка QR с экрана" hidden>
+        <aside class="device-screen-sidebar">
+          <div>
+            <p class="device-screen-label">Тестовый код</p>
+            <select id="device-screen-code" aria-label="Выбор тестового QR-кода"></select>
+          </div>
+          <div class="device-screen-nav">
+            <button id="device-screen-prev" class="button subtle small" type="button">← Предыдущий</button>
+            <button id="device-screen-next" class="button subtle small" type="button">Следующий →</button>
+          </div>
+          <div class="device-screen-presets">
+            <p class="device-screen-label">Размер в CSS-пикселях</p>
+            <div id="device-screen-pixel-presets" class="device-screen-preset-buttons"></div>
+            <p class="device-screen-label">Физический размер после калибровки</p>
+            <div id="device-screen-mm-presets" class="device-screen-preset-buttons"></div>
+          </div>
+
+          <details id="device-calibration" class="device-calibration" open>
+            <summary>Калибровка банковской картой</summary>
+            <p>Приложите карту к контуру и изменяйте ширину, пока края не совпадут. Расчёт использует размер 85,60 × 53,98 мм.</p>
+            <div class="device-card-ruler-wrap"><div id="device-card-ruler" class="device-card-ruler"><span>85,60 × 53,98 мм</span></div></div>
+            <label>Ширина контура, CSS px<input id="device-card-width" type="range" min="180" max="700" step="1" value="324"><output id="device-card-width-output">324 px</output></label>
+            <div class="device-calibration-actions">
+              <button id="device-calibration-save" class="button primary small" type="button">Сохранить калибровку</button>
+              <button id="device-calibration-reset" class="button subtle small" type="button">Сбросить</button>
+            </div>
+            <p id="device-calibration-result" class="device-calibration-result"></p>
+          </details>
+
+          <dl class="device-screen-metrics">
+            <div><dt>QR</dt><dd id="device-screen-qr-metrics">—</dd></div>
+            <div><dt>На экране</dt><dd id="device-screen-css-size">—</dd></div>
+            <div><dt>Буфер</dt><dd id="device-screen-buffer-size">—</dd></div>
+            <div><dt>Физический размер</dt><dd id="device-screen-physical-size">—</dd></div>
+            <div><dt>Пикселей на модуль</dt><dd id="device-screen-module-pixels">—</dd></div>
+            <div><dt>Вместимость экрана</dt><dd id="device-screen-capacity">—</dd></div>
+          </dl>
+          <p id="device-screen-quality" class="device-screen-quality"></p>
+        </aside>
+
+        <div id="device-screen-stage" class="device-screen-stage">
+          <canvas id="device-screen-canvas" aria-label="QR-код для проверки с экрана"></canvas>
+          <div id="device-screen-caption" class="device-screen-caption"></div>
+          <button id="device-screen-only" class="button subtle small" type="button">Только QR</button>
+          <button id="device-screen-only-exit" class="device-screen-only-exit" type="button" hidden aria-label="Вернуть элементы управления">×</button>
+        </div>
+      </section>
+    </div>
+  </section>
 
   <footer><span>QR Microapps Lab<span data-app-version-wrap hidden> · версия <span data-app-version></span></span></span><span>QR — один из способов упаковки, а не гарантия запуска штатной камерой любого телефона.</span></footer>
 
@@ -381,6 +466,7 @@
   <script src="editor/project.js"></script>
   <script src="editor/comparison.js"></script>
   <script src="editor/sample.js"></script>
+  <script src="editor/device-test.js"></script>
   <script src="editor/app.js"></script>
 </body>
 </html>
