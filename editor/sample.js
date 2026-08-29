@@ -17,6 +17,30 @@
     }
   };
 
+  var computerThinking = {
+    id: 'computer-thinking',
+    title: 'Как думает компьютер?',
+    html: "<!doctype html><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\"><style>body{background:#111;color:#eee;text-align:center;font:18px monospace;translate:0 calc(50vh - 50%)}pre{width:13ch;margin:auto;text-align:left;font:4vh/1 monospace}button{width:min(90%,30em);height:42px;margin:4px;font:inherit}e{color:#fff}f{color:#fd4}</style><b>Как думает компьютер?<br>Угадай ИТ-понятие.<br>Не знаешь — угадай :)</b><pre id=p></pre><div id=a></div><script>R=String.raw,z=x=>x.replace(/[A-`]/g,y=>String.fromCharCode(y.charCodeAt()+1007)),N=\"ОXFQFE];СSFK;МARRIC;ПFQFMFNNA`;КONRSANSA;ПAQAMFSQ;УRLOCIF;ЦIKL;ФTNKWI`;АLDOQISM;ПQODQAMMA;СFS];База данных\".split`;`,Q=[R` o  o  o []^/|\\/|\\/|\\||^/ \\/ \\/ \\||^1 2  3 ->;1;0;2;6a9`,R`      +-----+^      |  3  |^   +--+-----+^   |  2  |^+--+-----+^|  1  |^+-----+;0;2;1;da6`,R`+---------+^| X = 5   |^+----+----+^     |^   X = 8;3;4;5;7a6`,R`     [?]^     / \\^    1   0^   /     \\^ [YES]  [NO];7;6;9;c65`,R`   +-----+^   |     |^   v     |^  [DO]---+^   |^   * x 4;8;6;7;b86`,R`3 -->+----+^     | x2 |^6 <--+----+^       |^     [OUT];8;10;9;6ad`,R` [o]---[o]^  | \\ / |^ [o]-*-[o]^      |^     [o];12;11;2;49b`,R`  _________^ /_________\\^ | ID  42  |^ | ID  73  |^ | ID  91  |^ |_________|^ ?> ID=73;11;10;12;8bc`];i=c=0;n=_=>{if(i>7)return p.innerText=\"  СЧЁТ \"+c+\"/8\",a.innerHTML=\"<button onclick=n(i=c=0)>ЕЩЁ РАЗ\";q=Q[i++].split`;`;p.style.color=\"#\"+q[4];p.innerHTML=q[0].replaceAll(\"^\",\"\\n\").replace(/[o*?]/g,x=>`<${y=x==\"o\"?\"e\":\"f\"}>${x}</${y}>`);a.innerHTML=i+\"/8<br>\"+q.slice(1,4).map((x,j)=>`<button onclick=g(${j})>${z(N[x])}`).join``};g=x=>n(c+=x==i%3);n()</script>",
+    spec: {
+      schemaVersion: '0.1', id: 'computer-thinking', title: 'Как думает компьютер?', type: 'quiz',
+      qr: { encoding: 'base64', ecc: 'M' },
+      technical: { singleHtmlFile: true, externalResources: false, networkRequests: false, requiredViewport: true },
+      interface: { touchControls: true, noHorizontalScroll: true, noVerticalScroll: true, minTouchTargetPx: 42, minControlGapPx: 8, requireControlLabels: true }
+    }
+  };
+
+  var tournamentBracket = {
+    id: 'tournament-bracket',
+    title: 'Турнирная сетка',
+    html: "<!doctype html><meta charset=utf-8><meta name=viewport content=\"width=device-width,initial-scale=1\"><style>body{background:#111;color:#eee;text-align:center;font:18px monospace;translate:0 calc(50vh - 50%)}pre{width:max-content;margin:auto;text-align:left;font:3.5vh/1 monospace;color:#6ad}button{width:90%;height:42px;margin:4px;font:inherit}r{color:#f55}f{color:#5d5}v{color:#fd4}</style><b>Турнирная сетка<br><f>*</f> победа, <r>x</r> поражение<br>[<v>?</v>]=вопрос</b><div id=z></div><pre id=p></pre><div id=a></div><script>R=String.raw,D=\"   ; --;--;\\\\^;/^; +;[?]^; -;^^\".split`;`,N=\"A;B;C;D;3;4;7;Финал;Полуфинал;Четвертьфинал\".split`;`,P=\"Кто прошёл?;Кто чемпион?;Соперник C?;Матчей всего?;Какой этап?;Кто проиграл?;Матчей чемпиону?\".split`;`,Q=[R`Abxcdaa f-gBbc-e;0;0;1;0;3`,R`Ah*da f-xdBb/a daaa +gChx\\a ea fceDbe;1;0;3;0;2`,R`Abda fc 1^Dbe^Bbda fc 2^Cbe;2;0;1;3;0`,R`Abda fcdBb/a daaa +c^Cb\\a ea fceDbe;3;1;5;4;6`,R`AbdBbeCbdDbeEbdFbeGbdHb/;4;2;7;8;9`,R`Abc-daa fc^Bb*ce;5;0;0;1;3`,R`8b> 4b> 2^aaaa|^aaaav^aaaa1^;6;0;4;5;6`,R`Abda f[КУБОК]^Bbe;4;2;9;8;7`];i=s=0;n=_=>{if(i>7)return z.innerText=\"\",p.innerText=\"СЧЁТ \"+s+\"/8\",a.innerHTML=\"<button onclick=n(i=s=0)>ЕЩЁ РАЗ\";q=Q[i++].split`;`;z.innerHTML=P[q[1]].replace(\"?\",\"<v>?</v>\");p.innerHTML=q[0].replace(/[a-i]/g,x=>D[x.charCodeAt()-97]).replaceAll(\"^\",\"\\n\").replace(/[x*?]/g,x=>`<${y=\"rfv\"[\"x*?\".indexOf(x)]}>${x}</${y}>`);a.innerHTML=i+\"/8<br>\"+q.slice(3,6).map((x,j)=>`<button onclick=g(${j})>${N[x]}`).join``};g=x=>n(s+=x==q[2]);n()</script>",
+    spec: {
+      schemaVersion: '0.1', id: 'tournament-bracket', title: 'Турнирная сетка', type: 'quiz',
+      qr: { encoding: 'base64', ecc: 'M' },
+      technical: { singleHtmlFile: true, externalResources: false, networkRequests: false, requiredViewport: true },
+      interface: { touchControls: true, noHorizontalScroll: true, noVerticalScroll: true, minTouchTargetPx: 42, minControlGapPx: 8, requireControlLabels: true }
+    }
+  };
+
   var packetNetwork = {
     id: 'packet-network',
     title: 'Пакет в сети',
@@ -99,7 +123,7 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     }
   };
 
-  var items = [tinyQuiz, packetNetwork, brickBreaker, firewall, releaseRun, careerCompass];
+  var items = [tinyQuiz, computerThinking, tournamentBracket, packetNetwork, brickBreaker, firewall, releaseRun, careerCompass];
   return {
     defaultId: brickBreaker.id,
     items: items,

@@ -161,6 +161,13 @@ try {
   await page.waitForFunction(() => document.querySelector('#roundtrip-title')?.textContent === 'Содержимое восстановлено без изменений' && document.querySelector('#qr-correction-value')?.textContent === 'M', null, { timeout: 30_000 });
   assert.match(await page.locator('#data-url').inputValue(), /^data:text\/html;charset=utf-8;base64,/, 'Ручное значение Percent должно заменяться фиксированным Base64.');
 
+  await page.selectOption('#example-select', 'tournament-bracket');
+  await page.click('#load-sample');
+  await page.waitForFunction(() => document.querySelector('#roundtrip-title')?.textContent === 'Содержимое восстановлено без изменений', null, { timeout: 30_000 });
+  assert.equal(await page.locator('#qr-correction-value').textContent(), 'M', '«Турнирная сетка» должна помещаться в QR с коррекцией M.');
+  assert.match(await page.frameLocator('#preview').locator('body').innerText(), /Турнирная сетка/);
+  assert.doesNotMatch(await page.locator('#source').inputValue(), /Ответ:/, 'В публичном примере не должно быть отладочной подсказки.');
+
   await page.selectOption('#example-select', 'packet-network');
   await page.click('#load-sample');
   await page.waitForFunction(() => document.querySelector('#roundtrip-title')?.textContent === 'Содержимое восстановлено без изменений', null, { timeout: 30_000 });

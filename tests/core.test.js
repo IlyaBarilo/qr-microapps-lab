@@ -253,8 +253,8 @@ test('валидатор профиля проверяет формат и QR-п
   assert.match(core.validateSpec({ ...sample.spec, interface: { minTouchTargetPx: 10, minControlGapPx: 80, requireControlLabels: 'yes', noVerticalScroll: 'yes' } }).join(' '), /minTouchTargetPx.*minControlGapPx.*requireControlLabels.*noVerticalScroll/);
 });
 
-test('встроенный каталог содержит шесть компактных примеров с валидными профилями', () => {
-  assert.equal(sample.items.length, 6);
+test('встроенный каталог содержит восемь компактных примеров с валидными профилями', () => {
+  assert.equal(sample.items.length, 8);
   assert.equal(sample.defaultId, 'brick-breaker');
   for (const item of sample.items) {
     assert.doesNotMatch(item.html, /[\r\n]$/);
@@ -266,6 +266,36 @@ test('эталонный пример укладывается в стандар
   const url = core.makeDataUrl(sample.html, sample.spec.qr.encoding);
   assert.ok(core.byteLength(url) <= core.getQrLimit(sample.spec.qr.ecc));
   const checks = core.validateHtml(sample.html, sample.spec, { dataUrl: url, encoding: 'base64', ecc: 'M', qrVersion: 35 });
+  assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
+});
+
+test('«Как думает компьютер?» укладывается в стандартную вместимость QR', () => {
+  const quiz = sample.getById('computer-thinking');
+  const url = core.makeDataUrl(quiz.html, quiz.spec.qr.encoding);
+  assert.ok(core.byteLength(url) <= core.getQrLimit(quiz.spec.qr.ecc));
+  assert.match(quiz.html, /Угадай ИТ-понятие/);
+  assert.match(quiz.html, /font:4vh\/1 monospace/);
+  const choices = [...quiz.html.matchAll(/;(\d+);(\d+);(\d+);[0-9a-f]+`/g)]
+    .map((match) => match.slice(1).map(Number));
+  assert.deepEqual(
+    choices.map((choice, index) => choice[(index + 1) % 3]),
+    [0, 1, 3, 6, 7, 8, 11, 12],
+  );
+  assert.match(quiz.html, /\| ID  42  \|\^ \| ID  73  \|\^ \| ID  91  \|/);
+  const checks = core.validateHtml(quiz.html, quiz.spec, { dataUrl: url, encoding: 'base64', ecc: 'M', qrVersion: 40 });
+  assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
+});
+
+test('«Турнирная сетка» укладывается в стандартную вместимость QR', () => {
+  const quiz = sample.getById('tournament-bracket');
+  const url = core.makeDataUrl(quiz.html, quiz.spec.qr.encoding);
+  assert.ok(core.byteLength(url) <= core.getQrLimit(quiz.spec.qr.ecc));
+  assert.match(quiz.html, /\[<v>\?<\/v>\]=вопрос/);
+  assert.match(quiz.html, /f\{color:#5d5\}v\{color:#fd4\}/);
+  assert.doesNotMatch(quiz.html, /Ответ:/);
+  const questions = [...quiz.html.matchAll(/;(\d+);(\d+);(\d+);(\d+);(\d+)`/g)];
+  assert.deepEqual(questions.map((question) => Number(question[2])), [0, 0, 0, 1, 2, 0, 0, 2]);
+  const checks = core.validateHtml(quiz.html, quiz.spec, { dataUrl: url, encoding: 'base64', ecc: 'M', qrVersion: 40 });
   assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
 });
 
