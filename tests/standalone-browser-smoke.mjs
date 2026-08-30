@@ -286,10 +286,12 @@ try {
     bodyHeight: document.body.scrollHeight,
     canvasDisplay: getComputedStyle(document.querySelector('canvas')).display
   }));
-  assert.equal(trackLayout.documentHeight, trackLayout.viewportHeight, '«Кибертрасса 3D» не должна создавать вертикальную прокрутку.');
-  assert.equal(trackLayout.bodyHeight, trackLayout.viewportHeight, 'Canvas «Кибертрассы 3D» должен точно занимать высоту экрана.');
+  assert.equal(trackLayout.documentHeight, trackLayout.viewportHeight, '«Кибертрасса 2.5D» не должна создавать вертикальную прокрутку.');
+  assert.equal(trackLayout.bodyHeight, trackLayout.viewportHeight, 'Canvas «Кибертрассы 2.5D» должен точно занимать высоту экрана.');
   assert.equal(trackLayout.canvasDisplay, 'block', 'Блочный canvas не должен добавлять нижний зазор базовой линии.');
-  assert.equal(await page.locator('.validation-remarks-line.fail').count(), 0, 'У «Кибертрассы 3D» не должно быть нарушений переполнения.');
+  assert.equal(await page.locator('.validation-remarks-line.fail').count(), 0, 'У «Кибертрассы 2.5D» не должно быть нарушений переполнения.');
+  assert.equal(await page.locator('#example-select option:checked').textContent(), 'Кибертрасса 2.5D');
+  assert.match(await page.locator('#source').inputValue(), /КИБЕРТРАССА 2\.5D/);
   assert.equal(await page.locator('#sample-documentation-open').isDisabled(), true, 'Кнопка описания должна быть неактивна у примера без документации.');
 
   await page.selectOption('#example-select', 'cyber-maze-3d');
@@ -298,7 +300,7 @@ try {
   await page.click('#sample-documentation-open');
   assert.equal(await page.locator('#sample-documentation-overlay').isVisible(), true, 'Описание должно открываться во встроенном экранном окне.');
   const mazeDocumentation = await page.locator('#sample-documentation-overlay').innerText();
-  ['Киберлабиринт 3D', '15 × 15', '28 шагов', '1 — 52 секунды', '5 — 40 секунд', 'S1 (3, 3)', 'Canvas-рейкастером'].forEach((text) => {
+  ['Киберлабиринт 2.5D', '15 × 15', '28 шагов', '1 — 52 секунды', '5 — 40 секунд', 'S1 (3, 3)', 'Canvas-рейкастером'].forEach((text) => {
     assert.ok(mazeDocumentation.includes(text), 'В описании должен быть текст: ' + text);
   });
   const mapDocumentation = await page.locator('.sample-grid-map').evaluate((map) => ({
@@ -355,14 +357,14 @@ try {
     portalCell: window.M[112],
     startCount: window.P.length
   }));
-  assert.equal(mazeLayout.documentHeight, mazeLayout.viewportHeight, '«Киберлабиринт 3D» не должен создавать вертикальную прокрутку.');
+  assert.equal(mazeLayout.documentHeight, mazeLayout.viewportHeight, '«Киберлабиринт 2.5D» не должен создавать вертикальную прокрутку.');
   assert.ok(mazeLayout.bodyHeight <= mazeLayout.viewportHeight, 'Поле лабиринта не должно увеличивать высоту документа.');
   assert.equal(mazeLayout.canvasPosition, 'fixed', 'Canvas лабиринта должен быть закреплён в видимой области.');
   assert.equal(mazeLayout.state, 1, 'Лабиринт должен открываться со стартового экрана.');
   assert.equal(mazeLayout.mapCells, 225, 'В предпросмотре должна запускаться карта 15 на 15 клеток.');
   assert.equal(mazeLayout.portalCell, '2', 'Выход должен отрисовываться отдельной зелёной поверхностью.');
   assert.equal(mazeLayout.startCount, 4, 'Игра должна выбирать одну из четырёх точек старта.');
-  assert.equal(await page.locator('.validation-remarks-line.fail').count(), 0, 'У «Киберлабиринта 3D» не должно быть нарушений вместимости или переполнения.');
+  assert.equal(await page.locator('.validation-remarks-line.fail').count(), 0, 'У «Киберлабиринта 2.5D» не должно быть нарушений вместимости или переполнения.');
   const mazeCanvas = page.frameLocator('#preview').locator('canvas');
   await mazeCanvas.click({ position: { x: 180, y: 320 } });
   assert.equal(await mazeCanvas.evaluate(() => Q), 0, 'Первое касание должно запускать лабиринт.');

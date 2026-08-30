@@ -694,26 +694,50 @@ test('«Киберрефлекс» встроен как автономный п
   assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
 });
 
-test('«Кибертрасса 3D» встроена как автономная игра и укладывается в QR', () => {
+test('«Кибертрасса 2.5D» использует три полосы и укладывается в QR', () => {
   const game = sample.getById('cyber-track-3d');
   const url = core.makeDataUrl(game.html, game.spec.qr.encoding);
-  assert.equal(game.title, 'Кибертрасса 3D');
+  assert.equal(game.title, 'Кибертрасса 2.5D');
+  assert.equal(game.spec.title, 'Кибертрасса 2.5D');
   assert.equal(core.inspectDifficulty(game.html).value, 3);
   assert.ok(core.byteLength(url) <= core.getQrLimit(game.spec.qr.ecc));
   assert.match(game.html, /requestAnimationFrame\(T\)/);
   assert.match(game.html, /N=22\+\$d\*2/);
   assert.match(game.html, /S==N/);
   assert.match(game.html, /Q>1&&o<E/);
+  assert.match(game.html, /r\+=!\(Q%3\)\*d/, 'игровой таймер должен двигаться во время гонки и финиша, но останавливаться на старте и при ударе');
+  assert.match(game.html, /a\[1\]-=d\*v/, 'препятствия должны использовать общую скорость трассы');
+  assert.match(game.html, /r\*v\*9/, 'разметка должна использовать ту же скорость и игровой таймер');
+  assert.doesNotMatch(game.html, /t\/250/, 'разметка не должна продолжать движение по абсолютному времени');
+  assert.match(game.html, /a\[0\]==L&&a\[1\]<\.06&&a\[1\]\+d\*v>=\.06/, 'столкновение должно происходить только при пересечении зоны корабля');
+  assert.match(game.html, /a\[1\]<-\.15/, 'пройденное препятствие должно удаляться только за нижней границей экрана');
+  assert.match(game.html, /for\(i=Q<3\?A\.length:0;i--;\)/, 'после финиша препятствия не должны рисоваться');
   assert.match(game.html, /f\(0,0,W\*S\/N,5\)/);
   assert.match(game.html, /ТАП: ПОЛОСА/);
+  assert.match(game.html, /КИБЕРТРАССА 2\.5D/);
+  assert.match(game.html, /L=e\.clientX\/W\*3\|0/);
+  assert.equal((game.html.match(/Math\.random\(\)\*3\|0/g) || []).length, 2, 'полоса и один из трёх видов препятствия должны выбираться независимо');
+  assert.match(game.html, /C=\['#f24','#fc0','#a3f'\]/, 'палитра препятствий должна создаваться один раз, а не в каждом кадре');
+  assert.match(game.html, /strokeStyle=C\[q\]/, 'три ярких вида препятствий должны визуально различаться');
+  assert.match(game.html, /for\(j=4;j--;\)x\.rect/, 'препятствия должны собирать вложенные голографические контуры в один путь');
+  assert.doesNotMatch(game.html, /strokeRect/, 'каждая линия голограммы не должна вызывать отдельную обводку');
+  assert.match(game.html, /for\(i=-3;i<4;i\+=2\).*for\(i=9;i--;\).*x\.stroke\(\)/, 'вся разметка трассы должна обводиться одной операцией');
+  assert.match(game.html, /V=B\*p\/4/, 'увеличенный размер препятствий должен уменьшаться вместе с перспективной шириной полосы');
+  assert.match(game.html, /G=Y\+\(H-Y\)\*p/, 'препятствия и горизонтальная разметка должны двигаться в одной вертикальной перспективе');
+  assert.doesNotMatch(game.html, /G=Y\+\(H-Y\)\*p\*\.83/, 'препятствия не должны искусственно замедляться относительно разметки');
+  assert.doesNotMatch(game.html, /V=7\+45\*p/, 'у дальних препятствий не должно быть постоянного минимального размера');
+  assert.match(game.html, /for\(i=-3;i<4;i\+=2\)/, 'дорога должна иметь четыре границы для трёх полос');
+  assert.match(game.html, /\(a\[0\]-1\)\*B\*p\*2\/3/);
+  assert.match(game.html, /p=\(H-55-Y\)\/\(H-Y\)/, 'позиция корабля должна учитывать сужение трассы на высоте его визуального центра');
+  assert.match(game.html, /\(L-1\)\*B\*p\*2\/3/);
   assert.match(game.html, /display:block/);
-  assert.match(game.html, /x\.lineTo\(W\/2\+B,H\)/);
+  assert.match(game.html, /l\(W\/2\+B,H\)/);
   const checks = core.validateHtml(game.html, game.spec, { dataUrl: url, encoding: 'base64', ecc: 'M', qrVersion: 40 });
   assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
 
   const frames = [];
   const drawingContext = {
-    fillRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, fill() {}, stroke() {}, fillText() {}
+    fillRect() {}, rect() {}, beginPath() {}, moveTo() {}, lineTo() {}, fill() {}, stroke() {}, fillText() {}
   };
   const canvas = { getContext: () => drawingContext };
   const sandbox = {
@@ -731,39 +755,53 @@ test('«Кибертрасса 3D» встроена как автономная
   assert.equal(sandbox.A.length, 1, 'после старта должно появиться первое препятствие');
   canvas.onpointerdown({ clientX: 10 });
   assert.equal(sandbox.L, 0, 'касание левой полосы должно перестроить корабль влево');
+  canvas.onpointerdown({ clientX: 180 });
+  assert.equal(sandbox.L, 1, 'касание центральной полосы должно вернуть корабль в центр');
+  canvas.onpointerdown({ clientX: 350 });
+  assert.equal(sandbox.L, 2, 'касание правой полосы должно перестроить корабль вправо');
 
   sandbox.L = 1;
   sandbox.S = sandbox.N - 1;
-  sandbox.A = [[0, -0.1]];
+  sandbox.A = [[0, -0.2]];
   frames.shift()(116);
   assert.equal(sandbox.S, sandbox.N, 'последнее пройденное препятствие должно завершить дистанцию');
   assert.equal(sandbox.Q, 3, 'после прохождения дистанции должен открыться экран победы');
 
   const finishLock = sandbox.E;
+  const finishPhase = sandbox.r;
   canvas.onpointerdown({ clientX: 180 });
   assert.equal(sandbox.Q, 3, 'случайное касание сразу после финиша не должно перезапускать игру');
   frames.shift()(finishLock - 1);
+  assert.ok(sandbox.r > finishPhase, 'после финиша разметка трассы должна продолжать движение');
   canvas.onpointerdown({ clientX: 180 });
   assert.equal(sandbox.Q, 3, 'экран финиша должен оставаться заблокированным целую секунду');
   frames.shift()(finishLock);
   canvas.onpointerdown({ clientX: 180 });
   assert.equal(sandbox.Q, 0, 'после секундной задержки касание должно запускать новый раунд');
 
-  sandbox.A = [[1, -0.1]];
+  sandbox.A = [[1, 0, 1]];
   frames.shift()(finishLock + 16);
+  assert.equal(sandbox.Q, 0, 'переход на полосу уже проехавшего препятствия не должен вызывать запоздалый удар');
+  assert.ok(sandbox.A[0][1] < 0, 'проехавшее препятствие должно продолжать движение за экраном без телепортации к кораблю');
+  sandbox.A = [[1, 0.065, 1]];
+  frames.shift()(finishLock + 32);
   assert.equal(sandbox.Q, 2, 'препятствие на выбранной полосе должно завершить игру столкновением');
+  assert.equal(sandbox.A[0][1], 0.06, 'столкнувшееся препятствие должно оставаться видимым в точке удара');
   const collisionLock = sandbox.E;
+  const collisionPhase = sandbox.r;
   canvas.onpointerdown({ clientX: 180 });
   assert.equal(sandbox.Q, 2, 'случайное касание сразу после удара не должно перезапускать игру');
+  frames.shift()(collisionLock - 1);
+  assert.equal(sandbox.r, collisionPhase, 'во время паузы после удара препятствия и трасса должны быть заморожены вместе');
   frames.shift()(collisionLock);
   canvas.onpointerdown({ clientX: 180 });
   assert.equal(sandbox.Q, 0, 'после секундной задержки удар должен разрешить новый раунд');
 });
 
-test('«Киберлабиринт 3D» строит вид от первого лица, проверяет стены и укладывается в QR L', () => {
+test('«Киберлабиринт 2.5D» строит вид от первого лица, проверяет стены и укладывается в QR L', () => {
   const game = sample.getById('cyber-maze-3d');
   const url = core.makeDataUrl(game.html, game.spec.qr.encoding);
-  assert.equal(game.title, 'Киберлабиринт 3D');
+  assert.equal(game.title, 'Киберлабиринт 2.5D');
   assert.equal(game.spec.qr.ecc, 'L');
   assert.equal(core.inspectDifficulty(game.html).value, 3);
   assert.ok(core.byteLength(url) <= core.getQrLimit('L'));
@@ -775,7 +813,7 @@ test('«Киберлабиринт 3D» строит вид от первого 
   assert.match(game.html, /НАЙДИ ВЫХОД/);
   assert.match(game.html, /R\.toFixed\(1\)\+' СЕКУНД'/);
   assert.doesNotMatch(game.html, /ВПЕРЁД/);
-  assert.equal(game.documentation.title, 'Как играть в «Киберлабиринт 3D»');
+  assert.equal(game.documentation.title, 'Как играть в «Киберлабиринт 2.5D»');
   const documentationText = JSON.stringify(game.documentation);
   ['15 × 15', '28 шагов', '1 — 52 секунды', '5 — 40 секунд', 'S1 (3, 3)', 'выход E (7, 7)', 'Canvas-рейкастером'].forEach((text) => {
     assert.ok(documentationText.includes(text), 'в описании должен быть текст: ' + text);
