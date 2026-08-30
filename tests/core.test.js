@@ -323,8 +323,8 @@ test('валидатор профиля проверяет формат и QR-п
   assert.match(core.validateSpec({ ...sample.spec, interface: { minTouchTargetPx: 10, minControlGapPx: 80, requireControlLabels: 'yes', noVerticalScroll: 'yes' } }).join(' '), /minTouchTargetPx.*minControlGapPx.*requireControlLabels.*noVerticalScroll/);
 });
 
-test('встроенный каталог содержит восемь компактных примеров с валидными профилями', () => {
-  assert.equal(sample.items.length, 8);
+test('встроенный каталог содержит десять компактных примеров с валидными профилями', () => {
+  assert.equal(sample.items.length, 10);
   assert.equal(sample.defaultId, 'brick-breaker');
   for (const item of sample.items) {
     assert.doesNotMatch(item.html, /[\r\n]$/);
@@ -677,6 +677,87 @@ test('извлечённая из QR игра «Успей в релиз» вс�
     for (let index = 0; index < 36; index++) variant.ticks[0]();
     assert.ok(variant.sandbox.A.length > 0, 'после старта должно появиться препятствие');
   });
+});
+
+test('«Киберрефлекс» встроен как автономный пример и укладывается в QR', () => {
+  const game = sample.getById('cyber-reflex');
+  const url = core.makeDataUrl(game.html, game.spec.qr.encoding);
+  assert.equal(game.title, 'Киберрефлекс');
+  assert.equal(core.inspectDifficulty(game.html).value, 3);
+  assert.ok(core.byteLength(url) <= core.getQrLimit(game.spec.qr.ecc));
+  assert.match(game.html, /КИБЕР<br>РЕФЛЕКС/);
+  assert.match(game.html, /conic-gradient/);
+  assert.match(game.html, /setInterval/);
+  assert.match(game.html, /o\.style='--p:'\+20\*r\+'%'/);
+  assert.match(game.html, /'<br>'\+v\+' мс'/);
+  const checks = core.validateHtml(game.html, game.spec, { dataUrl: url, encoding: 'base64', ecc: 'M', qrVersion: 40 });
+  assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
+});
+
+test('«Кибертрасса 3D» встроена как автономная игра и укладывается в QR', () => {
+  const game = sample.getById('cyber-track-3d');
+  const url = core.makeDataUrl(game.html, game.spec.qr.encoding);
+  assert.equal(game.title, 'Кибертрасса 3D');
+  assert.equal(core.inspectDifficulty(game.html).value, 3);
+  assert.ok(core.byteLength(url) <= core.getQrLimit(game.spec.qr.ecc));
+  assert.match(game.html, /requestAnimationFrame\(T\)/);
+  assert.match(game.html, /N=22\+\$d\*2/);
+  assert.match(game.html, /S==N/);
+  assert.match(game.html, /Q>1&&o<E/);
+  assert.match(game.html, /f\(0,0,W\*S\/N,5\)/);
+  assert.match(game.html, /ТАП: ПОЛОСА/);
+  assert.match(game.html, /display:block/);
+  assert.match(game.html, /x\.lineTo\(W\/2\+B,H\)/);
+  const checks = core.validateHtml(game.html, game.spec, { dataUrl: url, encoding: 'base64', ecc: 'M', qrVersion: 40 });
+  assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
+
+  const frames = [];
+  const drawingContext = {
+    fillRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, fill() {}, stroke() {}, fillText() {}
+  };
+  const canvas = { getContext: () => drawingContext };
+  const sandbox = {
+    c: canvas,
+    innerWidth: 360,
+    innerHeight: 640,
+    Math,
+    requestAnimationFrame: (callback) => { frames.push(callback); }
+  };
+  vm.runInNewContext(game.html.match(/<script>([\s\S]*?)<\/script>/)[1], sandbox);
+  assert.equal(sandbox.Q, 1, 'до первого касания должен отображаться стартовый экран');
+  canvas.onpointerdown({ clientX: 180 });
+  frames.shift()(100);
+  assert.equal(sandbox.Q, 0, 'первое касание должно запустить игру');
+  assert.equal(sandbox.A.length, 1, 'после старта должно появиться первое препятствие');
+  canvas.onpointerdown({ clientX: 10 });
+  assert.equal(sandbox.L, 0, 'касание левой полосы должно перестроить корабль влево');
+
+  sandbox.L = 1;
+  sandbox.S = sandbox.N - 1;
+  sandbox.A = [[0, -0.1]];
+  frames.shift()(116);
+  assert.equal(sandbox.S, sandbox.N, 'последнее пройденное препятствие должно завершить дистанцию');
+  assert.equal(sandbox.Q, 3, 'после прохождения дистанции должен открыться экран победы');
+
+  const finishLock = sandbox.E;
+  canvas.onpointerdown({ clientX: 180 });
+  assert.equal(sandbox.Q, 3, 'случайное касание сразу после финиша не должно перезапускать игру');
+  frames.shift()(finishLock - 1);
+  canvas.onpointerdown({ clientX: 180 });
+  assert.equal(sandbox.Q, 3, 'экран финиша должен оставаться заблокированным целую секунду');
+  frames.shift()(finishLock);
+  canvas.onpointerdown({ clientX: 180 });
+  assert.equal(sandbox.Q, 0, 'после секундной задержки касание должно запускать новый раунд');
+
+  sandbox.A = [[1, -0.1]];
+  frames.shift()(finishLock + 16);
+  assert.equal(sandbox.Q, 2, 'препятствие на выбранной полосе должно завершить игру столкновением');
+  const collisionLock = sandbox.E;
+  canvas.onpointerdown({ clientX: 180 });
+  assert.equal(sandbox.Q, 2, 'случайное касание сразу после удара не должно перезапускать игру');
+  frames.shift()(collisionLock);
+  canvas.onpointerdown({ clientX: 180 });
+  assert.equal(sandbox.Q, 0, 'после секундной задержки удар должен разрешить новый раунд');
 });
 
 test('«Карьерный компас» укладывается в QR и содержит три результата', () => {

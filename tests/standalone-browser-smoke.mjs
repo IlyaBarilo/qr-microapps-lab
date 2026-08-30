@@ -282,6 +282,20 @@ try {
   const brickResult = await brickCanvas.evaluate(() => ({ blocks: A, score: K, state: Q }));
   assert.deepEqual(brickResult, { blocks: 0, score: 32, state: 3 }, 'Последний из 32 блоков должен давать очко и открывать экран победы.');
 
+  await page.selectOption('#example-select', 'cyber-track-3d');
+  await page.click('#load-sample');
+  await page.waitForFunction(() => document.querySelector('#roundtrip-title')?.textContent === 'Содержимое восстановлено без изменений' && document.querySelector('#qr-correction-value')?.textContent === 'M', null, { timeout: 30_000 });
+  const trackLayout = await page.frameLocator('#preview').locator('html').evaluate((html) => ({
+    viewportHeight: html.clientHeight,
+    documentHeight: html.scrollHeight,
+    bodyHeight: document.body.scrollHeight,
+    canvasDisplay: getComputedStyle(document.querySelector('canvas')).display
+  }));
+  assert.equal(trackLayout.documentHeight, trackLayout.viewportHeight, '«Кибертрасса 3D» не должна создавать вертикальную прокрутку.');
+  assert.equal(trackLayout.bodyHeight, trackLayout.viewportHeight, 'Canvas «Кибертрассы 3D» должен точно занимать высоту экрана.');
+  assert.equal(trackLayout.canvasDisplay, 'block', 'Блочный canvas не должен добавлять нижний зазор базовой линии.');
+  assert.equal(await page.locator('.validation-remarks-line.fail').count(), 0, 'У «Кибертрассы 3D» не должно быть нарушений переполнения.');
+
   await page.selectOption('#example-select', 'firewall');
   await page.click('#load-sample');
   await page.waitForFunction(() => document.querySelector('#roundtrip-title')?.textContent === 'Содержимое восстановлено без изменений' && document.querySelector('#qr-correction-value')?.textContent === 'M', null, { timeout: 30_000 });

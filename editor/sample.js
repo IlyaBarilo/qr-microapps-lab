@@ -111,6 +111,30 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     }
   };
 
+  var cyberReflex = {
+    id: 'cyber-reflex',
+    title: 'Киберрефлекс',
+    html: `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><style>body{margin:0;color:#fff;font:700 18px system-ui;text-align:center;touch-action:none;user-select:none}main{height:100vh;display:grid;place-content:center;background:radial-gradient(#124,#001)}h1{font-size:10vw;margin:8px}#o{--p:0;position:relative;width:min(50vw,25vh);aspect-ratio:1;margin:auto;background:conic-gradient(#2ef var(--p),#124 0)}#o,button{border-radius:50%}.w button{background:#012}.f button{background:#af2;color:#012}.f button:after{content:'ЖМИ!'}#t{font-size:8vw;color:#2ef}button{position:absolute;inset:6px;border:0;background:#2ef;color:#fff;font:700 64px system-ui}</style><main id=m><b id=h>5 РАУНДОВ</b><h1>КИБЕР<br>РЕФЛЕКС</h1><div id=o><button id=b>СТАРТ</button></div><div id=t></div></main><script>var $d=3,r=0,s=0,a=[],q,T,k=9999,p=performance;m.onpointerdown=e=>s?x(s<2?-1:p.now()-T):e.target==b&&r==0&&(a=[],o.style='',b.innerText='',n());function n(){s=1;m.className='w';h.innerText=++r+'/5 РАУНД';t.innerText='ЖДИ';q=setTimeout(()=>{s=2;m.className='f';T=p.now();q=setInterval(()=>{t.innerText=z=p.now()-T|0;z>1e3-$d*100&&x(-1)},16)},1e3+Math.random()*2e3)}function x(v){clearTimeout(q);s=0;m.className='w';z=v<0;v=z?1e3-$d*100:v|0;a.push(v);o.style='--p:'+20*r+'%';t.innerHTML=z?'<font color=#f90>ШТРАФ</font>':v+' мс';setTimeout(r<5?n:y,z?999:1500)}function y(){let v=a.reduce((x,y)=>x+y)/5|0;k>v&&(k=v);r=0;m.className='';h.innerText='СРЕДНЕЕ '+v+' · РЕКОРД '+k+' мс';t.innerHTML=(v<250?'МОЛНИЯ':v<330?'ПРО':v<500?'ИГРОК':'РАЗМИНКА')+'<br>'+v+' мс';b.innerText='СНОВА'}</script>`,
+    spec: {
+      schemaVersion: '0.1', id: 'cyber-reflex', title: 'Киберрефлекс', type: 'game', difficulty: 3,
+      qr: { encoding: 'base64', ecc: 'M' },
+      technical: { singleHtmlFile: true, externalResources: false, networkRequests: false, requiredViewport: true },
+      interface: { touchControls: true, noHorizontalScroll: true, noVerticalScroll: true }
+    }
+  };
+
+  var cyberTrack3d = {
+    id: 'cyber-track-3d',
+    title: 'Кибертрасса 3D',
+    html: `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body style=margin:0;overflow:hidden><canvas id=c style="display:block;touch-action:none"></canvas><script>var $d=3,x=c.getContext('2d'),f=x.fillRect.bind(x),F='fillStyle',A=[],L=1,S=0,Q=1,N=22+$d*2;onresize=z=_=>{c.width=W=innerWidth;c.height=H=innerHeight;Y=H/4;B=W*.48};z();R=_=>{A=[];L=1;S=Q=o=0};c.onpointerdown=e=>Q?Q>1&&o<E||R():L=e.clientX/W*3|0;T=t=>{d=Math.min(.04,(t-o)/1e3||0);o=t;if(!Q){for(i=A.length;i--;){a=A[i];a[1]-=d*(.3+$d*.04);a[1]<0&&(Q=a[0]==L?2:++S==N?3:0,Q&&(E=o+1e3),A.splice(i,1))}(!A.length||A[A.length-1][1]<.7)&&A.push([Math.random()*3|0,1])}x[F]='#002';f(0,0,W,H);x[F]='#2ef';f(0,0,W*S/N,5);x.beginPath();x.moveTo(W/2,Y);x.lineTo(W/2+B,H);x.lineTo(W/2-B,H);x[F]='#114';x.fill();x.strokeStyle='#38f';for(i=-2;i<3;i++){x.beginPath();x.moveTo(W/2,Y);x.lineTo(W/2+B*i/2,H);x.stroke()}for(i=9;i--;){p=((i+t/250)%9)/9;p*=p;x.beginPath();x.moveTo(W/2-B*p,Y+(H-Y)*p);x.lineTo(W/2+B*p,Y+(H-Y)*p);x.stroke()}for(i=A.length;i--;){a=A[i];p=1-a[1];p*=p;X=W/2+(a[0]-1)*B*p*.65;V=7+45*p;G=Y+(H-Y)*p*.83;x[F]='#f24';f(X-V,G-V,V*2,V*2);x[F]='#ff9';f(X-V,G-V,V*2,V/3)}X=W/2+(L-1)*B*.65;x.beginPath();x.moveTo(X,H-96);x.lineTo(X-28,H-35);x.lineTo(X+28,H-35);x[F]='#2ef';x.fill();if(Q){x.textAlign='center';x.font='bold 22px sans-serif';x.fillText(Q==1?'КИБЕРТРАССА 3D':Q==3?'ФИНИШ!':'УДАР',W/2,H/2-15);x[F]='#fff';x.font='15px sans-serif';x.fillText(Q==1?'ТАП: ПОЛОСА':'ЕЩЁ РАЗ',W/2,H/2+20)}requestAnimationFrame(T)};T(o=0)</script>`,
+    spec: {
+      schemaVersion: '0.1', id: 'cyber-track-3d', title: 'Кибертрасса 3D', type: 'game', difficulty: 3,
+      qr: { encoding: 'base64', ecc: 'M' },
+      technical: { singleHtmlFile: true, externalResources: false, networkRequests: false, requiredViewport: true },
+      interface: { touchControls: true, noHorizontalScroll: true, noVerticalScroll: true }
+    }
+  };
+
   var careerCompass = {
     id: 'career-compass',
     title: 'Карьерный компас ИТ',
@@ -123,7 +147,7 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     }
   };
 
-  var items = [tinyQuiz, computerThinking, tournamentBracket, packetNetwork, brickBreaker, firewall, releaseRun, careerCompass];
+  var items = [tinyQuiz, computerThinking, tournamentBracket, packetNetwork, brickBreaker, firewall, releaseRun, cyberReflex, cyberTrack3d, careerCompass];
   return {
     defaultId: brickBreaker.id,
     items: items,
