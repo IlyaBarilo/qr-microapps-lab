@@ -323,8 +323,8 @@ test('валидатор профиля проверяет формат и QR-п
   assert.match(core.validateSpec({ ...sample.spec, interface: { minTouchTargetPx: 10, minControlGapPx: 80, requireControlLabels: 'yes', noVerticalScroll: 'yes' } }).join(' '), /minTouchTargetPx.*minControlGapPx.*requireControlLabels.*noVerticalScroll/);
 });
 
-test('встроенный каталог содержит десять компактных примеров с валидными профилями', () => {
-  assert.equal(sample.items.length, 10);
+test('встроенный каталог содержит одиннадцать компактных примеров с валидными профилями', () => {
+  assert.equal(sample.items.length, 11);
   assert.equal(sample.defaultId, 'brick-breaker');
   for (const item of sample.items) {
     assert.doesNotMatch(item.html, /[\r\n]$/);
@@ -758,6 +758,135 @@ test('«Кибертрасса 3D» встроена как автономная
   frames.shift()(collisionLock);
   canvas.onpointerdown({ clientX: 180 });
   assert.equal(sandbox.Q, 0, 'после секундной задержки удар должен разрешить новый раунд');
+});
+
+test('«Киберлабиринт 3D» строит вид от первого лица, проверяет стены и укладывается в QR L', () => {
+  const game = sample.getById('cyber-maze-3d');
+  const url = core.makeDataUrl(game.html, game.spec.qr.encoding);
+  assert.equal(game.title, 'Киберлабиринт 3D');
+  assert.equal(game.spec.qr.ecc, 'L');
+  assert.equal(core.inspectDifficulty(game.html).value, 3);
+  assert.ok(core.byteLength(url) <= core.getQrLimit('L'));
+  assert.match(game.html, /r=D\+\(i\/W-\.5\)\*1\.1/);
+  assert.match(game.html, /m\.round\(X\+a\*d\)\+m\.round\(Z\+b\*d\)\*15/);
+  assert.match(game.html, /D\+=m\.atan2/);
+  assert.match(game.html, /55-3\*\$d/);
+  assert.match(game.html, /position:fixed/);
+  assert.match(game.html, /НАЙДИ ВЫХОД/);
+  assert.match(game.html, /R\.toFixed\(1\)\+' СЕКУНД'/);
+  assert.doesNotMatch(game.html, /ВПЕРЁД/);
+  assert.equal(game.documentation.title, 'Как играть в «Киберлабиринт 3D»');
+  const documentationText = JSON.stringify(game.documentation);
+  ['15 × 15', '28 шагов', '1 — 52 секунды', '5 — 40 секунд', 'S1 (3, 3)', 'выход E (7, 7)', 'Canvas-рейкастером'].forEach((text) => {
+    assert.ok(documentationText.includes(text), 'в описании должен быть текст: ' + text);
+  });
+  const mapDocumentation = game.documentation.sections.find((section) => section.visualization)?.visualization;
+  assert.equal(mapDocumentation.type, 'grid-map');
+  assert.equal(mapDocumentation.rows.length, 15);
+  assert.ok(mapDocumentation.rows.every((row) => row.length === 15));
+  assert.deepEqual(mapDocumentation.starts.map((start) => start.index), [48, 28, 200, 204]);
+  assert.deepEqual(mapDocumentation.exit, { label: 'E', index: 112 });
+  assert.deepEqual(sample.items.filter((item) => item.documentation).map((item) => item.id), ['cyber-maze-3d'], 'описание пока должно быть только у лабиринта');
+  const checks = core.validateHtml(game.html, game.spec, { dataUrl: url, encoding: 'base64', ecc: 'L', qrVersion: 40 });
+  assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
+
+  const frames = [];
+  let now = 1000;
+  let randomValue = 0;
+  const sandboxMath = Object.create(Math);
+  sandboxMath.random = () => randomValue;
+  const drawingContext = {
+    fillRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, fill() {}, fillText() {}
+  };
+  const canvas = { getContext: () => drawingContext };
+  const sandbox = {
+    c: canvas,
+    innerWidth: 360,
+    innerHeight: 640,
+    Math: sandboxMath,
+    performance: { now: () => now },
+    requestAnimationFrame: (callback) => { frames.push(callback); }
+  };
+  vm.runInNewContext(game.html.match(/<script>([\s\S]*?)<\/script>/)[1], sandbox);
+  assert.equal(sandbox.Q, 1, 'до касания должен отображаться стартовый экран');
+  assert.equal(sandbox.M.length, 225, 'лабиринт должен содержать поле 15 на 15 клеток');
+  assert.deepEqual(Array.from(sandbox.P), [48, 28, 200, 204], 'должны использоваться четыре точки старта');
+  assert.equal(sandbox.M[112], '2', 'выход должен быть отдельной зелёной поверхностью в 3D-сцене');
+
+  const distances = Array.from(sandbox.P, (start) => {
+    const queue = [[start, 0]];
+    const visited = new Set([start]);
+    for (let index = 0; index < queue.length; index++) {
+      const [cell, distance] = queue[index];
+      if (cell === 112) return distance;
+      for (const next of [cell - 1, cell + 1, cell - 15, cell + 15]) {
+        if (!visited.has(next) && sandbox.M[next] !== '1') {
+          visited.add(next);
+          queue.push([next, distance + 1]);
+        }
+      }
+    }
+    return Infinity;
+  });
+  assert.deepEqual(distances, [28, 28, 28, 28], 'все точки старта должны быть равноудалены от выхода');
+
+  const pointer = (clientX) => ({ clientX, preventDefault() {} });
+  canvas.onpointerdown(pointer(180));
+  frames.shift()(now);
+  assert.equal(sandbox.Q, 0, 'центральное касание должно запустить игру');
+  assert.equal(sandbox.T, 46, 'на средней сложности должно быть доступно 46 секунд');
+
+  const initialDirection = sandbox.D;
+  canvas.onpointerdown(pointer(330));
+  frames.shift()(1016);
+  assert.ok(sandbox.D > initialDirection, 'правое касание должно начать поворот камеры от первого лица');
+  assert.ok(sandbox.D - initialDirection < 0.15, 'один кадр не должен резко завершать поворот на 90 градусов');
+  now = 1032;
+  canvas.onpointerdown(pointer(180));
+  assert.deepEqual([sandbox.I, sandbox.V], [3, 2], 'центральное касание должно перемещать персонажа по направлению стрелки');
+
+  sandbox.I = sandbox.X = 3;
+  sandbox.V = sandbox.Z = 3;
+  sandbox.A = sandbox.D = -1.57;
+  now = 1100;
+  canvas.onpointerdown(pointer(180));
+  assert.equal(sandbox.Q, 2, 'шаг в стену должен включить состояние столкновения');
+  const collisionLock = sandbox.E;
+  frames.shift()(collisionLock - 1);
+  assert.equal(sandbox.Q, 2, 'столкновение должно блокировать управление на 600 мс');
+  frames.shift()(collisionLock);
+  assert.equal(sandbox.Q, 0, 'после паузы прохождение лабиринта должно продолжаться');
+
+  sandbox.I = sandbox.X = 6;
+  sandbox.V = sandbox.Z = 7;
+  sandbox.A = sandbox.D = 1.57;
+  sandbox.S = 1000;
+  now = 3500;
+  canvas.onpointerdown(pointer(180));
+  assert.equal(sandbox.Q, 3, 'вход на зелёную клетку должен завершить игру');
+  assert.equal(sandbox.R, 2.5, 'на финише должно сохраняться затраченное время');
+  frames.shift()(4000);
+  assert.equal(sandbox.T, 43.5, 'счётчик должен показывать остаток времени в момент выхода');
+  frames.shift()(4400);
+  assert.equal(sandbox.T, 43.5, 'после выхода счётчик не должен продолжать уменьшаться');
+  canvas.onpointerdown(pointer(180));
+  assert.equal(sandbox.Q, 3, 'случайное касание после финиша не должно сразу перезапускать игру');
+  now = sandbox.E;
+  canvas.onpointerdown(pointer(180));
+  assert.equal(sandbox.Q, 0, 'через секунду экран финиша должен разрешить новую игру');
+
+  sandbox.Q = 0;
+  sandbox.S = 0;
+  frames.shift()(46001);
+  assert.equal(sandbox.Q, 4, 'по истечении 46 секунд должен открываться экран завершения времени');
+
+  const starts = [];
+  for (const value of [0, 0.25, 0.5, 0.75]) {
+    randomValue = value;
+    sandbox.N();
+    starts.push([sandbox.I, sandbox.V]);
+  }
+  assert.deepEqual(starts, [[3, 3], [13, 1], [5, 13], [9, 13]], 'случайный выбор должен охватывать все четыре точки старта');
 });
 
 test('«Карьерный компас» укладывается в QR и содержит три результата', () => {
@@ -1302,4 +1431,31 @@ test('импорт проекта отклоняет чужой формат, н
   const openProjectSource = appSource.slice(appSource.indexOf('async function openProject'), appSource.indexOf('async function copyDataUrl'));
   assert.ok(openProjectSource.length > 200);
   assert.doesNotMatch(openProjectSource, /runPreview\s*\(/, 'импорт не должен автоматически выполнять HTML');
+});
+
+test('спецификация документации фиксирует карты, изображения и обратную совместимость', () => {
+  const gameSpecification = fs.readFileSync(path.join(__dirname, '../spec_game_creation_ru.md'), 'utf8');
+  ['## 12. Документация примера в каталоге', "type: 'grid-map'", 'Другие карты и изображения', 'Обратная совместимость визуализаторов'].forEach((text) => {
+    assert.ok(gameSpecification.includes(text), 'в спецификации должен быть раздел: ' + text);
+  });
+  assert.match(gameSpecification, /интерактивная карта маршрутов[\s\S]*самостоятельный тип/);
+  assert.match(gameSpecification, /неизвестный тип визуализации[\s\S]*проигнорирован без ошибки/);
+  const appSource = fs.readFileSync(path.join(__dirname, '../editor/app.js'), 'utf8');
+  const documentationRenderer = appSource.slice(appSource.indexOf('function createDocumentationSvgElement'), appSource.indexOf('function openSampleDocumentation'));
+  assert.match(documentationRenderer, /sectionData\.diagram/,'старое поле diagram должно оставаться в рендерере');
+  assert.match(documentationRenderer, /visualization\.type === 'grid-map'/, 'grid-map должен использовать отдельный рендерер');
+  assert.doesNotMatch(documentationRenderer, /innerHTML/, 'визуализаторы документации не должны вставлять произвольную разметку');
+});
+
+test('выбор примера сразу загружает его, а описание относится к предпросмотру', () => {
+  const editorSource = fs.readFileSync(path.join(__dirname, '../editor/source.html'), 'utf8');
+  assert.doesNotMatch(editorSource, /id="load-sample"/, 'отдельной кнопки загрузки примера быть не должно');
+  const previewSection = editorSource.slice(editorSource.indexOf('<section class="panel preview-panel"'), editorSource.indexOf('<section class="panel history-panel"'));
+  assert.match(previewSection, /id="sample-documentation-open"[^>]*>Описание примера</, 'описание должно открываться из этапа предпросмотра');
+  const appSource = fs.readFileSync(path.join(__dirname, '../editor/app.js'), 'utf8');
+  const selectionHandler = appSource.slice(appSource.indexOf("elements.exampleSelect.addEventListener('change'"), appSource.indexOf('elements.sampleDocumentationOpen.addEventListener'));
+  assert.match(selectionHandler, /loadSample\(elements\.exampleSelect\.value\)/);
+  assert.match(selectionHandler, /build\(\)\.then/);
+  assert.match(selectionHandler, /runPreview\(\)/);
+  assert.doesNotMatch(appSource, /\$\('load-sample'\)/);
 });

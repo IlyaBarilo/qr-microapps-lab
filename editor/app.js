@@ -25,6 +25,9 @@
     previewPreset: $('preview-preset'), previewWidth: $('preview-width'), previewHeight: $('preview-height'),
     downloadPng: $('download-png'), copyUrl: $('copy-url'), downloadHtml: $('download-html'), qrOpenHelp: $('qr-open-help'),
     downloadReport: $('download-report'), exampleSelect: $('example-select'), fileActions: $('file-actions'),
+    sampleDocumentationOpen: $('sample-documentation-open'), sampleDocumentationOverlay: $('sample-documentation-overlay'),
+    sampleDocumentationTitle: $('sample-documentation-title'), sampleDocumentationContent: $('sample-documentation-content'),
+    sampleDocumentationClose: $('sample-documentation-close'),
     difficultyEditor: $('difficulty-editor'), difficultyVariableNote: $('difficulty-variable-note'),
     codeDifficulty: $('code-difficulty'), applyDifficulty: $('apply-difficulty'),
     codeEditor: $('code-editor'), simpleEditor: $('simple-editor'), modeSimple: $('mode-simple'), modeCode: $('mode-code'),
@@ -58,7 +61,8 @@
   var state = {
     html: '', spec: null, dataUrl: '', qr: null, checks: [], runtime: null, checksum: null,
     roundtrip: null, report: null, sizeAnalysis: null, optimization: null, previewToken: '', previewHtml: '', runtimeMessages: [],
-    iterations: [], comparisons: [], buildId: 0, mode: 'code', specEditorMode: 'form', importedQrProfile: null, qrEmulation: null
+    iterations: [], comparisons: [], buildId: 0, mode: 'code', specEditorMode: 'form', importedQrProfile: null, qrEmulation: null,
+    sampleDocumentationLastFocus: null
   };
   var simpleBuildTimer = 0;
 
@@ -1177,6 +1181,138 @@
       elements.exampleSelect.appendChild(option);
     });
     elements.exampleSelect.value = sample.defaultId || sample.spec.id;
+    updateSampleDocumentationButton();
+  }
+
+  function selectedSample() {
+    return typeof sample.getById === 'function' ? sample.getById(elements.exampleSelect.value) : sample;
+  }
+
+  function updateSampleDocumentationButton() {
+    var selected = selectedSample();
+    var available = Boolean(selected && selected.documentation);
+    elements.sampleDocumentationOpen.disabled = !available;
+    elements.sampleDocumentationOpen.title = available
+      ? 'Открыть описание примера «' + (selected.title || selected.spec.title) + '»'
+      : 'Для этого примера описание пока не добавлено';
+  }
+
+  function appendDocumentationText(container, tagName, text, className) {
+    var element = document.createElement(tagName);
+    if (className) element.className = className;
+    element.textContent = text;
+    container.appendChild(element);
+  }
+
+  function createDocumentationSvgElement(tagName) {
+    return document.createElementNS('http://www.w3.org/2000/svg', tagName);
+  }
+
+  function renderGridMapDocumentation(container, visualization) {
+    var rows = visualization.rows || [];
+    var width = rows.length ? rows[0].length : 0;
+    if (!width || rows.some(function (row) { return row.length !== width; })) return;
+    var cells = rows.join('');
+    var wallValue = visualization.wall || '1';
+    var starts = visualization.starts || [];
+    var exitData = typeof visualization.exit === 'number'
+      ? { index: visualization.exit, label: 'E' }
+      : visualization.exit;
+    if (!starts.length || !exitData) return;
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'sample-grid-map';
+    var caption = document.createElement('p');
+    caption.className = 'sample-grid-map-caption';
+    caption.textContent = visualization.caption || '';
+    var svg = createDocumentationSvgElement('svg');
+    svg.classList.add('sample-grid-map-svg');
+    svg.setAttribute('viewBox', '0 0 ' + width + ' ' + rows.length);
+    svg.setAttribute('role', 'img');
+    var svgTitle = createDocumentationSvgElement('title');
+    svgTitle.textContent = visualization.title || 'Схема лабиринта';
+    var svgDescription = createDocumentationSvgElement('desc');
+    svg.appendChild(svgTitle);
+    svg.appendChild(svgDescription);
+
+    for (var index = 0; index < cells.length; index++) {
+      var cellRect = createDocumentationSvgElement('rect');
+      cellRect.setAttribute('x', index % width);
+      cellRect.setAttribute('y', Math.floor(index / width));
+      cellRect.setAttribute('width', 1);
+      cellRect.setAttribute('height', 1);
+      cellRect.setAttribute('class', 'sample-grid-map-cell ' + (cells[index] === wallValue ? 'is-wall' : 'is-floor'));
+      svg.appendChild(cellRect);
+    }
+
+    function appendMarker(marker, markerClass) {
+      var group = createDocumentationSvgElement('g');
+      group.setAttribute('class', 'sample-grid-map-marker ' + markerClass);
+      var rect = createDocumentationSvgElement('rect');
+      rect.setAttribute('x', marker.index % width);
+      rect.setAttribute('y', Math.floor(marker.index / width));
+      rect.setAttribute('width', 1);
+      rect.setAttribute('height', 1);
+      var label = createDocumentationSvgElement('text');
+      label.setAttribute('x', marker.index % width + 0.5);
+      label.setAttribute('y', Math.floor(marker.index / width) + 0.62);
+      label.setAttribute('text-anchor', 'middle');
+      label.textContent = marker.label;
+      group.appendChild(rect);
+      group.appendChild(label);
+      svg.appendChild(group);
+    }
+
+    starts.forEach(function (start) { appendMarker(start, 'is-start'); });
+    appendMarker(exitData, 'is-exit');
+    svgDescription.textContent = (visualization.caption || 'Схема карты') + '. Стены показаны тёмными клетками; отмечены четыре точки старта и выход.';
+    svg.setAttribute('aria-label', svgDescription.textContent);
+    if (caption.textContent) wrapper.appendChild(caption);
+    wrapper.appendChild(svg);
+    container.appendChild(wrapper);
+  }
+
+  function renderDocumentationVisualization(container, visualization) {
+    if (visualization.type === 'grid-map') renderGridMapDocumentation(container, visualization);
+  }
+
+  function renderSampleDocumentation(documentation) {
+    elements.sampleDocumentationTitle.textContent = documentation.title || 'Документация';
+    elements.sampleDocumentationContent.replaceChildren();
+    (documentation.intro || []).forEach(function (text) {
+      appendDocumentationText(elements.sampleDocumentationContent, 'p', text, 'sample-documentation-intro');
+    });
+    (documentation.sections || []).forEach(function (sectionData) {
+      var section = document.createElement('section');
+      section.className = 'sample-documentation-section';
+      if (sectionData.title) appendDocumentationText(section, 'h3', sectionData.title);
+      (sectionData.paragraphs || []).forEach(function (text) { appendDocumentationText(section, 'p', text); });
+      if (sectionData.items && sectionData.items.length) {
+        var list = document.createElement('ul');
+        sectionData.items.forEach(function (text) { appendDocumentationText(list, 'li', text); });
+        section.appendChild(list);
+      }
+      if (sectionData.diagram) appendDocumentationText(section, 'pre', sectionData.diagram, 'sample-documentation-diagram');
+      if (sectionData.visualization) renderDocumentationVisualization(section, sectionData.visualization);
+      elements.sampleDocumentationContent.appendChild(section);
+    });
+  }
+
+  function openSampleDocumentation() {
+    var selected = selectedSample();
+    if (!selected || !selected.documentation) return;
+    renderSampleDocumentation(selected.documentation);
+    state.sampleDocumentationLastFocus = document.activeElement;
+    elements.sampleDocumentationOverlay.hidden = false;
+    document.body.classList.add('sample-documentation-open');
+    elements.sampleDocumentationClose.focus();
+  }
+
+  function closeSampleDocumentation() {
+    if (elements.sampleDocumentationOverlay.hidden) return;
+    elements.sampleDocumentationOverlay.hidden = true;
+    document.body.classList.remove('sample-documentation-open');
+    if (state.sampleDocumentationLastFocus && typeof state.sampleDocumentationLastFocus.focus === 'function') state.sampleDocumentationLastFocus.focus();
   }
 
   function refreshDifficultyEditor() {
@@ -1227,6 +1363,7 @@
     writeSpecForm(selected.spec);
     elements.encoding.value = selected.spec.qr.encoding;
     elements.ecc.value = selected.spec.qr.ecc;
+    updateSampleDocumentationButton();
     refreshDifficultyEditor();
     setStatus('Загружен эталонный пример «' + selected.spec.title + '».');
   }
@@ -1580,8 +1717,19 @@
   elements.clearQrEmulation.addEventListener('click', function () { clearQrEmulation(true); setStatus('Возвращён автоматический выбор коррекции и стандартная геометрия QR.'); });
   elements.qrZoom.addEventListener('click', function () { setQrExpanded(!elements.qrZoom.classList.contains('expanded')); });
   window.addEventListener('resize', fitExpandedQr);
-  document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && elements.qrZoom.classList.contains('expanded')) setQrExpanded(false); });
-  $('load-sample').addEventListener('click', function () { setMode('code', false); loadSample(elements.exampleSelect.value); build().then(runPreview); });
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape') return;
+    if (!elements.sampleDocumentationOverlay.hidden) closeSampleDocumentation();
+    else if (elements.qrZoom.classList.contains('expanded')) setQrExpanded(false);
+  });
+  elements.exampleSelect.addEventListener('change', function () {
+    setMode('code', false);
+    loadSample(elements.exampleSelect.value);
+    build().then(function () { if (state.html) runPreview(); });
+  });
+  elements.sampleDocumentationOpen.addEventListener('click', openSampleDocumentation);
+  elements.sampleDocumentationClose.addEventListener('click', closeSampleDocumentation);
+  elements.sampleDocumentationOverlay.addEventListener('click', function (event) { if (event.target === elements.sampleDocumentationOverlay) closeSampleDocumentation(); });
   elements.applyDifficulty.addEventListener('click', applyCodeDifficulty);
   elements.source.addEventListener('input', refreshDifficultyEditor);
   $('clear').addEventListener('click', function () { if (state.mode === 'simple') resetSimpleWorkspace(); else resetWorkspace(); });

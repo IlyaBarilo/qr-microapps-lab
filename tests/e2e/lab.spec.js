@@ -187,8 +187,7 @@ test('при переполнении M автоматически выбира�
 
 test('альбомный предпросмотр не получает внутреннюю прокрутку', async ({ page }) => {
   await openLab(page);
-  await page.locator('#example-select').selectOption('brick-breaker');
-  await page.locator('#load-sample').click();
+  await expect(page.locator('#load-sample')).toHaveCount(0);
   await expect(page.locator('#roundtrip-title')).toHaveText('Содержимое восстановлено без изменений');
   await page.locator('#preview-preset').selectOption('640x360');
 

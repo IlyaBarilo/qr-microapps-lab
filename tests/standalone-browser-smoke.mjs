@@ -229,15 +229,15 @@ try {
   await page.waitForFunction(() => document.querySelector('#roundtrip-title')?.textContent === 'Содержимое восстановлено без изменений' && document.querySelector('#qr-correction-value')?.textContent === 'M', null, { timeout: 30_000 });
   assert.match(await page.locator('#data-url').inputValue(), /^data:text\/html;charset=utf-8;base64,/, 'Ручное значение Percent должно заменяться фиксированным Base64.');
 
+  assert.equal(await page.locator('#load-sample').count(), 0, 'Отдельная кнопка загрузки примера должна быть удалена.');
+  assert.equal(await page.locator('.preview-actions #sample-documentation-open').count(), 1, 'Описание примера должно находиться в действиях предпросмотра.');
   await page.selectOption('#example-select', 'tournament-bracket');
-  await page.click('#load-sample');
   await page.waitForFunction(() => document.querySelector('#roundtrip-title')?.textContent === 'Содержимое восстановлено без изменений', null, { timeout: 30_000 });
   assert.equal(await page.locator('#qr-correction-value').textContent(), 'M', '«Турнирная сетка» должна помещаться в QR с коррекцией M.');
   assert.match(await page.frameLocator('#preview').locator('body').innerText(), /Турнирная сетка/);
   assert.doesNotMatch(await page.locator('#source').inputValue(), /Ответ:/, 'В публичном примере не должно быть отладочной подсказки.');
 
   await page.selectOption('#example-select', 'packet-network');
-  await page.click('#load-sample');
   await page.waitForFunction(() => document.querySelector('#roundtrip-title')?.textContent === 'Содержимое восстановлено без изменений', null, { timeout: 30_000 });
   const packetGeometry = await page.frameLocator('#preview').locator('canvas').evaluate((canvas) => ({
     logicalHeight: window.H,
@@ -247,7 +247,6 @@ try {
   assert.ok(packetGeometry.logicalHeight > 360, '«Пакет в сети» должен использовать всю высоту экрана без нижнего следа.');
 
   await page.selectOption('#example-select', 'brick-breaker');
-  await page.click('#load-sample');
   await page.waitForFunction(() => document.querySelector('#roundtrip-title')?.textContent === 'Содержимое восстановлено без изменений', null, { timeout: 30_000 });
   const ballGeometry = await page.frameLocator('#preview').locator('canvas').evaluate((canvas) => ({
     logicalHeight: window.H,
@@ -258,9 +257,6 @@ try {
   assert.ok(ballGeometry.logicalHeight > 360, 'Высокий экран должен использоваться по всей высоте.');
   assert.ok(Math.abs(ballGeometry.logicalHeight - ballGeometry.platformY - 75) < 0.01, 'Под платформой должна оставаться увеличенная зона управления.');
 
-  await page.selectOption('#example-select', 'brick-breaker');
-  await page.click('#load-sample');
-  await page.waitForFunction(() => document.querySelector('#roundtrip-title')?.textContent === 'Содержимое восстановлено без изменений', null, { timeout: 30_000 });
   assert.equal(await page.locator('#difficulty-editor').isVisible(), true, 'Для любого HTML должен отображаться блок сложности.');
   assert.equal(await page.locator('#code-difficulty').inputValue(), '3', 'По умолчанию должна выбираться средняя сложность.');
   const sourceBeforeDifficulty = await page.locator('#source').inputValue();
@@ -283,7 +279,6 @@ try {
   assert.deepEqual(brickResult, { blocks: 0, score: 32, state: 3 }, 'Последний из 32 блоков должен давать очко и открывать экран победы.');
 
   await page.selectOption('#example-select', 'cyber-track-3d');
-  await page.click('#load-sample');
   await page.waitForFunction(() => document.querySelector('#roundtrip-title')?.textContent === 'Содержимое восстановлено без изменений' && document.querySelector('#qr-correction-value')?.textContent === 'M', null, { timeout: 30_000 });
   const trackLayout = await page.frameLocator('#preview').locator('html').evaluate((html) => ({
     viewportHeight: html.clientHeight,
@@ -295,9 +290,96 @@ try {
   assert.equal(trackLayout.bodyHeight, trackLayout.viewportHeight, 'Canvas «Кибертрассы 3D» должен точно занимать высоту экрана.');
   assert.equal(trackLayout.canvasDisplay, 'block', 'Блочный canvas не должен добавлять нижний зазор базовой линии.');
   assert.equal(await page.locator('.validation-remarks-line.fail').count(), 0, 'У «Кибертрассы 3D» не должно быть нарушений переполнения.');
+  assert.equal(await page.locator('#sample-documentation-open').isDisabled(), true, 'Кнопка описания должна быть неактивна у примера без документации.');
+
+  await page.selectOption('#example-select', 'cyber-maze-3d');
+  assert.match(await page.locator('#source').inputValue(), /НАЙДИ ВЫХОД/, 'Выбор лабиринта должен сразу загрузить его HTML без отдельной кнопки.');
+  assert.equal(await page.locator('#sample-documentation-open').isEnabled(), true, 'Выбор лабиринта должен активировать кнопку описания.');
+  await page.click('#sample-documentation-open');
+  assert.equal(await page.locator('#sample-documentation-overlay').isVisible(), true, 'Описание должно открываться во встроенном экранном окне.');
+  const mazeDocumentation = await page.locator('#sample-documentation-overlay').innerText();
+  ['Киберлабиринт 3D', '15 × 15', '28 шагов', '1 — 52 секунды', '5 — 40 секунд', 'S1 (3, 3)', 'Canvas-рейкастером'].forEach((text) => {
+    assert.ok(mazeDocumentation.includes(text), 'В описании должен быть текст: ' + text);
+  });
+  const mapDocumentation = await page.locator('.sample-grid-map').evaluate((map) => ({
+    caption: map.querySelector('.sample-grid-map-caption')?.textContent,
+    cells: map.querySelectorAll('.sample-grid-map-cell').length,
+    starts: map.querySelectorAll('.sample-grid-map-marker.is-start').length,
+    exits: map.querySelectorAll('.sample-grid-map-marker.is-exit').length,
+    controls: map.querySelectorAll('button').length,
+    viewBox: map.querySelector('svg')?.getAttribute('viewBox')
+  }));
+  assert.deepEqual(mapDocumentation, {
+    caption: 'S1–S4 → E · кратчайший путь 28 шагов',
+    cells: 225,
+    starts: 4,
+    exits: 1,
+    controls: 0,
+    viewBox: '0 0 15 15'
+  }, 'Описание должно показывать компактную статичную SVG-карту без лишних переключателей.');
+  await page.click('#sample-documentation-close');
+  assert.equal(await page.locator('#sample-documentation-overlay').isHidden(), true, 'Кнопка закрытия должна скрывать описание.');
+  await page.evaluate(() => {
+    const legacySample = window.QRMicroappsSample.getById('firewall');
+    legacySample.documentation = {
+      title: 'Проверка совместимости',
+      sections: [
+        { title: 'Старая схема', diagram: 'A → B' },
+        { title: 'Будущий формат', paragraphs: ['Текст остаётся доступным.'], visualization: { type: 'future-image' } }
+      ]
+    };
+    const select = document.querySelector('#example-select');
+    select.value = 'firewall';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  assert.equal(await page.locator('#sample-documentation-open').isEnabled(), true, 'Старый документ с diagram должен оставаться доступным.');
+  await page.click('#sample-documentation-open');
+  assert.equal(await page.locator('.sample-documentation-diagram').textContent(), 'A → B', 'Старый формат diagram должен отображаться без преобразования.');
+  assert.match(await page.locator('#sample-documentation-content').innerText(), /Текст остаётся доступным/, 'Неизвестный будущий тип не должен скрывать остальной документ.');
+  assert.equal(await page.locator('#sample-documentation-content svg').count(), 0, 'Неизвестный тип визуализации должен безопасно игнорироваться.');
+  await page.click('#sample-documentation-close');
+  await page.evaluate(() => {
+    delete window.QRMicroappsSample.getById('firewall').documentation;
+    const select = document.querySelector('#example-select');
+    select.value = 'cyber-maze-3d';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await page.waitForFunction(() => document.querySelector('#roundtrip-title')?.textContent === 'Содержимое восстановлено без изменений' && document.querySelector('#qr-correction-value')?.textContent === 'L', null, { timeout: 30_000 });
+  const mazeLayout = await page.frameLocator('#preview').locator('html').evaluate((html) => ({
+    viewportHeight: html.clientHeight,
+    documentHeight: html.scrollHeight,
+    bodyHeight: document.body.scrollHeight,
+    canvasPosition: getComputedStyle(document.querySelector('canvas')).position,
+    state: window.Q,
+    mapCells: window.M.length,
+    portalCell: window.M[112],
+    startCount: window.P.length
+  }));
+  assert.equal(mazeLayout.documentHeight, mazeLayout.viewportHeight, '«Киберлабиринт 3D» не должен создавать вертикальную прокрутку.');
+  assert.ok(mazeLayout.bodyHeight <= mazeLayout.viewportHeight, 'Поле лабиринта не должно увеличивать высоту документа.');
+  assert.equal(mazeLayout.canvasPosition, 'fixed', 'Canvas лабиринта должен быть закреплён в видимой области.');
+  assert.equal(mazeLayout.state, 1, 'Лабиринт должен открываться со стартового экрана.');
+  assert.equal(mazeLayout.mapCells, 225, 'В предпросмотре должна запускаться карта 15 на 15 клеток.');
+  assert.equal(mazeLayout.portalCell, '2', 'Выход должен отрисовываться отдельной зелёной поверхностью.');
+  assert.equal(mazeLayout.startCount, 4, 'Игра должна выбирать одну из четырёх точек старта.');
+  assert.equal(await page.locator('.validation-remarks-line.fail').count(), 0, 'У «Киберлабиринта 3D» не должно быть нарушений вместимости или переполнения.');
+  const mazeCanvas = page.frameLocator('#preview').locator('canvas');
+  await mazeCanvas.click({ position: { x: 180, y: 320 } });
+  assert.equal(await mazeCanvas.evaluate(() => Q), 0, 'Первое касание должно запускать лабиринт.');
+  const mazeStart = await mazeCanvas.evaluate(() => [I, V, D]);
+  await mazeCanvas.click({ position: { x: 330, y: 320 } });
+  await page.waitForTimeout(100);
+  const mazeTurn = await mazeCanvas.evaluate(() => D);
+  assert.ok(mazeTurn > mazeStart[2], 'Камера от первого лица должна поворачиваться вправо.');
+  assert.ok(mazeTurn - mazeStart[2] < 1.2, 'Поворот камеры не должен завершаться резко.');
+  await mazeCanvas.click({ position: { x: 30, y: 320 } });
+  await page.waitForTimeout(100);
+  await mazeCanvas.click({ position: { x: 180, y: 320 } });
+  const mazeMove = await mazeCanvas.evaluate(() => [I, V]);
+  assert.equal(Math.abs(mazeMove[0] - mazeStart[0]) + Math.abs(mazeMove[1] - mazeStart[1]), 1, 'Стрелка вверх должна перемещать персонажа на одну клетку.');
 
   await page.selectOption('#example-select', 'firewall');
-  await page.click('#load-sample');
+  assert.equal(await page.locator('#sample-documentation-open').isDisabled(), true, 'После выбора примера без документации кнопка снова должна отключаться.');
   await page.waitForFunction(() => document.querySelector('#roundtrip-title')?.textContent === 'Содержимое восстановлено без изменений' && document.querySelector('#qr-correction-value')?.textContent === 'M', null, { timeout: 30_000 });
   assert.equal(await page.locator('#preview-difficulty').textContent(), 'Сложность: 3 — средняя');
   assert.equal(await page.locator('.validation-remarks-line.warn').count(), 0, 'У «Брандмауэра» не должно быть предупреждения о коррекции L.');

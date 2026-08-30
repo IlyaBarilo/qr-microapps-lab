@@ -10,9 +10,9 @@
 .file-actions select{width:auto;min-width:155px;margin:0}
 .source-actions{display:flex;align-items:flex-end;flex-direction:column;gap:8px}.project-actions,.game-spec-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}.project-actions .button,.game-spec-actions .button{min-height:38px;padding:7px 11px}
 .difficulty-editor{display:grid;grid-template-columns:minmax(0,1fr) 150px auto;align-items:end;gap:9px;margin:0 0 10px;border:1px solid #2b665e;border-radius:14px;padding:10px;background:rgba(27,91,79,.14)}.difficulty-editor.unavailable{border-color:var(--line);background:#0a1d27}.difficulty-editor.unavailable .difficulty-editor-copy{opacity:.62}.difficulty-editor-copy{align-self:center}.difficulty-editor-copy strong{display:block}.difficulty-editor-copy small{display:block;margin-top:2px;color:var(--muted);font-size:11px}.difficulty-editor label{color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.difficulty-editor select{margin:4px 0 0}.difficulty-editor .button{min-height:42px}
-.source-head{display:block}.source-head>div:first-child{margin-bottom:13px}.source-head .source-actions{align-items:stretch;width:100%}.source-head .file-actions{display:grid;grid-template-columns:auto minmax(260px,1fr);align-items:end;gap:8px}.example-picker{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px;min-width:0;border:1px solid var(--line);border-radius:13px;padding:8px;background:#0a1d27}.example-select-field{min-width:0;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.example-select-field select{width:100%;min-width:0;margin:4px 0 0}.example-picker .button{white-space:nowrap}.source-head .project-actions,.source-head .game-spec-actions{justify-content:flex-start;border-top:1px solid rgba(36,68,83,.7);padding-top:8px}.action-group-label{flex:0 0 100%;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.game-spec-hint{flex:0 0 100%;margin:0;color:var(--muted);font-size:12px;line-height:1.45}
+.source-head{display:block}.source-head>div:first-child{margin-bottom:13px}.source-head .source-actions{align-items:stretch;width:100%}.source-head .file-actions{display:grid;grid-template-columns:auto minmax(260px,1fr);align-items:end;gap:8px}.example-picker{display:block;min-width:0;border:1px solid var(--line);border-radius:13px;padding:8px;background:#0a1d27}.example-select-field{min-width:0;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.example-select-field select{width:100%;min-width:0;margin:4px 0 0}.source-head .project-actions,.source-head .game-spec-actions{justify-content:flex-start;border-top:1px solid rgba(36,68,83,.7);padding-top:8px}.action-group-label{flex:0 0 100%;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.game-spec-hint{flex:0 0 100%;margin:0;color:var(--muted);font-size:12px;line-height:1.45}
 .source-reset-actions{display:flex;justify-content:flex-end;margin-top:13px}.qr-controls{margin-bottom:16px;border:1px solid #2b665e;border-radius:15px;padding:13px;background:rgba(27,91,79,.13)}.qr-controls-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:9px}.qr-controls-head h3{margin:0}.qr-controls-head span{color:var(--muted);font-size:11px;text-align:right}.qr-controls .settings{margin:0 0 11px}.qr-action-row{display:flex;align-items:center;gap:12px}.qr-action-row .status{flex:1;margin:0}.qr-action-row .button{flex:0 0 auto}
-@media(max-width:520px){.source-head .file-actions{grid-template-columns:1fr}.example-picker{grid-template-columns:minmax(0,1fr) auto}.difficulty-editor{grid-template-columns:1fr 1fr}.difficulty-editor-copy{grid-column:1/-1}.difficulty-editor .button{align-self:end}}
+@media(max-width:520px){.source-head .file-actions{grid-template-columns:1fr}.difficulty-editor{grid-template-columns:1fr 1fr}.difficulty-editor-copy{grid-column:1/-1}.difficulty-editor .button{align-self:end}}
 @media(max-width:720px){.qr-controls-head,.qr-action-row{align-items:stretch;flex-direction:column}.qr-controls-head span{text-align:left}.qr-action-row .button{width:100%}}
 .mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 14px;border:1px solid var(--line);border-radius:14px;padding:5px;background:#071923}.mode-button{min-height:42px;border:0;border-radius:10px;color:var(--muted);background:transparent;font-weight:800}.mode-button.active{color:#022127;background:var(--accent)}.simple-editor{display:grid;gap:13px;margin-bottom:14px}.simple-editor[hidden]{display:none}.simple-intro{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border:1px solid #2b665e;border-radius:14px;padding:13px;background:rgba(27,91,79,.18)}.simple-intro b{font-size:16px}.simple-intro p{margin:3px 0 0;color:var(--muted);font-size:12px}.simple-field,.simple-question label,.simple-colors label{display:block;color:var(--muted);font-size:11px;font-weight:750}.simple-editor input[type=text],.simple-editor select{width:100%;min-height:43px;margin-top:6px;border:1px solid var(--line);border-radius:11px;padding:8px 10px;color:var(--text);background:#061720}.simple-colors{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.simple-colors label{display:grid;grid-template-columns:1fr 48px;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:8px 9px;background:#0a1d27}.simple-colors input[type=color]{width:48px;height:36px;border:0;border-radius:8px;padding:2px;background:#061720}.simple-questions{display:grid;gap:10px}.simple-question{min-width:0;margin:0;border:1px solid var(--line);border-radius:14px;padding:12px;background:#0a1d27}.simple-question legend{padding:0 6px;color:var(--accent);font-size:12px;font-weight:850}.simple-question>label+label,.simple-question>.answer-grid+label{margin-top:9px}.answer-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}.simple-estimate{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--muted);background:#071923;font-size:11px}.simple-estimate strong{color:var(--accent);text-align:right}.simple-estimate.over-limit strong{color:var(--danger)}
 @media(max-width:430px){.mode-switch,.simple-colors,.answer-grid{grid-template-columns:1fr}.simple-colors label{grid-template-columns:1fr 52px}.simple-estimate{align-items:flex-start;flex-direction:column}.simple-estimate strong{text-align:left}}
@@ -104,6 +104,8 @@ body.device-test-open,body.device-code-focus-open{overflow:hidden}.device-test-o
 @media(max-width:850px){.device-test-overlay{padding:0}.device-test-dialog{min-height:100vh;border:0;border-radius:0}.device-test-dialog-head,.device-test-toolbar{align-items:stretch;flex-direction:column}.device-test-toolbar{top:0;margin:0 -18px 15px}.device-test-tabs{display:grid;grid-template-columns:1fr 1fr}.device-test-set-field{justify-content:space-between}.device-test-screen-view{grid-template-columns:1fr}.device-screen-sidebar{max-height:none}.device-screen-stage{min-height:75vh}.device-test-pages{justify-content:start}.device-test-launch-actions .button{flex:1}}
 @media(max-width:520px){.device-test-dialog-actions,.device-test-launch-actions{display:grid;grid-template-columns:1fr;width:100%}.device-test-set-field{align-items:stretch;flex-direction:column}.device-test-set-field select{width:100%;min-width:0}.device-screen-nav{grid-template-columns:1fr}.device-screen-metrics div{grid-template-columns:1fr}.device-screen-metrics dd{text-align:left}}
 @page{size:A4 portrait;margin:0}@media print{html,body{min-width:0!important;background:#fff!important}.topbar,.workspace,body>footer,.device-test-dialog-head,.device-test-toolbar,.device-test-pages-note{display:none!important}.device-test-overlay{position:static!important;display:block!important;overflow:visible!important;padding:0!important;background:#fff!important}body:not(.device-test-open) .device-test-overlay{display:none!important}.device-test-dialog{width:auto!important;min-height:0!important;border:0!important;border-radius:0!important;padding:0!important;background:#fff!important;box-shadow:none!important}.device-test-pages-view,.device-test-pages{display:block!important;padding:0!important}.device-print-page{height:296mm!important;min-height:296mm!important;max-height:296mm!important;overflow:hidden!important;break-after:auto;page-break-after:auto;margin:0!important;box-shadow:none!important}.device-print-page+.device-print-page{break-before:page;page-break-before:always}.device-print-code{outline:0!important}.device-print-footer p{display:block!important}}
+body.sample-documentation-open{overflow:hidden}.sample-documentation-overlay{position:fixed;inset:0;z-index:1060;display:grid;place-items:center;overflow:auto;padding:18px;background:rgba(2,13,19,.88);backdrop-filter:blur(9px)}.sample-documentation-dialog{width:min(900px,100%);max-height:calc(100vh - 36px);overflow:auto;border:1px solid var(--line);border-radius:22px;padding:18px;background:var(--bg);box-shadow:0 28px 90px rgba(0,0,0,.55)}.sample-documentation-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:14px}.sample-documentation-content{display:grid;gap:12px}.sample-documentation-intro{margin:0;border-left:3px solid var(--accent);padding:3px 0 3px 13px;color:var(--text);font-size:15px}.sample-documentation-section{border:1px solid var(--line);border-radius:14px;padding:14px;background:#0a1d27}.sample-documentation-section h3{color:var(--accent)}.sample-documentation-section p{margin:7px 0;color:var(--muted)}.sample-documentation-section ul{margin:8px 0 0;padding-left:22px}.sample-documentation-section li+li{margin-top:6px}.sample-documentation-diagram{overflow:auto;margin:12px 0 0;border-radius:11px;padding:13px;color:#b8f9e9;background:#03151d;font:14px/1.25 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.08em}:root[data-theme=light] .sample-documentation-section{background:#fff}:root[data-theme=light] .sample-documentation-diagram{color:#145b51;background:#e3f1f2}@media(max-width:520px){.sample-documentation-overlay{align-items:start;padding:0}.sample-documentation-dialog{min-height:100vh;max-height:none;border:0;border-radius:0;padding:15px}.sample-documentation-head{position:sticky;top:-15px;z-index:1;margin:-15px -15px 14px;padding:15px;background:var(--bg)}.sample-documentation-diagram{font-size:12px}}
+.sample-grid-map{--grid-map-start:#ffd166;--grid-map-exit:#5de4cf;margin-top:14px}.sample-grid-map-caption{margin:0 0 8px!important;color:var(--muted)!important;text-align:center}.sample-grid-map-svg{display:block;width:min(100%,620px);height:auto;margin:auto}.sample-grid-map-cell{stroke:var(--bg);stroke-width:.025;shape-rendering:crispEdges}.sample-grid-map-cell.is-wall{fill:var(--muted);opacity:.55}.sample-grid-map-cell.is-floor{fill:var(--panel)}.sample-grid-map-marker rect{stroke:var(--bg);stroke-width:.035}.sample-grid-map-marker.is-start rect{fill:var(--grid-map-start)}.sample-grid-map-marker.is-exit rect{fill:var(--grid-map-exit)}.sample-grid-map-marker text{fill:#022127;font:bold .34px ui-sans-serif,system-ui,sans-serif;pointer-events:none}:root[data-theme=light] .sample-grid-map{--grid-map-start:#ffcf4a;--grid-map-exit:#5de4cf}@media(max-width:520px){.sample-grid-map-caption{font-size:12px}.sample-grid-map-svg{width:100%}}
   </style>
   <script type="text/plain" id="embedded-license-notices" data-purpose="license-notices">
 QR MICROAPPS LAB — MIT LICENSE
@@ -622,6 +624,114 @@ Base64-упаковки QR Microapps Lab. Решение о M или L прин�
 - итоговый Base64 `data:` URL предпочтительно помещается в M; L используется
   только после попытки сократить код без потери основной механики и сопровождается
   предупреждением о меньшей устойчивости QR.
+
+## 12. Документация примера в каталоге
+
+Этот раздел применяется только при добавлении готовой игры в каталог QR
+Microapps Lab. Документация является метаданными элемента каталога, хранится
+отдельно от HTML игры и не включается в её `data:` URL или QR-код. При обычном
+создании игры по шаблону из начала файла по-прежнему нужно вернуть только HTML.
+
+Элемент каталога может содержать необязательное поле `documentation`:
+
+```js
+documentation: {
+  title: 'Как играть',
+  intro: ['Краткая цель игры.'],
+  sections: [
+    { title: 'Управление', items: ['Нажмите слева', 'Нажмите справа'] },
+    { title: 'Правила', paragraphs: ['Краткое объяснение механики.'] }
+  ]
+}
+```
+
+Поддерживаемые поля раздела:
+
+- `title` — заголовок;
+- `paragraphs` — массив обычных абзацев;
+- `items` — маркированный список;
+- `diagram` — компактная текстовая схема с сохранением пробелов и переносов;
+- `visualization` — структурированные данные для отдельного встроенного
+  визуализатора.
+
+Текст должен быть самодостаточным: цель, управление, условия победы и поражения,
+влияние сложности и важные числовые параметры. Описание не должно повторять весь
+исходный код или содержать внешние ссылки, необходимые для понимания игры.
+
+### 12.1. Статичная карта `grid-map`
+
+Тип `grid-map` предназначен для компактных прямоугольных карт и строит безопасный
+масштабируемый SVG средствами редактора. В документации хранятся только строки
+сетки и маркеры, а не готовое растровое изображение:
+
+```js
+visualization: {
+  type: 'grid-map',
+  title: 'Карта 5 × 5',
+  caption: 'S1 → E · кратчайший путь 4 шага',
+  wall: '1',
+  rows: [
+    '11111',
+    '10001',
+    '10101',
+    '10021',
+    '11111'
+  ],
+  starts: [{ label: 'S1', index: 6 }],
+  exit: { label: 'E', index: 18 }
+}
+```
+
+Правила формата:
+
+- все строки `rows` имеют одинаковую ненулевую длину;
+- `wall` задаёт символ стены, остальные клетки считаются проходами;
+- индекс клетки вычисляется как `y * ширина + x`, начало координат находится
+  слева сверху;
+- `starts` содержит подписи и индексы точек старта;
+- `exit` содержит подпись и индекс выхода;
+- `title` используется как доступное название SVG, `caption` — как короткая
+  видимая подпись;
+- карта является статичной: она показывает геометрию, все старты и выход без
+  обязательных переключателей или скрытых состояний.
+
+Для простой моноширинной схемы можно сохранить поле `diagram`. Для лабиринта,
+поля по клеткам или плана уровня предпочтителен `grid-map`: SVG остаётся чётким
+на телефоне и большом экране, поддерживает тему редактора и обычно требует лишь
+несколько сотен символов данных.
+
+### 12.2. Другие карты и изображения
+
+Нельзя помещать произвольный SVG или HTML в `innerHTML` документации. Для нового
+вида изображения следует определить отдельный декларативный тип визуализации и
+отдельный безопасный рендерер, который создаёт DOM или SVG из проверяемых данных.
+Например, интерактивная карта маршрутов не должна менять смысл статичного
+`grid-map`: для неё нужен самостоятельный тип наподобие `grid-map-routes`.
+
+Растровые PNG, JPEG и WebP уместны только когда схему нельзя выразить компактными
+данными. Они увеличивают автономный файл редактора, поэтому должны добавляться
+явно, иметь проверенное происхождение и лицензию, не содержать персональные
+данные и встраиваться сборщиком без сетевой загрузки. Исходный материал и
+публикуемая производная копия должны храниться раздельно по правилам проекта.
+
+### 12.3. Обратная совместимость визуализаторов
+
+Форматы документации являются расширяемыми, но уже опубликованные документы не
+должны требовать переделки после добавления новых возможностей:
+
+- `documentation` и все поля разделов остаются необязательными;
+- существующие `paragraphs`, `items` и `diagram` продолжают отображаться без
+  изменения их смысла;
+- известный `visualization.type` сохраняет прежние обязательные поля, внешний
+  вид данных и базовое поведение;
+- в существующий тип можно добавлять только необязательные поля с безопасными
+  значениями по умолчанию;
+- несовместимая структура или другое поведение получают новое имя `type` и
+  отдельный рендерер;
+- неизвестный тип визуализации должен быть проигнорирован без ошибки, а текст и
+  остальные разделы документа должны остаться доступными;
+- для каждого опубликованного типа сохраняется браузерная проверка; отдельно
+  проверяется старое поле `diagram`.
 </pre></template>
 </head>
 <body>
@@ -655,7 +765,6 @@ Base64-упаковки QR Microapps Lab. Решение о M или L прин�
             </div>
             <div class="example-picker" role="group" aria-label="Выбор готового примера">
               <label class="example-select-field" for="example-select"><span>Готовый пример</span><select id="example-select"></select></label>
-              <button id="load-sample" class="button subtle" type="button">Загрузить</button>
             </div>
           </div>
           <div class="project-actions" aria-label="Действия с проектом">
@@ -908,6 +1017,7 @@ Base64-упаковки QR Microapps Lab. Решение о M или L прин�
       <div class="section-head">
         <div><p class="step">03 · ПРЕДПРОСМОТР</p><h2 id="preview-title">Изолированный запуск</h2><span id="preview-difficulty" class="preview-difficulty badge muted">Без сложности</span></div>
         <div class="preview-actions">
+          <button id="sample-documentation-open" class="button subtle small" type="button" disabled>Описание примера</button>
           <button id="run-preview" class="button primary small" type="button">Запустить</button>
           <button id="reset-preview" class="button subtle small" type="button">Сбросить</button>
           <button id="stop-preview" class="button danger small" type="button">Остановить</button>
@@ -988,6 +1098,16 @@ Base64-упаковки QR Microapps Lab. Решение о M или L прин�
       </div>
     </section>
   </main>
+
+  <section id="sample-documentation-overlay" class="sample-documentation-overlay" role="dialog" aria-modal="true" aria-labelledby="sample-documentation-title" hidden>
+    <div class="sample-documentation-dialog">
+      <header class="sample-documentation-head">
+        <div><p class="step">ОПИСАНИЕ ПРИМЕРА</p><h2 id="sample-documentation-title">Документация</h2></div>
+        <button id="sample-documentation-close" class="button subtle small" type="button">Закрыть</button>
+      </header>
+      <div id="sample-documentation-content" class="sample-documentation-content"></div>
+    </div>
+  </section>
 
   <section id="device-test-overlay" class="device-test-overlay" role="dialog" aria-modal="true" aria-labelledby="device-test-dialog-title" hidden>
     <div class="device-test-dialog">
@@ -13027,6 +13147,90 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     }
   };
 
+  var cyberMaze3d = {
+    id: 'cyber-maze-3d',
+    title: 'Киберлабиринт 3D',
+    documentation: {
+      title: 'Как играть в «Киберлабиринт 3D»',
+      intro: [
+        'Задача — от первого лица найти зелёный выход раньше, чем закончится время. Оставшееся время показано в левом верхнем углу.'
+      ],
+      sections: [
+        {
+          title: 'Управление',
+          items: [
+            'Левая треть экрана — повернуть камеру на 90° влево.',
+            'Стрелка ↑ в центральной трети — сделать один шаг вперёд.',
+            'Правая треть экрана — повернуть камеру на 90° вправо.'
+          ]
+        },
+        {
+          title: 'Сложность и время',
+          paragraphs: ['Сложность меняет только запас времени. Размер и устройство лабиринта остаются одинаковыми.'],
+          items: ['1 — 52 секунды', '2 — 49 секунд', '3 — 46 секунд', '4 — 43 секунды', '5 — 40 секунд']
+        },
+        {
+          title: 'Карта',
+          paragraphs: [
+            'Поле состоит из 15 × 15 клеток. При каждом запуске случайно выбирается одна из четырёх точек старта; кратчайший путь от любой из них до выхода занимает ровно 28 шагов.',
+            'Координаты указаны как (x, y) от левого верхнего угла: S1 (3, 3), S2 (13, 1), S3 (5, 13), S4 (9, 13), выход E (7, 7).'
+          ],
+          visualization: {
+            type: 'grid-map',
+            title: 'Киберлабиринт 15 × 15',
+            caption: 'S1–S4 → E · кратчайший путь 28 шагов',
+            wall: '1',
+            rows: [
+              '111111111111111',
+              '100010001000001',
+              '111010101010111',
+              '101000101010001',
+              '101111101111101',
+              '101000001000101',
+              '101011111010101',
+              '100010021010101',
+              '101110101010101',
+              '100000100010001',
+              '111111111111101',
+              '101000100000001',
+              '101010101111111',
+              '100010000000001',
+              '111111111111111'
+            ],
+            starts: [
+              { label: 'S1', index: 48 },
+              { label: 'S2', index: 28 },
+              { label: 'S3', index: 200 },
+              { label: 'S4', index: 204 }
+            ],
+            exit: { label: 'E', index: 112 }
+          }
+        },
+        {
+          title: 'Правила раунда',
+          items: [
+            'Попытка пройти сквозь стену показывает сообщение «СТЕНА» и блокирует управление на 600 мс.',
+            'После входа в выход таймер останавливается, а на экране остаётся точное время прохождения.',
+            'После финиша или завершения времени новый запуск блокируется на 1 секунду, чтобы случайное быстрое нажатие не перезапустило игру.'
+          ]
+        },
+        {
+          title: 'Техническая основа',
+          paragraphs: [
+            'Объёмный вид строится автономным Canvas-рейкастером без Three.js, сети и внешних файлов. Сама игра помещается в QR с коррекцией L; это описание хранится в редакторе и не увеличивает QR-код игры.'
+          ]
+        }
+      ]
+    },
+    html: `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><canvas id=c style=position:fixed;inset:0;touch-action:none></canvas><script>var $d=3,x=c.getContext('2d'),F='fillStyle',M='111111111111111100010001000001111010101010111101000101010001101111101111101101000001000101101011111010101100010021010101101110101010101100000100010001111111111111101101000100000001101010101111111100010000000001111111111111111',Q=1,E=0,o=0,m=Math,P=[48,28,200,204];onresize=z=_=>{c.width=W=innerWidth;c.height=H=innerHeight};z();N=_=>{k=m.random()*4|0;n=P[k];X=I=n%15;Z=V=n/15|0;A=D=k&1?-1.57:1.57;Q=0;S=performance.now()};c.onpointerdown=e=>{e.preventDefault();t=performance.now();if(Q)return Q!=2&&t>=E&&N();if(e.clientX<W/3)A-=1.57;else if(e.clientX>W*2/3)A+=1.57;else{i=m.round(I+m.sin(A));j=m.round(V+m.cos(A));n=i+j*15;M[n]>1?(R=(t-S)/1e3,I=i,V=j,Q=3,E=t+1e3):M[n]>0?(Q=2,E=t+600):(I=i,V=j)}};L=t=>{g=m.min(.04,(t-o)/1e3||0);o=t;Q==1&&(S=t);Q==2&&t>=E&&(Q=0);T=m.max(0,55-3*$d-(Q==3?R:(t-S)/1e3));!Q&&!T&&(Q=4,E=t+1e3);X+=(I-X)*g*8;Z+=(V-Z)*g*8;D+=m.atan2(m.sin(A-D),m.cos(A-D))*g*4;Y=H/2+m.sin(t/60)*6*(m.abs(X-I)+m.abs(Z-V));x[F]='#034';x.fillRect(0,0,W,Y);x[F]='#111';x.fillRect(0,Y,W,H-Y);x[F]='#8cf';for(i=16;i--;)x.fillRect(i*73%W,i*47%Y,2,2);x[F]='#234';for(j=Y;j<H;j+=22)x.fillRect(0,j,W,1);for(i=0;i<W;i+=5){r=D+(i/W-.5)*1.1;a=m.sin(r);b=m.cos(r);for(d=.05;d<18;d+=.05){n=m.round(X+a*d)+m.round(Z+b*d)*15;if(M[n]>0)break}u=X+a*d;v=Z+b*d;p=m.abs(u-m.round(u))>m.abs(v-m.round(v));d*=m.cos(r-D);h=m.min(H,H/d);x[F]=M[n]>1?'#0f8':'hsl(210 70% '+(18+35/(1+d)+p*8)+'%)';x.fillRect(i,Y-h/2,6,h)}x[F]='#fff';x.fillRect(W/2-9,Y,18,2);x.fillRect(W/2,Y-9,2,18);x.font='bold 18px sans-serif';x.textAlign='left';x.fillText(T.toFixed(1),12,24);x.textAlign='center';x.fillText('↶  ↑  ↷',W/2,H-16);if(Q){x[F]='#001d';x.fillRect(W/2-125,H/2-45,250,90);x[F]='#fff';x.fillText(['','НАЙДИ ВЫХОД','СТЕНА','ВЫХОД НАЙДЕН','ВРЕМЯ'][Q],W/2,H/2);x.font='13px sans-serif';x.fillText(Q==1?'ЛЕВО · ↑ · ПРАВО':Q==3?R.toFixed(1)+' СЕКУНД':'ЕЩЁ',W/2,H/2+22)}requestAnimationFrame(L)};N();Q=1;L(0)<\/script>`,
+    spec: {
+      schemaVersion: '0.1', id: 'cyber-maze-3d', title: 'Киберлабиринт 3D', type: 'game', difficulty: 3,
+      qr: { encoding: 'base64', ecc: 'L' },
+      technical: { singleHtmlFile: true, externalResources: false, networkRequests: false, requiredViewport: true },
+      interface: { touchControls: true, noHorizontalScroll: true, noVerticalScroll: true }
+    }
+  };
+
   var careerCompass = {
     id: 'career-compass',
     title: 'Карьерный компас ИТ',
@@ -13039,7 +13243,7 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     }
   };
 
-  var items = [tinyQuiz, computerThinking, tournamentBracket, packetNetwork, brickBreaker, firewall, releaseRun, cyberReflex, cyberTrack3d, careerCompass];
+  var items = [tinyQuiz, computerThinking, tournamentBracket, packetNetwork, brickBreaker, firewall, releaseRun, cyberReflex, cyberTrack3d, cyberMaze3d, careerCompass];
   return {
     defaultId: brickBreaker.id,
     items: items,
@@ -13615,6 +13819,9 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     previewPreset: $('preview-preset'), previewWidth: $('preview-width'), previewHeight: $('preview-height'),
     downloadPng: $('download-png'), copyUrl: $('copy-url'), downloadHtml: $('download-html'), qrOpenHelp: $('qr-open-help'),
     downloadReport: $('download-report'), exampleSelect: $('example-select'), fileActions: $('file-actions'),
+    sampleDocumentationOpen: $('sample-documentation-open'), sampleDocumentationOverlay: $('sample-documentation-overlay'),
+    sampleDocumentationTitle: $('sample-documentation-title'), sampleDocumentationContent: $('sample-documentation-content'),
+    sampleDocumentationClose: $('sample-documentation-close'),
     difficultyEditor: $('difficulty-editor'), difficultyVariableNote: $('difficulty-variable-note'),
     codeDifficulty: $('code-difficulty'), applyDifficulty: $('apply-difficulty'),
     codeEditor: $('code-editor'), simpleEditor: $('simple-editor'), modeSimple: $('mode-simple'), modeCode: $('mode-code'),
@@ -13648,7 +13855,8 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
   var state = {
     html: '', spec: null, dataUrl: '', qr: null, checks: [], runtime: null, checksum: null,
     roundtrip: null, report: null, sizeAnalysis: null, optimization: null, previewToken: '', previewHtml: '', runtimeMessages: [],
-    iterations: [], comparisons: [], buildId: 0, mode: 'code', specEditorMode: 'form', importedQrProfile: null, qrEmulation: null
+    iterations: [], comparisons: [], buildId: 0, mode: 'code', specEditorMode: 'form', importedQrProfile: null, qrEmulation: null,
+    sampleDocumentationLastFocus: null
   };
   var simpleBuildTimer = 0;
 
@@ -14767,6 +14975,138 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
       elements.exampleSelect.appendChild(option);
     });
     elements.exampleSelect.value = sample.defaultId || sample.spec.id;
+    updateSampleDocumentationButton();
+  }
+
+  function selectedSample() {
+    return typeof sample.getById === 'function' ? sample.getById(elements.exampleSelect.value) : sample;
+  }
+
+  function updateSampleDocumentationButton() {
+    var selected = selectedSample();
+    var available = Boolean(selected && selected.documentation);
+    elements.sampleDocumentationOpen.disabled = !available;
+    elements.sampleDocumentationOpen.title = available
+      ? 'Открыть описание примера «' + (selected.title || selected.spec.title) + '»'
+      : 'Для этого примера описание пока не добавлено';
+  }
+
+  function appendDocumentationText(container, tagName, text, className) {
+    var element = document.createElement(tagName);
+    if (className) element.className = className;
+    element.textContent = text;
+    container.appendChild(element);
+  }
+
+  function createDocumentationSvgElement(tagName) {
+    return document.createElementNS('http://www.w3.org/2000/svg', tagName);
+  }
+
+  function renderGridMapDocumentation(container, visualization) {
+    var rows = visualization.rows || [];
+    var width = rows.length ? rows[0].length : 0;
+    if (!width || rows.some(function (row) { return row.length !== width; })) return;
+    var cells = rows.join('');
+    var wallValue = visualization.wall || '1';
+    var starts = visualization.starts || [];
+    var exitData = typeof visualization.exit === 'number'
+      ? { index: visualization.exit, label: 'E' }
+      : visualization.exit;
+    if (!starts.length || !exitData) return;
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'sample-grid-map';
+    var caption = document.createElement('p');
+    caption.className = 'sample-grid-map-caption';
+    caption.textContent = visualization.caption || '';
+    var svg = createDocumentationSvgElement('svg');
+    svg.classList.add('sample-grid-map-svg');
+    svg.setAttribute('viewBox', '0 0 ' + width + ' ' + rows.length);
+    svg.setAttribute('role', 'img');
+    var svgTitle = createDocumentationSvgElement('title');
+    svgTitle.textContent = visualization.title || 'Схема лабиринта';
+    var svgDescription = createDocumentationSvgElement('desc');
+    svg.appendChild(svgTitle);
+    svg.appendChild(svgDescription);
+
+    for (var index = 0; index < cells.length; index++) {
+      var cellRect = createDocumentationSvgElement('rect');
+      cellRect.setAttribute('x', index % width);
+      cellRect.setAttribute('y', Math.floor(index / width));
+      cellRect.setAttribute('width', 1);
+      cellRect.setAttribute('height', 1);
+      cellRect.setAttribute('class', 'sample-grid-map-cell ' + (cells[index] === wallValue ? 'is-wall' : 'is-floor'));
+      svg.appendChild(cellRect);
+    }
+
+    function appendMarker(marker, markerClass) {
+      var group = createDocumentationSvgElement('g');
+      group.setAttribute('class', 'sample-grid-map-marker ' + markerClass);
+      var rect = createDocumentationSvgElement('rect');
+      rect.setAttribute('x', marker.index % width);
+      rect.setAttribute('y', Math.floor(marker.index / width));
+      rect.setAttribute('width', 1);
+      rect.setAttribute('height', 1);
+      var label = createDocumentationSvgElement('text');
+      label.setAttribute('x', marker.index % width + 0.5);
+      label.setAttribute('y', Math.floor(marker.index / width) + 0.62);
+      label.setAttribute('text-anchor', 'middle');
+      label.textContent = marker.label;
+      group.appendChild(rect);
+      group.appendChild(label);
+      svg.appendChild(group);
+    }
+
+    starts.forEach(function (start) { appendMarker(start, 'is-start'); });
+    appendMarker(exitData, 'is-exit');
+    svgDescription.textContent = (visualization.caption || 'Схема карты') + '. Стены показаны тёмными клетками; отмечены четыре точки старта и выход.';
+    svg.setAttribute('aria-label', svgDescription.textContent);
+    if (caption.textContent) wrapper.appendChild(caption);
+    wrapper.appendChild(svg);
+    container.appendChild(wrapper);
+  }
+
+  function renderDocumentationVisualization(container, visualization) {
+    if (visualization.type === 'grid-map') renderGridMapDocumentation(container, visualization);
+  }
+
+  function renderSampleDocumentation(documentation) {
+    elements.sampleDocumentationTitle.textContent = documentation.title || 'Документация';
+    elements.sampleDocumentationContent.replaceChildren();
+    (documentation.intro || []).forEach(function (text) {
+      appendDocumentationText(elements.sampleDocumentationContent, 'p', text, 'sample-documentation-intro');
+    });
+    (documentation.sections || []).forEach(function (sectionData) {
+      var section = document.createElement('section');
+      section.className = 'sample-documentation-section';
+      if (sectionData.title) appendDocumentationText(section, 'h3', sectionData.title);
+      (sectionData.paragraphs || []).forEach(function (text) { appendDocumentationText(section, 'p', text); });
+      if (sectionData.items && sectionData.items.length) {
+        var list = document.createElement('ul');
+        sectionData.items.forEach(function (text) { appendDocumentationText(list, 'li', text); });
+        section.appendChild(list);
+      }
+      if (sectionData.diagram) appendDocumentationText(section, 'pre', sectionData.diagram, 'sample-documentation-diagram');
+      if (sectionData.visualization) renderDocumentationVisualization(section, sectionData.visualization);
+      elements.sampleDocumentationContent.appendChild(section);
+    });
+  }
+
+  function openSampleDocumentation() {
+    var selected = selectedSample();
+    if (!selected || !selected.documentation) return;
+    renderSampleDocumentation(selected.documentation);
+    state.sampleDocumentationLastFocus = document.activeElement;
+    elements.sampleDocumentationOverlay.hidden = false;
+    document.body.classList.add('sample-documentation-open');
+    elements.sampleDocumentationClose.focus();
+  }
+
+  function closeSampleDocumentation() {
+    if (elements.sampleDocumentationOverlay.hidden) return;
+    elements.sampleDocumentationOverlay.hidden = true;
+    document.body.classList.remove('sample-documentation-open');
+    if (state.sampleDocumentationLastFocus && typeof state.sampleDocumentationLastFocus.focus === 'function') state.sampleDocumentationLastFocus.focus();
   }
 
   function refreshDifficultyEditor() {
@@ -14817,6 +15157,7 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     writeSpecForm(selected.spec);
     elements.encoding.value = selected.spec.qr.encoding;
     elements.ecc.value = selected.spec.qr.ecc;
+    updateSampleDocumentationButton();
     refreshDifficultyEditor();
     setStatus('Загружен эталонный пример «' + selected.spec.title + '».');
   }
@@ -15170,8 +15511,19 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
   elements.clearQrEmulation.addEventListener('click', function () { clearQrEmulation(true); setStatus('Возвращён автоматический выбор коррекции и стандартная геометрия QR.'); });
   elements.qrZoom.addEventListener('click', function () { setQrExpanded(!elements.qrZoom.classList.contains('expanded')); });
   window.addEventListener('resize', fitExpandedQr);
-  document.addEventListener('keydown', function (event) { if (event.key === 'Escape' && elements.qrZoom.classList.contains('expanded')) setQrExpanded(false); });
-  $('load-sample').addEventListener('click', function () { setMode('code', false); loadSample(elements.exampleSelect.value); build().then(runPreview); });
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape') return;
+    if (!elements.sampleDocumentationOverlay.hidden) closeSampleDocumentation();
+    else if (elements.qrZoom.classList.contains('expanded')) setQrExpanded(false);
+  });
+  elements.exampleSelect.addEventListener('change', function () {
+    setMode('code', false);
+    loadSample(elements.exampleSelect.value);
+    build().then(function () { if (state.html) runPreview(); });
+  });
+  elements.sampleDocumentationOpen.addEventListener('click', openSampleDocumentation);
+  elements.sampleDocumentationClose.addEventListener('click', closeSampleDocumentation);
+  elements.sampleDocumentationOverlay.addEventListener('click', function (event) { if (event.target === elements.sampleDocumentationOverlay) closeSampleDocumentation(); });
   elements.applyDifficulty.addEventListener('click', applyCodeDifficulty);
   elements.source.addEventListener('input', refreshDifficultyEditor);
   $('clear').addEventListener('click', function () { if (state.mode === 'simple') resetSimpleWorkspace(); else resetWorkspace(); });

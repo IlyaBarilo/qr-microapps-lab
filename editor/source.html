@@ -37,7 +37,6 @@
             </div>
             <div class="example-picker" role="group" aria-label="Выбор готового примера">
               <label class="example-select-field" for="example-select"><span>Готовый пример</span><select id="example-select"></select></label>
-              <button id="load-sample" class="button subtle" type="button">Загрузить</button>
             </div>
           </div>
           <div class="project-actions" aria-label="Действия с проектом">
@@ -290,6 +289,7 @@
       <div class="section-head">
         <div><p class="step">03 · ПРЕДПРОСМОТР</p><h2 id="preview-title">Изолированный запуск</h2><span id="preview-difficulty" class="preview-difficulty badge muted">Без сложности</span></div>
         <div class="preview-actions">
+          <button id="sample-documentation-open" class="button subtle small" type="button" disabled>Описание примера</button>
           <button id="run-preview" class="button primary small" type="button">Запустить</button>
           <button id="reset-preview" class="button subtle small" type="button">Сбросить</button>
           <button id="stop-preview" class="button danger small" type="button">Остановить</button>
@@ -370,6 +370,16 @@
       </div>
     </section>
   </main>
+
+  <section id="sample-documentation-overlay" class="sample-documentation-overlay" role="dialog" aria-modal="true" aria-labelledby="sample-documentation-title" hidden>
+    <div class="sample-documentation-dialog">
+      <header class="sample-documentation-head">
+        <div><p class="step">ОПИСАНИЕ ПРИМЕРА</p><h2 id="sample-documentation-title">Документация</h2></div>
+        <button id="sample-documentation-close" class="button subtle small" type="button">Закрыть</button>
+      </header>
+      <div id="sample-documentation-content" class="sample-documentation-content"></div>
+    </div>
+  </section>
 
   <section id="device-test-overlay" class="device-test-overlay" role="dialog" aria-modal="true" aria-labelledby="device-test-dialog-title" hidden>
     <div class="device-test-dialog">
