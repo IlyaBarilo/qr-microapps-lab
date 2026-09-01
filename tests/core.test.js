@@ -12,15 +12,19 @@ const projectFile = require('../editor/project.js');
 const comparison = require('../editor/comparison.js');
 const deviceTest = require('../editor/device-test.js');
 
-test('тест устройства формирует самостоятельный быстрый лист и три страницы полного набора', () => {
+test('тест устройства формирует самостоятельный быстрый лист и шесть страниц полного набора', () => {
   const simpleGame = sample.getById('tiny-quiz');
   const brickGame = sample.getById('brick-breaker');
-  const suite = deviceTest.createTestSuite({ simpleHtml: simpleGame.html, brickHtml: brickGame.html });
+  const lowCorrectionGame = sample.getById('cyber-maze-3d');
+  const suite = deviceTest.createTestSuite({ simpleHtml: simpleGame.html, brickHtml: brickGame.html, lowCorrectionHtml: lowCorrectionGame.html });
   assert.equal(suite.quick.length, 1);
   assert.deepEqual(suite.full.map((page) => [page.id, page.items.length]), [
     ['overview', 4],
     ['threshold', 4],
-    ['correction', 4]
+    ['correction', 4],
+    ['encoding', 4],
+    ['density', 4],
+    ['iphone-manual', 4]
   ]);
   assert.deepEqual(suite.quick[0].items.map((item) => item.id), ['Q1', 'Q2', 'Q3', 'Q4']);
   assert.deepEqual(suite.full[0].items.map((item) => item.id), ['A1', 'A2', 'A3', 'A4']);
@@ -39,6 +43,51 @@ test('тест устройства формирует самостоятель�
   assert.ok(suite.full[2].items.every((item) => item.payload.startsWith('https://github.com/IlyaBarilo/qr-microapps-lab#')));
   assert.deepEqual(suite.full[1].items.map((item) => item.moduleMm), [0.50, 0.40, 0.32, 0.25]);
   assert.deepEqual(suite.full[2].items.map((item) => item.ecc), ['L', 'M', 'Q', 'H']);
+
+  const encodingItems = suite.full[3].items;
+  assert.deepEqual(encodingItems.map((item) => item.id), ['D1', 'D2', 'D3', 'D4']);
+  assert.equal(core.parseDataUrl(encodingItems[1].payload).text, encodingItems[0].payload);
+  assert.equal(core.parseDataUrl(encodingItems[2].payload).text, encodingItems[0].payload);
+  assert.equal(core.parseDataUrl(encodingItems[3].payload).text, encodingItems[0].payload);
+  assert.equal(core.parseDataUrl(encodingItems[1].payload).encoding, 'percent');
+  assert.equal(core.parseDataUrl(encodingItems[2].payload).encoding, 'percent');
+  assert.equal(core.parseDataUrl(encodingItems[3].payload).encoding, 'base64');
+  assert.notEqual(encodingItems[1].payload, encodingItems[2].payload);
+  assert.ok(encodingItems.every((item) => item.payloadBytes <= core.getQrLimit('M')));
+
+  const densityItems = suite.full[4].items;
+  assert.deepEqual(densityItems.map((item) => item.id), ['E1', 'E2', 'E3', 'E4']);
+  assert.deepEqual(densityItems.map((item) => item.payloadBytes), [200, 640, 1300, 2250]);
+  assert.deepEqual(densityItems.map((item) => item.expectedVersion), [10, 20, 30, 40]);
+  assert.ok(densityItems.every((item) => item.ecc === 'M' && item.moduleMm === 0.45));
+
+  const iphoneItems = suite.full[5].items;
+  assert.deepEqual(iphoneItems.map((item) => item.id), ['F1', 'F2', 'F3', 'F4']);
+  assert.deepEqual(iphoneItems.map((item) => item.payloadBytes), [42, 1017, 2245, 2933]);
+  assert.ok(iphoneItems.every((item) => item.payload.startsWith('Xdata:')));
+  assert.deepEqual(iphoneItems.map((item) => item.ecc), ['M', 'M', 'M', 'L']);
+  assert.ok(iphoneItems.every((item) => item.moduleMm === 0.50));
+  assert.deepEqual(iphoneItems.map((item) => item.expectedVersion || null), [null, null, 40, 40]);
+  assert.equal(core.parseDataUrl(iphoneItems[0].payload.slice(1)).text, '<h1>OFFLINE</h1>');
+  const offlineCheckHtml = core.parseDataUrl(iphoneItems[1].payload.slice(1)).text;
+  assert.match(offlineCheckHtml, /<h1>Тест автономного запуска<\/h1>/);
+  assert.match(offlineCheckHtml, /Тест пройден: страница и кнопка работают без Интернета/);
+  assert.notEqual(offlineCheckHtml, encodingItems[0].payload);
+  assert.equal(core.parseDataUrl(iphoneItems[2].payload.slice(1)).text, brickGame.html);
+  assert.equal(core.parseDataUrl(iphoneItems[3].payload.slice(1)).text, lowCorrectionGame.html);
+  assert.ok(iphoneItems.every((item) => item.payloadBytes <= core.getQrLimit(item.ecc)));
+});
+
+test('цифровая проверка тестового QR различает совпадение, BOM и ошибку', () => {
+  const canvas = {
+    width: 1,
+    height: 1,
+    getContext: () => ({ getImageData: () => ({ data: new Uint8ClampedArray(4) }) })
+  };
+  assert.equal(deviceTest.verifyCanvasPayload(canvas, 'данные', () => ({ data: 'данные' })).status, 'pass');
+  assert.equal(deviceTest.verifyCanvasPayload(canvas, 'данные', () => ({ data: '\uFEFFданные' })).status, 'warn');
+  assert.equal(deviceTest.verifyCanvasPayload(canvas, 'данные', () => ({ data: 'другие' })).status, 'fail');
+  assert.equal(deviceTest.verifyCanvasPayload(canvas, 'данные', null).status, 'unavailable');
 });
 
 test('метка печати содержит локальные дату и время с секундами', () => {
@@ -1119,6 +1168,7 @@ test('упрощённый конструктор создаёт валидны�
   assert.match(editorPage, /id="validation-toggle"[^>]*class="[^"]*validation-toggle[^"]*summary-hint[^"]*"[^>]*>показать<\/button>/);
   assert.doesNotMatch(editorPage, /class="panel validation-panel"/);
   assert.match(editorPage, /id="open-quick-device-test"[\s\S]*id="open-full-device-test"/);
+  assert.match(editorPage, /Полный тест · листы A–F/);
   assert.match(editorPage, /id="device-test-overlay"[\s\S]*id="device-test-pages"[\s\S]*id="device-test-screen-view"/);
   assert.match(editorPage, /id="device-card-ruler"[\s\S]*id="device-card-width"[\s\S]*id="device-screen-module-pixels"/);
   assert.match(editorPage, /<script data-source="editor\/device-test\.js">[\s\S]*<script data-source="editor\/app\.js">/);
@@ -1150,6 +1200,7 @@ test('упрощённый конструктор создаёт валидны�
   assert.match(editorStyles, /\.fallback-metric strong\{color:var\(--muted\)\}/);
   assert.match(editorStyles, /\.fallback-metric\.recovery[^{]*\{[^}]*border-color:#765e2d/);
   assert.match(editorStyles, /\.device-print-page\{[^}]*width:210mm;[^}]*min-height:297mm/);
+  assert.match(editorStyles, /\.device-print-preflight\.pass\{color:#176a55\}/);
   assert.match(editorStyles, /\.device-test-screen-view\{display:grid;grid-template-columns:340px minmax\(0,1fr\)/);
   assert.match(editorStyles, /@page\{size:A4 portrait;margin:0\}/);
   const editorApp = fs.readFileSync(path.join(__dirname, '../editor/app.js'), 'utf8');
@@ -1172,9 +1223,14 @@ test('упрощённый конструктор создаёт валидны�
   assert.match(editorApp, /inversionAttempts: 'onlyInvert'/);
   assert.match(editorApp, /var importedEccFits = !!requestedEcc/);
   assert.match(editorApp, /deviceTestApi\.createController/);
+  assert.match(editorApp, /jsQR: window\.jsQR/);
   const deviceTestSource = fs.readFileSync(path.join(__dirname, '../editor/device-test.js'), 'utf8');
   for (const match of deviceTestSource.matchAll(/\$\('([^']+)'\)/g)) assert.ok(htmlIds.has(match[1]), 'в HTML отсутствует #' + match[1]);
   assert.match(deviceTestSource, /CARD_WIDTH_MM = 85\.60/);
+  assert.match(deviceTestSource, /title: 'Представление и запуск HTML'/);
+  assert.match(deviceTestSource, /title: 'Ступени плотности'/);
+  assert.match(deviceTestSource, /title: 'Ручной офлайн-запуск на iPhone'/);
+  assert.match(deviceTestSource, /verifyCanvasPayload\(canvas, payload, decoder\)/);
   assert.match(deviceTestSource, /modulePixels = Math\.max\(1, Math\.round\(targetCss \* dpr \/ totalModules\)\)/);
   const jsQrSource = fs.readFileSync(path.join(__dirname, '../editor/vendor/jsQR.js'), 'utf8');
   assert.match(jsQrSource, /decoded\.errorCorrectionLevel = \["L", "M", "Q", "H"\]/);

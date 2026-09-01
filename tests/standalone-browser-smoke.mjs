@@ -64,28 +64,87 @@ try {
   assert.equal(result.themeLabel, 'Светлая тема');
 
   await page.click('#open-full-device-test');
-  await page.waitForFunction(() => document.querySelectorAll('.device-print-page').length === 3 && document.querySelectorAll('.device-print-code').length === 12);
+  try {
+    await page.waitForFunction(() => document.querySelectorAll('.device-print-page').length === 6 && document.querySelectorAll('.device-print-code').length === 24);
+  } catch (error) {
+    const snapshot = await page.evaluate(() => ({
+      pages: document.querySelectorAll('.device-print-page').length,
+      codes: document.querySelectorAll('.device-print-code').length,
+      ids: [...document.querySelectorAll('.device-print-code')].map((element) => element.dataset.testCodeId)
+    }));
+    throw new Error('Полный набор не отрисован: ' + JSON.stringify({ snapshot, pageErrors, consoleErrors }) + '. ' + error.message);
+  }
   const devicePages = await page.evaluate(() => ({
     pageCount: document.querySelectorAll('.device-print-page').length,
     codeCount: document.querySelectorAll('.device-print-code').length,
     pageTitles: [...document.querySelectorAll('.device-print-page h3')].map((element) => element.textContent),
     codeIds: [...document.querySelectorAll('.device-print-code')].map((element) => element.dataset.testCodeId),
     labels: [...document.querySelectorAll('.device-print-code-copy strong')].map((element) => element.textContent),
+    iphoneDetails: ['F1', 'F2', 'F3', 'F4'].map((id) => document.querySelector('[data-test-code-id="' + id + '"] .device-print-code-copy span')?.textContent || ''),
+    preflight: [...document.querySelectorAll('.device-print-preflight')].map((element) => ({ text: element.textContent, status: [...element.classList].find((name) => ['pass', 'warn', 'fail', 'unavailable'].includes(name)) })),
     timestamps: [...document.querySelectorAll('[data-print-timestamp]')].map((element) => element.textContent),
     brickPayload: document.querySelector('[data-test-code-id="A4"] canvas')?.width || 0
   }));
-  assert.equal(devicePages.pageCount, 3, 'Полный тест устройства должен содержать три листа A4.');
-  assert.equal(devicePages.codeCount, 12, 'Полный тест устройства должен содержать 12 QR-кодов.');
-  assert.deepEqual(devicePages.pageTitles.map((title) => title.slice(0, 6)), ['Лист A', 'Лист B', 'Лист C']);
-  assert.deepEqual(devicePages.codeIds, ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4', 'C1', 'C2', 'C3', 'C4']);
+  assert.equal(devicePages.pageCount, 6, 'Полный тест устройства должен содержать шесть листов A4.');
+  assert.equal(devicePages.codeCount, 24, 'Полный тест устройства должен содержать 24 QR-кода.');
+  assert.deepEqual(devicePages.pageTitles.map((title) => title.slice(0, 6)), ['Лист A', 'Лист B', 'Лист C', 'Лист D', 'Лист E', 'Лист F']);
+  assert.deepEqual(devicePages.codeIds, ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4', 'C1', 'C2', 'C3', 'C4', 'D1', 'D2', 'D3', 'D4', 'E1', 'E2', 'E3', 'E4', 'F1', 'F2', 'F3', 'F4']);
   assert.ok(devicePages.labels.some((label) => label.includes('Игра «ИТ-мини-тест»')), 'Обзорный лист должен включать точный мини-тест.');
   assert.ok(devicePages.labels.some((label) => label.includes('Игра «Разбей блоки»')), 'Обзорный лист должен включать точную игру «Разбей блоки».');
-  assert.equal(devicePages.timestamps.length, 3, 'Каждый печатный лист должен содержать метку времени.');
+  assert.ok(devicePages.labels.some((label) => label.includes('Data URL · Base64')), 'Лист D должен сравнивать Base64 с другими представлениями.');
+  assert.ok(devicePages.labels.some((label) => label.includes('Плотность · QR v40')), 'Лист E должен доходить до предельной плотности QR v40.');
+  assert.ok(devicePages.labels.some((label) => label.includes('iPhone · «Разбей блоки» · QR v40/M')), 'Лист F должен содержать игровую проверку QR v40/M.');
+  assert.ok(devicePages.labels.some((label) => label.includes('iPhone · «Киберлабиринт 2.5D» · QR v40/L')), 'Лист F должен содержать игровую проверку QR v40/L.');
+  const iphoneVersions = devicePages.iphoneDetails.map((detail) => Number(detail.match(/QR v(\d+)/)?.[1] || 0));
+  assert.deepEqual(iphoneVersions, [...iphoneVersions].sort((left, right) => left - right), 'F1–F4 должны идти по возрастанию версии и плотности QR.');
+  assert.match(devicePages.iphoneDetails[2], /QR v40 · ECC M$/, 'F3 должен печататься как игровая проверка QR v40/M.');
+  assert.match(devicePages.iphoneDetails[3], /QR v40 · ECC L$/, 'F4 должен печататься как игровая проверка QR v40/L.');
+  assert.equal(devicePages.preflight.length, 24, 'Каждый тестовый QR должен получить результат цифровой автопроверки.');
+  assert.ok(devicePages.preflight.every((result) => result.status === 'pass' || result.status === 'warn'), 'Цифровая автопроверка не должна завершаться ошибкой или быть недоступной.');
+  assert.equal(devicePages.timestamps.length, 6, 'Каждый печатный лист должен содержать метку времени.');
   assert.ok(devicePages.timestamps.every((timestamp) => timestamp === devicePages.timestamps[0] && /^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}$/.test(timestamp)), 'На всех листах должна быть одна корректная дата печати.');
   assert.ok(devicePages.brickPayload > 0, 'Тестовые QR должны быть отрисованы в предпросмотре листа.');
+  const encodingPayloads = await page.evaluate(() => ['D1', 'D2', 'D3', 'D4'].map((id) => {
+    const canvas = document.querySelector('[data-test-code-id="' + id + '"] canvas');
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    return jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'dontInvert' })?.data || '';
+  }));
+  assert.ok(encodingPayloads[0].startsWith('<!doctype html>'), 'D1 должен содержать исходный HTML как текст.');
+  for (const payload of encodingPayloads.slice(1)) {
+    const probePage = await browser.newPage();
+    await probePage.goto(payload, { waitUntil: 'load', timeout: 15_000 });
+    assert.equal(await probePage.locator('h1').textContent(), 'Тест ё ✓', 'Data URL должен восстановить русскую подпись и специальный символ.');
+    await probePage.locator('button').click();
+    assert.equal(await probePage.locator('#o').textContent(), 'OK OFFLINE', 'HTML-зонд должен выполнять встроенный сценарий без сети.');
+    await probePage.close();
+  }
+  const iphonePayloads = await page.evaluate(() => ['F1', 'F2', 'F3', 'F4'].map((id) => {
+    const canvas = document.querySelector('[data-test-code-id="' + id + '"] canvas');
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    return jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'dontInvert' })?.data || '';
+  }));
+  assert.ok(iphonePayloads.every((payload) => payload.startsWith('Xdata:')), 'F1–F4 должны распознаваться как текст с удаляемым префиксом X.');
+  const offlineContext = await browser.newContext({ offline: true });
+  const manualPage = await offlineContext.newPage();
+  await manualPage.goto(iphonePayloads[0].slice(1), { waitUntil: 'load', timeout: 15_000 });
+  assert.equal(await manualPage.locator('h1').textContent(), 'OFFLINE', 'F1 после удаления X должен открываться без сети.');
+  await manualPage.goto(iphonePayloads[1].slice(1), { waitUntil: 'load', timeout: 15_000 });
+  assert.equal(await manualPage.locator('h1').textContent(), 'Тест автономного запуска', 'F2 должен объяснять назначение проверки понятным текстом.');
+  assert.equal(await manualPage.locator('#o').textContent(), 'Нажмите кнопку. Если появится подтверждение, автономная страница и JavaScript работают.');
+  await manualPage.locator('button').click();
+  assert.equal(await manualPage.locator('#o').textContent(), 'Тест пройден: страница и кнопка работают без Интернета', 'F2 после удаления X должен понятно подтверждать работу JavaScript без сети.');
+  await manualPage.goto(iphonePayloads[2].slice(1), { waitUntil: 'load', timeout: 15_000 });
+  await manualPage.waitForFunction(() => document.querySelector('canvas')?.width > 0);
+  assert.ok(await manualPage.locator('canvas').evaluate((canvas) => canvas.width > 0 && canvas.height > 0), 'F3 после удаления X должен запускать игру QR v40/M без сети.');
+  await manualPage.goto(iphonePayloads[3].slice(1), { waitUntil: 'load', timeout: 15_000 });
+  await manualPage.waitForFunction(() => document.querySelector('canvas')?.width > 0);
+  assert.ok(await manualPage.locator('canvas').evaluate((canvas) => canvas.width > 0 && canvas.height > 0), 'F4 после удаления X должен запускать игру QR v40/L без сети.');
+  await offlineContext.close();
   await page.evaluate(() => document.querySelectorAll('[data-print-timestamp]').forEach((element) => { element.textContent = 'ожидание печати'; }));
   const fullPrintPdf = await page.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true });
-  assert.equal(countPdfPages(fullPrintPdf), 3, 'Полный набор должен печататься ровно на трёх листах без пустых страниц.');
+  assert.equal(countPdfPages(fullPrintPdf), 6, 'Полный набор должен печататься ровно на шести листах без пустых страниц.');
   const timestampsAfterPrint = await page.locator('[data-print-timestamp]').allTextContents();
   assert.ok(timestampsAfterPrint.every((timestamp) => timestamp === timestampsAfterPrint[0] && /^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}$/.test(timestamp)), 'Событие печати должно обновлять дату одновременно на всех листах.');
 
@@ -94,13 +153,13 @@ try {
   const quickPrintPdf = await page.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true });
   assert.equal(countPdfPages(quickPrintPdf), 1, 'Быстрый набор должен печататься ровно на одном листе.');
   await page.selectOption('#device-test-set', 'full');
-  await page.waitForFunction(() => document.querySelectorAll('.device-print-page').length === 3 && document.querySelector('[data-test-code-id="A3"]'));
+  await page.waitForFunction(() => document.querySelectorAll('.device-print-page').length === 6 && document.querySelector('[data-test-code-id="A3"]'));
   const decodedDeviceCodes = await page.evaluate(() => [...document.querySelectorAll('.device-print-code canvas')].map((canvas) => {
     const context = canvas.getContext('2d', { willReadFrequently: true });
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
     return !!jsQR(pixels.data, pixels.width, pixels.height, { inversionAttempts: 'dontInvert' });
   }));
-  assert.ok(decodedDeviceCodes.every(Boolean), 'Все 12 тестовых QR должны независимо декодироваться из пикселей.');
+  assert.ok(decodedDeviceCodes.every(Boolean), 'Все 24 тестовых QR должны независимо декодироваться из пикселей.');
 
   await page.click('[data-test-code-id="A3"]');
   await page.waitForFunction(() => !document.querySelector('#device-test-screen-view')?.hidden && document.querySelector('#device-screen-code')?.value === 'A3' && document.querySelector('#device-screen-canvas')?.width > 0);
