@@ -133,6 +133,42 @@ body.sample-documentation-open{overflow:hidden}.sample-documentation-overlay{pos
 .draft-actions select{width:100%;min-width:0}
 .qr-margin-hint{margin:8px 0 0;color:var(--muted);font-size:12px}
 label[for]:has(+ input[type=file]:focus-visible){outline:3px solid rgba(91,184,255,.55);outline-offset:2px}
+
+/* Vector export and a physical A4 preview for the current QR. */
+.output-panel .download-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+.output-panel .download-actions #print-qr{grid-column:1/-1}
+body.qr-print-open{overflow:hidden}
+.qr-print-dialog{width:min(1200px,calc(100vw - 32px));max-width:none;max-height:calc(100vh - 32px);margin:auto;border:1px solid var(--line);border-radius:20px;padding:20px;color:var(--text);background:var(--bg);overflow:auto}
+.qr-print-dialog::backdrop{background:rgba(2,13,19,.85);backdrop-filter:blur(6px)}
+.qr-print-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.qr-print-head h2{margin:0}.qr-print-head .step{margin:0 0 5px}
+.qr-print-layout{display:grid;grid-template-columns:minmax(240px,300px) minmax(0,1fr);align-items:start;gap:24px}
+.qr-print-settings{display:grid;gap:14px;min-width:0}
+.qr-print-settings label{display:grid;gap:6px;font-size:13px;font-weight:700}
+.qr-print-settings input,.qr-print-settings textarea{width:100%;min-width:0;min-height:42px;margin:0;border:1px solid var(--line);border-radius:12px;padding:9px 10px;color:var(--text);background:var(--panel)}
+.qr-print-settings textarea{resize:vertical;min-height:110px;font:14px/1.5 system-ui,sans-serif}
+.qr-print-hint{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+.qr-print-hint:empty,.qr-print-message:empty{display:none}
+.qr-print-message{margin:0;color:var(--danger);font-size:13px;line-height:1.45}
+.qr-print-stage{min-width:0;width:100%}
+.qr-print-sheet-wrap{margin:auto;overflow:hidden}
+.qr-print-sheet{box-sizing:border-box;display:flex;align-items:center;flex-direction:column;gap:6mm;width:210mm;height:296mm;padding:12mm;overflow:hidden;background:#fff;color:#111;color-scheme:light;text-align:center;transform:scale(var(--qr-sheet-scale,1));transform-origin:top left;box-shadow:0 3px 20px rgba(0,0,0,.2)}
+.qr-print-sheet h1{flex:0 0 auto;width:100%;margin:0;font:700 22pt/1.15 Arial,sans-serif;overflow-wrap:anywhere}
+.qr-print-code{flex:0 0 auto;line-height:0;background:#fff}
+.qr-print-code svg{display:block;max-width:none;max-height:none}
+.qr-print-copy{flex:0 0 auto;width:100%;margin:0;font:12pt/1.45 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}
+.qr-print-credit{flex:0 0 auto;margin:auto 0 0;color:#666;font:9pt/1.2 Arial,sans-serif}
+@media(max-width:760px){.qr-print-dialog{width:calc(100vw - 16px);max-height:calc(100vh - 16px);padding:14px}.qr-print-layout{grid-template-columns:minmax(0,1fr);gap:20px}.qr-print-head h2{font-size:20px}}
+@media print{
+  body.qr-print-open{margin:0!important;padding:0!important;overflow:visible!important}
+  body.qr-print-open> :not(.qr-print-dialog){display:none!important}
+  .qr-print-dialog:not([open]){display:none!important}
+  .qr-print-dialog[open]{display:block!important;position:static!important;inset:auto!important;width:210mm!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;overflow:visible!important;background:#fff!important;box-shadow:none!important}
+  .qr-print-dialog::backdrop{display:none!important}
+  .qr-print-head,.qr-print-settings{display:none!important}
+  .qr-print-layout,.qr-print-stage,.qr-print-sheet-wrap{display:block!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important}
+  .qr-print-sheet{transform:none!important;box-shadow:none!important;break-inside:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+}
   </style>
   <script type="text/plain" id="embedded-license-notices" data-purpose="license-notices">
 QR MICROAPPS LAB — MIT LICENSE
@@ -1193,8 +1229,10 @@ visualization: {
 
           <div class="download-actions">
             <button id="download-png" class="button subtle" type="button" disabled>Скачать PNG</button>
+            <button id="download-svg" class="button subtle" type="button" disabled>Скачать SVG</button>
             <button id="copy-url" class="button subtle" type="button" disabled>Копировать data URL</button>
             <button id="download-html" class="button subtle" type="button" disabled>Скачать HTML</button>
+            <button id="print-qr" class="button subtle" type="button" disabled>Печать QR</button>
           </div>
         </div>
 
@@ -1421,6 +1459,35 @@ visualization: {
       </section>
     </div>
   </section>
+
+  <dialog id="qr-print-dialog" class="qr-print-dialog" aria-labelledby="qr-print-dialog-title">
+    <div class="qr-print-head">
+      <div><p class="step">ПЕЧАТНЫЙ ЛИСТ</p><h2 id="qr-print-dialog-title">Текущий QR на бумаге</h2></div>
+      <button id="qr-print-close" class="button subtle small" type="button" autofocus>Закрыть</button>
+    </div>
+    <div class="qr-print-layout">
+      <div class="qr-print-settings">
+        <label>Название<input id="qr-print-title" type="text" maxlength="80" required></label>
+        <label>Размер QR с белым полем, мм<input id="qr-print-size" type="number" min="20" max="180" step="0.1" value="100" required></label>
+        <p id="qr-print-geometry" class="qr-print-hint"></p>
+        <p id="qr-print-margin-note" class="qr-print-hint"></p>
+        <label>Инструкция на листе<textarea id="qr-print-instruction" rows="5" maxlength="400"></textarea></label>
+        <p class="qr-print-hint">A4, книжная ориентация. В окне печати выберите масштаб 100 % и отключите колонтитулы. Перед тиражом проверьте пробную распечатку.</p>
+        <p id="qr-print-message" class="qr-print-message" role="status" aria-live="polite"></p>
+        <button id="qr-print-confirm" class="button primary" type="button">Печать / сохранить PDF</button>
+      </div>
+      <div id="qr-print-stage" class="qr-print-stage">
+        <div id="qr-print-sheet-wrap" class="qr-print-sheet-wrap">
+          <article id="qr-print-sheet" class="qr-print-sheet">
+            <h1 id="qr-print-heading"></h1>
+            <div id="qr-print-code" class="qr-print-code"></div>
+            <p id="qr-print-copy" class="qr-print-copy"></p>
+            <p class="qr-print-credit">QR Microapps Lab</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </dialog>
 
   <footer><span>QR Microapps Lab<span data-app-version-wrap hidden> · версия <span data-app-version></span></span></span><span>QR — один из способов упаковки, а не гарантия запуска штатной камерой любого телефона.</span></footer>
 
@@ -20873,6 +20940,162 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
   };
 });
   </script>
+  <script data-source="editor/qr-export.js">
+/* Встроенный исходный файл: editor/qr-export.js. */
+(function (root, factory) {
+  var api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  else root.QRMicroappsQrExport = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  function escapeXml(value) {
+    // XML 1.0 cannot contain lone surrogates or most control characters.
+    return Array.from(String(value == null ? '' : value)).filter(function (character) {
+      var code = character.codePointAt(0);
+      return code === 9 || code === 10 || code === 13 || code >= 32 && code <= 0xD7FF ||
+        code >= 0xE000 && code <= 0xFFFD || code >= 0x10000 && code <= 0x10FFFF;
+    }).join('').replace(/[&<>"']/g, function (character) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[character];
+    });
+  }
+
+  function geometry(modules, quietZone, sizeMm) {
+    if (!Number.isInteger(modules) || modules < 21 || modules > 177 || (modules - 17) % 4) throw new Error('Некорректный размер матрицы QR.');
+    if (!Number.isInteger(quietZone) || quietZone < 0 || quietZone > 16) throw new Error('Белое поле должно содержать от 0 до 16 модулей.');
+    if (!Number.isFinite(sizeMm) || sizeMm < 20 || sizeMm > 180) throw new Error('Задайте размер QR от 20 до 180 мм.');
+    var totalModules = modules + 2 * quietZone;
+    return { modules: modules, quietZone: quietZone, totalModules: totalModules, sizeMm: sizeMm,
+      moduleMm: sizeMm / totalModules, marginMm: quietZone * sizeMm / totalModules };
+  }
+
+  function toSvg(matrix, options) {
+    options = options || {};
+    if (!Array.isArray(matrix)) throw new Error('Матрица QR отсутствует.');
+    var layout = geometry(matrix.length, options.quietZone, options.sizeMm == null ? 100 : options.sizeMm);
+    var commands = [];
+    matrix.forEach(function (row, y) {
+      if (!Array.isArray(row) || row.length !== matrix.length || row.some(function (cell) { return typeof cell !== 'boolean'; })) {
+        throw new Error('Матрица QR должна быть квадратной и содержать логические значения.');
+      }
+      for (var x = 0; x < row.length; x++) {
+        if (!row[x]) continue;
+        var start = x;
+        while (x + 1 < row.length && row[x + 1]) x++;
+        commands.push('M' + (start + layout.quietZone) + ' ' + (y + layout.quietZone) + 'h' + (x - start + 1) + 'v1H' + (start + layout.quietZone) + 'z');
+      }
+    });
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + layout.sizeMm + 'mm" height="' + layout.sizeMm +
+      'mm" viewBox="0 0 ' + layout.totalModules + ' ' + layout.totalModules + '" role="img" aria-label="' + escapeXml(options.title || 'QR-код') +
+      '" shape-rendering="crispEdges">\r\n<title>' + escapeXml(options.title || 'QR-код') + '</title>\r\n' +
+      '<rect width="' + layout.totalModules + '" height="' + layout.totalModules + '" fill="#fff"/>\r\n' +
+      '<path d="' + commands.join('') + '" fill="#000"/>\r\n</svg>\r\n';
+  }
+
+  function createController(options) {
+    var $ = function (id) { return document.getElementById(id); };
+    var dialog = $('qr-print-dialog');
+    var title = $('qr-print-title');
+    var instruction = $('qr-print-instruction');
+    var size = $('qr-print-size');
+    var sheet = $('qr-print-sheet');
+    var stage = $('qr-print-stage');
+    var wrapper = $('qr-print-sheet-wrap');
+    var code = $('qr-print-code');
+    var message = $('qr-print-message');
+    var print = $('qr-print-confirm');
+    var current = null;
+    var revision = '';
+    var pending = 0;
+    var lastFocus = null;
+    var defaults = 'Наведите камеру телефона на QR-код и откройте приложение.\nЕсли код показан как текст, используйте «Открыть как сайт» для полного адреса data:.';
+
+    function fit() {
+      if (!dialog.open) return;
+      var width = sheet.offsetWidth;
+      if (!width) return;
+      var scale = Math.min(1, stage.clientWidth / width);
+      sheet.style.setProperty('--qr-sheet-scale', String(scale));
+      wrapper.style.width = width * scale + 'px';
+      wrapper.style.height = sheet.offsetHeight * scale + 'px';
+    }
+
+    function update() {
+      cancelAnimationFrame(pending);
+      if (!current) return false;
+      print.disabled = true;
+      message.textContent = '';
+      code.replaceChildren();
+      $('qr-print-heading').textContent = title.value;
+      $('qr-print-copy').textContent = instruction.value;
+      try {
+        if (!title.value.trim()) throw new Error('Введите название для печатного листа.');
+        var quiet = Math.max(4, current.quietZone);
+        var layout = geometry(current.matrix.length, quiet, Number(size.value));
+        code.innerHTML = toSvg(current.matrix, { quietZone: quiet, sizeMm: layout.sizeMm, title: title.value });
+        $('qr-print-geometry').textContent = 'Модуль: ' + layout.moduleMm.toFixed(3).replace('.', ',') + ' мм · белое поле: ' + quiet + ' мод.';
+        $('qr-print-margin-note').textContent = current.quietZone < 4 ? 'На печатном листе белое поле увеличено до 4 модулей. Скачиваемые PNG и SVG сохраняют исходную рамку.' : '';
+        fit();
+        if (sheet.scrollHeight > sheet.clientHeight + 1 || sheet.scrollWidth > sheet.clientWidth + 1) {
+          throw new Error('Текст и QR не помещаются на одном листе. Сократите инструкцию или уменьшите QR.');
+        }
+        print.disabled = false;
+        return true;
+      } catch (error) {
+        message.textContent = error.message;
+        return false;
+      }
+    }
+
+    function schedule() {
+      print.disabled = true;
+      cancelAnimationFrame(pending);
+      pending = requestAnimationFrame(update);
+    }
+
+    function close() {
+      cancelAnimationFrame(pending);
+      if (dialog.open) dialog.close();
+      document.body.classList.remove('qr-print-open');
+    }
+
+    function open() {
+      var next = options.getCurrent();
+      if (!next) return;
+      if (revision !== next.revision) {
+        title.value = next.title;
+        instruction.value = defaults;
+        revision = next.revision;
+      }
+      current = next;
+      lastFocus = $('print-qr');
+      document.body.classList.add('qr-print-open');
+      dialog.showModal();
+      update();
+    }
+
+    $('print-qr').addEventListener('click', open);
+    $('qr-print-close').addEventListener('click', close);
+    dialog.addEventListener('close', function () {
+      document.body.classList.remove('qr-print-open');
+      if (lastFocus && lastFocus.isConnected && !lastFocus.disabled) lastFocus.focus();
+    });
+    dialog.addEventListener('click', function (event) {
+      var bounds = dialog.getBoundingClientRect();
+      if (event.target === dialog && (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom)) close();
+    });
+    [title, instruction, size].forEach(function (input) { input.addEventListener('input', schedule); });
+    print.addEventListener('click', function () { if (update()) window.print(); });
+    window.addEventListener('beforeprint', function () { if (dialog.open) update(); });
+    window.addEventListener('afterprint', fit);
+    window.addEventListener('resize', fit);
+    if (typeof ResizeObserver !== 'undefined') new ResizeObserver(fit).observe(stage);
+    return { close: close, invalidate: function () { close(); current = null; } };
+  }
+
+  return { toSvg: toSvg, geometry: geometry, createController: createController };
+});
+  </script>
   <script data-source="editor/app.js">
 /* Встроенный исходный файл: editor/app.js. */
 (function () {
@@ -20886,6 +21109,8 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
   var comparisonApi = window.QRMicroappsComparison;
   var sample = window.QRMicroappsSample;
   var deviceTestApi = window.QRMicroappsDeviceTest;
+  var qrExportApi = window.QRMicroappsQrExport;
+  var qrPrintController = null;
   var $ = function (id) { return document.getElementById(id); };
   var elements = {
     themeToggle: $('theme-toggle'), themeToggleIcon: $('theme-toggle-icon'), themeToggleLabel: $('theme-toggle-label'),
@@ -20900,7 +21125,7 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     validationRemarks: $('validation-remarks'), validationToggle: $('validation-toggle'), validationDetails: $('validation-details'),
     validationList: $('validation-list'), preview: $('preview'), device: $('device'), runtimeLog: $('runtime-log'), previewDifficulty: $('preview-difficulty'),
     previewPreset: $('preview-preset'), previewWidth: $('preview-width'), previewHeight: $('preview-height'),
-    downloadPng: $('download-png'), copyUrl: $('copy-url'), downloadHtml: $('download-html'), qrOpenHelp: $('qr-open-help'),
+    downloadPng: $('download-png'), downloadSvg: $('download-svg'), printQr: $('print-qr'), copyUrl: $('copy-url'), downloadHtml: $('download-html'), qrOpenHelp: $('qr-open-help'),
     downloadReport: $('download-report'), exampleSelect: $('example-select'), fileActions: $('file-actions'),
     sampleDocumentationOpen: $('sample-documentation-open'), sampleDocumentationOverlay: $('sample-documentation-overlay'),
     sampleDocumentationTitle: $('sample-documentation-title'), sampleDocumentationContent: $('sample-documentation-content'),
@@ -20936,7 +21161,7 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
   };
 
   var state = {
-    html: '', spec: null, dataUrl: '', qr: null, checks: [], runtime: null, checksum: null,
+    html: '', spec: null, dataUrl: '', qr: null, qrCells: null, checks: [], runtime: null, checksum: null,
     roundtrip: null, report: null, sizeAnalysis: null, optimization: null, previewToken: '', previewHtml: '', runtimeMessages: [],
     iterations: [], comparisons: [], buildId: 0, mode: 'code', specEditorMode: 'form', importedQrProfile: null, qrEmulation: null,
     sampleDocumentationLastFocus: null, previewBlocked: []
@@ -21806,6 +22031,8 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
   }
 
   function clearQr() {
+    state.qrCells = null;
+    if (qrPrintController) qrPrintController.invalidate();
     setQrExpanded(false);
     elements.qrZoom.disabled = true;
     var context = elements.canvas.getContext('2d');
@@ -21828,6 +22055,8 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     elements.qrCorrectionNote.textContent = 'Уровень будет выбран после расчёта нагрузки.';
     elements.checksum.textContent = '—';
     elements.downloadPng.disabled = true;
+    elements.downloadSvg.disabled = true;
+    elements.printQr.disabled = true;
     elements.copyUrl.disabled = true;
     elements.downloadHtml.disabled = true;
     elements.qrOpenHelp.hidden = true;
@@ -21866,15 +22095,18 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, size, size);
     context.fillStyle = '#000000';
+    var cells = [];
     for (var row = 0; row < modules; row++) {
+      cells[row] = [];
       for (var column = 0; column < modules; column++) {
-        if (model.isDark(row, column)) context.fillRect((column + quiet) * scale, (row + quiet) * scale, scale, scale);
+        cells[row][column] = !!model.isDark(row, column);
+        if (cells[row][column]) context.fillRect((column + quiet) * scale, (row + quiet) * scale, scale, scale);
       }
     }
     elements.canvas.style.display = 'block';
     elements.placeholder.style.display = 'none';
     elements.qrZoom.disabled = false;
-    return { version: version, modules: modules, pixels: size, ecc: ecc, scale: scale, quietZone: quiet };
+    return { cells: cells, details: { version: version, modules: modules, pixels: size, ecc: ecc, scale: scale, quietZone: quiet } };
   }
 
   function decodeRenderedQr() {
@@ -22063,7 +22295,8 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
       var scale = clamp(elements.moduleScale.value, 1, 20, 6);
       var quiet = clamp(elements.quietZone.value, 0, 16, 4);
       renderSizeAnalysis(html, spec, encoding, ecc, optimization);
-      var qr = renderQr(dataUrl, ecc, scale, quiet);
+      var rendered = renderQr(dataUrl, ecc, scale, quiet);
+      var qr = rendered.details;
       qr.emulation = state.qrEmulation ? {
         sourceFile: state.qrEmulation.sourceFile,
         sourceVersion: state.qrEmulation.sourceVersion,
@@ -22082,6 +22315,7 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
       state.spec = spec;
       state.dataUrl = dataUrl;
       state.qr = qr;
+      state.qrCells = rendered.cells;
       if (elements.qrZoom.classList.contains('expanded')) fitExpandedQr();
       state.checksum = sourceChecksum;
       state.runtime = matchingRuntime;
@@ -22098,6 +22332,8 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
       setRoundtrip(exact, exact ? 'Содержимое восстановлено без изменений' : 'Восстановленное содержимое отличается', exact ? 'Декодировано из пикселей QR и побайтово сопоставлено. ' + sourceChecksum.algorithm + ': ' + sourceChecksum.value.slice(0, 16) + '…' : 'Сравнение контрольных сумм не пройдено.');
 
       elements.downloadPng.disabled = false;
+      elements.downloadSvg.disabled = !exact;
+      elements.printQr.disabled = !exact;
       elements.copyUrl.disabled = false;
       elements.downloadHtml.disabled = false;
       elements.qrOpenHelp.hidden = !exact;
@@ -22533,6 +22769,12 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     link.click();
   }
 
+  function downloadSvg() {
+    if (!state.qrCells || !state.roundtrip || !state.roundtrip.ok) return;
+    var svg = qrExportApi.toSvg(state.qrCells, { quietZone: state.qr.quietZone, title: state.spec.title });
+    downloadBlob(svg, 'image/svg+xml;charset=utf-8', state.spec.id + '-qr.svg');
+  }
+
   function addRuntimeMessage(text, className) {
     if (state.runtimeMessages.indexOf(text) >= 0) return;
     state.runtimeMessages.push(text);
@@ -22738,6 +22980,7 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
   $('clear').addEventListener('click', function () { if (state.mode === 'simple') resetSimpleWorkspace(); else resetWorkspace(); });
   $('copy-url').addEventListener('click', copyDataUrl);
   $('download-png').addEventListener('click', downloadPng);
+  elements.downloadSvg.addEventListener('click', downloadSvg);
   $('download-html').addEventListener('click', function () { if (state.html) downloadBlob(state.html, 'text/html;charset=utf-8', (state.spec && state.spec.id || 'microapp') + '.html'); });
   $('download-report').addEventListener('click', function () { if (state.report) downloadBlob(JSON.stringify(createReport(), null, 2), 'application/json;charset=utf-8', (state.spec && state.spec.id || 'microapp') + '-validation-report.json'); });
   elements.validationToggle.addEventListener('click', function () { setValidationExpanded(elements.validationDetails.hidden); });
@@ -22805,6 +23048,13 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
   }
   if (simpleBuilder) writeSimpleConfig(simpleBuilder.DEFAULT_CONFIG);
   populateExamples();
+  qrPrintController = qrExportApi.createController({
+    getCurrent: function () {
+      return state.qrCells && state.roundtrip && state.roundtrip.ok ? {
+        matrix: state.qrCells, quietZone: state.qr.quietZone, title: state.spec.title, revision: String(state.buildId)
+      } : null;
+    }
+  });
   loadSample(sample.defaultId);
   draftController = window.QRMicroappsDraftController.create({
     read: readDraftSnapshot, restore: restoreDraftSnapshot, status: setStatus, download: downloadBlob,

@@ -9,6 +9,8 @@
   var comparisonApi = window.QRMicroappsComparison;
   var sample = window.QRMicroappsSample;
   var deviceTestApi = window.QRMicroappsDeviceTest;
+  var qrExportApi = window.QRMicroappsQrExport;
+  var qrPrintController = null;
   var $ = function (id) { return document.getElementById(id); };
   var elements = {
     themeToggle: $('theme-toggle'), themeToggleIcon: $('theme-toggle-icon'), themeToggleLabel: $('theme-toggle-label'),
@@ -23,7 +25,7 @@
     validationRemarks: $('validation-remarks'), validationToggle: $('validation-toggle'), validationDetails: $('validation-details'),
     validationList: $('validation-list'), preview: $('preview'), device: $('device'), runtimeLog: $('runtime-log'), previewDifficulty: $('preview-difficulty'),
     previewPreset: $('preview-preset'), previewWidth: $('preview-width'), previewHeight: $('preview-height'),
-    downloadPng: $('download-png'), copyUrl: $('copy-url'), downloadHtml: $('download-html'), qrOpenHelp: $('qr-open-help'),
+    downloadPng: $('download-png'), downloadSvg: $('download-svg'), printQr: $('print-qr'), copyUrl: $('copy-url'), downloadHtml: $('download-html'), qrOpenHelp: $('qr-open-help'),
     downloadReport: $('download-report'), exampleSelect: $('example-select'), fileActions: $('file-actions'),
     sampleDocumentationOpen: $('sample-documentation-open'), sampleDocumentationOverlay: $('sample-documentation-overlay'),
     sampleDocumentationTitle: $('sample-documentation-title'), sampleDocumentationContent: $('sample-documentation-content'),
@@ -59,7 +61,7 @@
   };
 
   var state = {
-    html: '', spec: null, dataUrl: '', qr: null, checks: [], runtime: null, checksum: null,
+    html: '', spec: null, dataUrl: '', qr: null, qrCells: null, checks: [], runtime: null, checksum: null,
     roundtrip: null, report: null, sizeAnalysis: null, optimization: null, previewToken: '', previewHtml: '', runtimeMessages: [],
     iterations: [], comparisons: [], buildId: 0, mode: 'code', specEditorMode: 'form', importedQrProfile: null, qrEmulation: null,
     sampleDocumentationLastFocus: null, previewBlocked: []
@@ -929,6 +931,8 @@
   }
 
   function clearQr() {
+    state.qrCells = null;
+    if (qrPrintController) qrPrintController.invalidate();
     setQrExpanded(false);
     elements.qrZoom.disabled = true;
     var context = elements.canvas.getContext('2d');
@@ -951,6 +955,8 @@
     elements.qrCorrectionNote.textContent = 'Уровень будет выбран после расчёта нагрузки.';
     elements.checksum.textContent = '—';
     elements.downloadPng.disabled = true;
+    elements.downloadSvg.disabled = true;
+    elements.printQr.disabled = true;
     elements.copyUrl.disabled = true;
     elements.downloadHtml.disabled = true;
     elements.qrOpenHelp.hidden = true;
@@ -989,15 +995,18 @@
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, size, size);
     context.fillStyle = '#000000';
+    var cells = [];
     for (var row = 0; row < modules; row++) {
+      cells[row] = [];
       for (var column = 0; column < modules; column++) {
-        if (model.isDark(row, column)) context.fillRect((column + quiet) * scale, (row + quiet) * scale, scale, scale);
+        cells[row][column] = !!model.isDark(row, column);
+        if (cells[row][column]) context.fillRect((column + quiet) * scale, (row + quiet) * scale, scale, scale);
       }
     }
     elements.canvas.style.display = 'block';
     elements.placeholder.style.display = 'none';
     elements.qrZoom.disabled = false;
-    return { version: version, modules: modules, pixels: size, ecc: ecc, scale: scale, quietZone: quiet };
+    return { cells: cells, details: { version: version, modules: modules, pixels: size, ecc: ecc, scale: scale, quietZone: quiet } };
   }
 
   function decodeRenderedQr() {
@@ -1186,7 +1195,8 @@
       var scale = clamp(elements.moduleScale.value, 1, 20, 6);
       var quiet = clamp(elements.quietZone.value, 0, 16, 4);
       renderSizeAnalysis(html, spec, encoding, ecc, optimization);
-      var qr = renderQr(dataUrl, ecc, scale, quiet);
+      var rendered = renderQr(dataUrl, ecc, scale, quiet);
+      var qr = rendered.details;
       qr.emulation = state.qrEmulation ? {
         sourceFile: state.qrEmulation.sourceFile,
         sourceVersion: state.qrEmulation.sourceVersion,
@@ -1205,6 +1215,7 @@
       state.spec = spec;
       state.dataUrl = dataUrl;
       state.qr = qr;
+      state.qrCells = rendered.cells;
       if (elements.qrZoom.classList.contains('expanded')) fitExpandedQr();
       state.checksum = sourceChecksum;
       state.runtime = matchingRuntime;
@@ -1221,6 +1232,8 @@
       setRoundtrip(exact, exact ? 'Содержимое восстановлено без изменений' : 'Восстановленное содержимое отличается', exact ? 'Декодировано из пикселей QR и побайтово сопоставлено. ' + sourceChecksum.algorithm + ': ' + sourceChecksum.value.slice(0, 16) + '…' : 'Сравнение контрольных сумм не пройдено.');
 
       elements.downloadPng.disabled = false;
+      elements.downloadSvg.disabled = !exact;
+      elements.printQr.disabled = !exact;
       elements.copyUrl.disabled = false;
       elements.downloadHtml.disabled = false;
       elements.qrOpenHelp.hidden = !exact;
@@ -1656,6 +1669,12 @@
     link.click();
   }
 
+  function downloadSvg() {
+    if (!state.qrCells || !state.roundtrip || !state.roundtrip.ok) return;
+    var svg = qrExportApi.toSvg(state.qrCells, { quietZone: state.qr.quietZone, title: state.spec.title });
+    downloadBlob(svg, 'image/svg+xml;charset=utf-8', state.spec.id + '-qr.svg');
+  }
+
   function addRuntimeMessage(text, className) {
     if (state.runtimeMessages.indexOf(text) >= 0) return;
     state.runtimeMessages.push(text);
@@ -1861,6 +1880,7 @@
   $('clear').addEventListener('click', function () { if (state.mode === 'simple') resetSimpleWorkspace(); else resetWorkspace(); });
   $('copy-url').addEventListener('click', copyDataUrl);
   $('download-png').addEventListener('click', downloadPng);
+  elements.downloadSvg.addEventListener('click', downloadSvg);
   $('download-html').addEventListener('click', function () { if (state.html) downloadBlob(state.html, 'text/html;charset=utf-8', (state.spec && state.spec.id || 'microapp') + '.html'); });
   $('download-report').addEventListener('click', function () { if (state.report) downloadBlob(JSON.stringify(createReport(), null, 2), 'application/json;charset=utf-8', (state.spec && state.spec.id || 'microapp') + '-validation-report.json'); });
   elements.validationToggle.addEventListener('click', function () { setValidationExpanded(elements.validationDetails.hidden); });
@@ -1928,6 +1948,13 @@
   }
   if (simpleBuilder) writeSimpleConfig(simpleBuilder.DEFAULT_CONFIG);
   populateExamples();
+  qrPrintController = qrExportApi.createController({
+    getCurrent: function () {
+      return state.qrCells && state.roundtrip && state.roundtrip.ok ? {
+        matrix: state.qrCells, quietZone: state.qr.quietZone, title: state.spec.title, revision: String(state.buildId)
+      } : null;
+    }
+  });
   loadSample(sample.defaultId);
   draftController = window.QRMicroappsDraftController.create({
     read: readDraftSnapshot, restore: restoreDraftSnapshot, status: setStatus, download: downloadBlob,

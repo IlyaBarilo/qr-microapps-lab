@@ -238,8 +238,10 @@
 
           <div class="download-actions">
             <button id="download-png" class="button subtle" type="button" disabled>Скачать PNG</button>
+            <button id="download-svg" class="button subtle" type="button" disabled>Скачать SVG</button>
             <button id="copy-url" class="button subtle" type="button" disabled>Копировать data URL</button>
             <button id="download-html" class="button subtle" type="button" disabled>Скачать HTML</button>
+            <button id="print-qr" class="button subtle" type="button" disabled>Печать QR</button>
           </div>
         </div>
 
@@ -467,6 +469,35 @@
     </div>
   </section>
 
+  <dialog id="qr-print-dialog" class="qr-print-dialog" aria-labelledby="qr-print-dialog-title">
+    <div class="qr-print-head">
+      <div><p class="step">ПЕЧАТНЫЙ ЛИСТ</p><h2 id="qr-print-dialog-title">Текущий QR на бумаге</h2></div>
+      <button id="qr-print-close" class="button subtle small" type="button" autofocus>Закрыть</button>
+    </div>
+    <div class="qr-print-layout">
+      <div class="qr-print-settings">
+        <label>Название<input id="qr-print-title" type="text" maxlength="80" required></label>
+        <label>Размер QR с белым полем, мм<input id="qr-print-size" type="number" min="20" max="180" step="0.1" value="100" required></label>
+        <p id="qr-print-geometry" class="qr-print-hint"></p>
+        <p id="qr-print-margin-note" class="qr-print-hint"></p>
+        <label>Инструкция на листе<textarea id="qr-print-instruction" rows="5" maxlength="400"></textarea></label>
+        <p class="qr-print-hint">A4, книжная ориентация. В окне печати выберите масштаб 100 % и отключите колонтитулы. Перед тиражом проверьте пробную распечатку.</p>
+        <p id="qr-print-message" class="qr-print-message" role="status" aria-live="polite"></p>
+        <button id="qr-print-confirm" class="button primary" type="button">Печать / сохранить PDF</button>
+      </div>
+      <div id="qr-print-stage" class="qr-print-stage">
+        <div id="qr-print-sheet-wrap" class="qr-print-sheet-wrap">
+          <article id="qr-print-sheet" class="qr-print-sheet">
+            <h1 id="qr-print-heading"></h1>
+            <div id="qr-print-code" class="qr-print-code"></div>
+            <p id="qr-print-copy" class="qr-print-copy"></p>
+            <p class="qr-print-credit">QR Microapps Lab</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
   <footer><span>QR Microapps Lab<span data-app-version-wrap hidden> · версия <span data-app-version></span></span></span><span>QR — один из способов упаковки, а не гарантия запуска штатной камерой любого телефона.</span></footer>
 
   <script>
@@ -497,6 +528,7 @@
   <script src="editor/comparison.js"></script>
   <script src="editor/sample.js"></script>
   <script src="editor/device-test.js"></script>
+  <script src="editor/qr-export.js"></script>
   <script src="editor/app.js"></script>
 </body>
 </html>

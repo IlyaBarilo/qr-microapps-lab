@@ -11,6 +11,28 @@ const history = require('../editor/history.js');
 const projectFile = require('../editor/project.js');
 const comparison = require('../editor/comparison.js');
 const deviceTest = require('../editor/device-test.js');
+const qrExport = require('../editor/qr-export.js');
+
+test('физический размер SVG включает белое поле и проверяет допустимые границы', () => {
+  const layout = qrExport.geometry(177, 4, 92.5);
+  assert.equal(layout.totalModules, 185);
+  assert.equal(layout.moduleMm, 0.5);
+  assert.equal(layout.marginMm, 2);
+  for (const args of [[20, 4, 100], [22, 4, 100], [181, 4, 100], [21, -1, 100], [21, 17, 100], [21, 4, NaN], [21, 4, 0], [21, 4, 181]]) {
+    assert.throws(() => qrExport.geometry(...args));
+  }
+});
+
+test('SVG отклоняет испорченную матрицу и не превращает название в разметку', () => {
+  const matrix = Array.from({ length: 21 }, () => Array(21).fill(false));
+  matrix[0][0] = true;
+  const svg = qrExport.toSvg(matrix, { quietZone: 4, title: '<script>alert("x")</script>&\u0001\uD800' });
+  assert.ok(svg.includes('&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;&amp;'));
+  assert.ok(!svg.includes('<script>'));
+  assert.ok(!/[\u0001\uD800]/.test(svg));
+  matrix[1].pop();
+  assert.throws(() => qrExport.toSvg(matrix, { quietZone: 4 }));
+});
 
 test('тест устройства формирует самостоятельный быстрый лист и шесть страниц полного набора', () => {
   const simpleGame = sample.getById('tiny-quiz');

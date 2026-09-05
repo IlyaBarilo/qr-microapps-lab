@@ -60,7 +60,7 @@ function build() {
     if (relativePath === 'editor/vendor/jsQR.js') banner = '/*! jsQR 1.4.0 | Apache License 2.0 | Полный текст лицензии встроен в этот HTML. */';
     return `  <script data-source="${relativePath}">\n${banner}\n${escapeInlineScript(readFileSync(fullPath, 'utf8').replace(/^\uFEFF/, '').trim())}\n  <\/script>`;
   });
-  if (scriptsInlined !== 18) throw new Error(`Ожидалось 18 локальных скриптов, встроено: ${scriptsInlined}.`);
+  if (scriptsInlined !== 19) throw new Error(`Ожидалось 19 локальных скриптов, встроено: ${scriptsInlined}.`);
 
   const releaseVersionTokens = html.match(/__APP_VERSION__/g) || [];
   if (releaseVersionTokens.length !== 1) throw new Error(`Ожидалась одна релизная метка версии, найдено: ${releaseVersionTokens.length}.`);

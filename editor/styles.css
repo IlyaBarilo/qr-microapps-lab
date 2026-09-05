@@ -125,3 +125,39 @@ body.sample-documentation-open{overflow:hidden}.sample-documentation-overlay{pos
 .draft-actions select{width:100%;min-width:0}
 .qr-margin-hint{margin:8px 0 0;color:var(--muted);font-size:12px}
 label[for]:has(+ input[type=file]:focus-visible){outline:3px solid rgba(91,184,255,.55);outline-offset:2px}
+
+/* Vector export and a physical A4 preview for the current QR. */
+.output-panel .download-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+.output-panel .download-actions #print-qr{grid-column:1/-1}
+body.qr-print-open{overflow:hidden}
+.qr-print-dialog{width:min(1200px,calc(100vw - 32px));max-width:none;max-height:calc(100vh - 32px);margin:auto;border:1px solid var(--line);border-radius:20px;padding:20px;color:var(--text);background:var(--bg);overflow:auto}
+.qr-print-dialog::backdrop{background:rgba(2,13,19,.85);backdrop-filter:blur(6px)}
+.qr-print-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.qr-print-head h2{margin:0}.qr-print-head .step{margin:0 0 5px}
+.qr-print-layout{display:grid;grid-template-columns:minmax(240px,300px) minmax(0,1fr);align-items:start;gap:24px}
+.qr-print-settings{display:grid;gap:14px;min-width:0}
+.qr-print-settings label{display:grid;gap:6px;font-size:13px;font-weight:700}
+.qr-print-settings input,.qr-print-settings textarea{width:100%;min-width:0;min-height:42px;margin:0;border:1px solid var(--line);border-radius:12px;padding:9px 10px;color:var(--text);background:var(--panel)}
+.qr-print-settings textarea{resize:vertical;min-height:110px;font:14px/1.5 system-ui,sans-serif}
+.qr-print-hint{margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+.qr-print-hint:empty,.qr-print-message:empty{display:none}
+.qr-print-message{margin:0;color:var(--danger);font-size:13px;line-height:1.45}
+.qr-print-stage{min-width:0;width:100%}
+.qr-print-sheet-wrap{margin:auto;overflow:hidden}
+.qr-print-sheet{box-sizing:border-box;display:flex;align-items:center;flex-direction:column;gap:6mm;width:210mm;height:296mm;padding:12mm;overflow:hidden;background:#fff;color:#111;color-scheme:light;text-align:center;transform:scale(var(--qr-sheet-scale,1));transform-origin:top left;box-shadow:0 3px 20px rgba(0,0,0,.2)}
+.qr-print-sheet h1{flex:0 0 auto;width:100%;margin:0;font:700 22pt/1.15 Arial,sans-serif;overflow-wrap:anywhere}
+.qr-print-code{flex:0 0 auto;line-height:0;background:#fff}
+.qr-print-code svg{display:block;max-width:none;max-height:none}
+.qr-print-copy{flex:0 0 auto;width:100%;margin:0;font:12pt/1.45 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}
+.qr-print-credit{flex:0 0 auto;margin:auto 0 0;color:#666;font:9pt/1.2 Arial,sans-serif}
+@media(max-width:760px){.qr-print-dialog{width:calc(100vw - 16px);max-height:calc(100vh - 16px);padding:14px}.qr-print-layout{grid-template-columns:minmax(0,1fr);gap:20px}.qr-print-head h2{font-size:20px}}
+@media print{
+  body.qr-print-open{margin:0!important;padding:0!important;overflow:visible!important}
+  body.qr-print-open> :not(.qr-print-dialog){display:none!important}
+  .qr-print-dialog:not([open]){display:none!important}
+  .qr-print-dialog[open]{display:block!important;position:static!important;inset:auto!important;width:210mm!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;overflow:visible!important;background:#fff!important;box-shadow:none!important}
+  .qr-print-dialog::backdrop{display:none!important}
+  .qr-print-head,.qr-print-settings{display:none!important}
+  .qr-print-layout,.qr-print-stage,.qr-print-sheet-wrap{display:block!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;overflow:visible!important}
+  .qr-print-sheet{transform:none!important;box-shadow:none!important;break-inside:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+}
