@@ -22,7 +22,8 @@ function read(relativePath) {
   'docs/images/qr-microapps-lab.webp',
   '.github/workflows/ci.yml', '.github/workflows/pages.yml',
   'tests/package.json', 'tests/package-lock.json', 'tests/playwright.config.js', 'tests/e2e/lab.spec.js', 'tests/standalone-browser-smoke.mjs',
-  'tools/build-standalone.mjs', 'tools/set-standalone-version.mjs'
+  'tools/build-standalone.mjs', 'tools/set-standalone-version.mjs', 'tools/build-html-parser.mjs',
+  'editor/vendor/parse5.js', 'editor/vendor/parse5.LICENSE', 'editor/vendor/entities.LICENSE'
 ].forEach(requireFile);
 
 const firstPartyScripts = readdirSync(join(root, 'editor'))
@@ -33,7 +34,7 @@ for (const file of firstPartyScripts) {
   if (result.status !== 0) errors.push(`Ошибка синтаксиса ${file}: ${(result.stderr || result.stdout).trim()}`);
 }
 
-['tests/playwright.config.js', 'tests/e2e/lab.spec.js', 'tests/standalone-browser-smoke.mjs', 'tools/build-standalone.mjs', 'tools/set-standalone-version.mjs'].forEach((relativePath) => {
+['tests/playwright.config.js', 'tests/e2e/lab.spec.js', 'tests/standalone-browser-smoke.mjs', 'tools/build-standalone.mjs', 'tools/set-standalone-version.mjs', 'tools/build-html-parser.mjs'].forEach((relativePath) => {
   const result = spawnSync(process.execPath, ['--check', join(root, relativePath)], { encoding: 'utf8' });
   if (result.status !== 0) errors.push(`Ошибка синтаксиса ${relativePath}: ${(result.stderr || result.stdout).trim()}`);
 });
@@ -87,7 +88,9 @@ if (!/npm --prefix tests run test:e2e/.test(ciWorkflow)) errors.push('CI не з
 if (!/playwright install --with-deps chromium/.test(ciWorkflow)) errors.push('CI не устанавливает Chromium для E2E-тестов.');
 if (!/permissions:\s*\n\s*contents: read/.test(ciWorkflow)) errors.push('CI должен использовать минимальное разрешение contents: read.');
 
+if (!/npm --prefix tests run test:standalone-browser/.test(ciWorkflow)) errors.push('CI должен запускать проверку автономного HTML в браузере.');
 const pagesWorkflow = read('.github/workflows/pages.yml');
+if (!/npm --prefix tests run check:all/.test(pagesWorkflow)) errors.push('Перед публикацией нужны модульные и браузерные проверки.');
 if (!/name:\s*Publish release/.test(pagesWorkflow)) errors.push('Единый workflow публикации должен иметь понятное имя.');
 if (!/workflow_dispatch:/.test(pagesWorkflow)) errors.push('Публикация должна поддерживать ручной запуск.');
 if (!/release:\s*\n\s*types:\s*\[published\]/.test(pagesWorkflow)) errors.push('Публикация должна автоматически запускаться при публикации релиза.');

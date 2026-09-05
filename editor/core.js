@@ -1,12 +1,15 @@
 (function (root, factory) {
-  var api = factory();
+  var commonjs = typeof module === 'object' && module.exports;
+  var api = factory(commonjs ? require('./optimizer.js') : root.QRMicroappsOptimizer,
+    commonjs ? require('./source-analysis.js') : root.QRMicroappsSourceAnalysis);
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.QRMicroappsCore = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (optimizer, sourceAnalysis) {
   'use strict';
 
   var QR_LIMITS = { L: 2953, M: 2331, Q: 1663, H: 1273 };
   var DATA_URL_PREFIX = 'data:text/html;charset=utf-8';
+  var VALIDATOR_VERSION = '0.2';
 
   function utf8Bytes(value) {
     return new TextEncoder().encode(String(value == null ? '' : value));
@@ -86,168 +89,8 @@
     return /^data:/i.test(source) ? parseDataUrl(source).text : String(value);
   }
 
-  function compactHtmlTag(tag) {
-    var output = '';
-    var quote = '';
-    var pendingSpace = false;
-    for (var index = 0; index < tag.length; index++) {
-      var character = tag[index];
-      if (quote) {
-        output += character;
-        if (character === quote) quote = '';
-        continue;
-      }
-      if (character === '"' || character === "'") {
-        if (pendingSpace && output && !/[<=\s]$/.test(output)) output += ' ';
-        pendingSpace = false;
-        quote = character;
-        output += character;
-        continue;
-      }
-      if (/\s/.test(character)) {
-        pendingSpace = true;
-        continue;
-      }
-      if (pendingSpace) {
-        var previous = output[output.length - 1] || '';
-        if (character !== '>' && character !== '/' && character !== '=' && previous !== '<' && previous !== '/' && previous !== '=' && previous !== '!') output += ' ';
-        pendingSpace = false;
-      }
-      output += character;
-    }
-    return output;
-  }
-
-  function compactJavaScript(javascript) {
-    var source = String(javascript || '');
-    var output = '';
-    var state = 'code';
-    var quote = '';
-    for (var index = 0; index < source.length;) {
-      var character = source[index];
-      var next = source[index + 1] || '';
-      if (state === 'string' || state === 'template' || state === 'regex') {
-        output += character;
-        if (character === '\\' && index + 1 < source.length) output += source[++index];
-        else if (character === quote) state = 'code';
-        index++;
-        continue;
-      }
-      if (state === 'line-comment') {
-        output += character;
-        index++;
-        if (character === '\n' || character === '\r') state = 'code';
-        continue;
-      }
-      if (state === 'block-comment') {
-        output += character;
-        if (character === '*' && next === '/') {
-          output += next;
-          index += 2;
-          state = 'code';
-        } else index++;
-        continue;
-      }
-      if (character === '"' || character === "'") {
-        state = 'string';
-        quote = character;
-        output += character;
-        index++;
-        continue;
-      }
-      if (character === '`') {
-        state = 'template';
-        quote = character;
-        output += character;
-        index++;
-        continue;
-      }
-      if (character === '/' && next === '/') {
-        state = 'line-comment';
-        output += '//';
-        index += 2;
-        continue;
-      }
-      if (character === '/' && next === '*') {
-        state = 'block-comment';
-        output += '/*';
-        index += 2;
-        continue;
-      }
-      if (character === '/') {
-        state = 'regex';
-        quote = '/';
-        output += character;
-        index++;
-        continue;
-      }
-      if (/\s/.test(character)) {
-        var start = index;
-        while (index < source.length && /\s/.test(source[index])) index++;
-        var whitespace = source.slice(start, index);
-        var previous = output[output.length - 1] || '';
-        var following = source[index] || '';
-        var hasLineBreak = /[\r\n]/.test(whitespace);
-        if (hasLineBreak) {
-          if (!/[\[\(,;:]$/.test(previous) && !/[\]\),;:]/.test(following) && output) output += '\n';
-        } else if (previous !== '\n' && output && !/[\[\]\(\),;:{}=]/.test(previous) && !/[\[\]\(\),;:{}=]/.test(following)) output += ' ';
-        continue;
-      }
-      output += character;
-      index++;
-    }
-    return output.trim();
-  }
-
-  function optimizeHtml(value) {
-    var source = String(value == null ? '' : value);
-    var originalBytes = byteLength(source);
-    var protectedContents = [];
-    var tokenPrefix = '\uE000QRMLAB';
-    while (source.indexOf(tokenPrefix) >= 0) tokenPrefix += 'X';
-    var protectedSource = source.replace(/<(script|style|pre|textarea|template|svg|math)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, function (block, tagName) {
-      var openEnd = block.indexOf('>') + 1;
-      var closeStart = block.toLowerCase().lastIndexOf('</');
-      var token = tokenPrefix + protectedContents.length + '\uE001';
-      var content = block.slice(openEnd, closeStart);
-      var kind = tagName.toLowerCase();
-      protectedContents.push(kind === 'style' ? compactCss(content) : kind === 'script' ? compactJavaScript(content) : content);
-      return block.slice(0, openEnd) + token + block.slice(closeStart);
-    });
-    var commentsRemoved = 0;
-    var optimized = protectedSource.replace(/<!--[\s\S]*?-->/g, function (comment) {
-      if (/^<!--\s*\[if\b/i.test(comment) || /<!\[endif\]\s*-->$/i.test(comment)) return comment;
-      commentsRemoved++;
-      return '';
-    });
-    var blockTags = {
-      html: 1, head: 1, body: 1, title: 1, meta: 1, link: 1, base: 1,
-      main: 1, section: 1, article: 1, aside: 1, header: 1, footer: 1, nav: 1,
-      div: 1, p: 1, h1: 1, h2: 1, h3: 1, h4: 1, h5: 1, h6: 1,
-      ul: 1, ol: 1, li: 1, dl: 1, dt: 1, dd: 1, table: 1, thead: 1,
-      tbody: 1, tfoot: 1, tr: 1, th: 1, td: 1, form: 1, fieldset: 1,
-      legend: 1, details: 1, summary: 1, figure: 1, figcaption: 1,
-      blockquote: 1, canvas: 1, video: 1, audio: 1, source: 1,
-      script: 1, style: 1, pre: 1, textarea: 1, template: 1, svg: 1, math: 1
-    };
-    optimized = optimized.replace(/(<\/?([a-z][\w:-]*)\b[^>]*>)\s+(?=<\/?([a-z][\w:-]*)\b)/gi, function (whole, leftTag, leftName, rightName) {
-      return blockTags[leftName.toLowerCase()] || blockTags[rightName.toLowerCase()] ? leftTag : leftTag + ' ';
-    });
-    optimized = optimized.replace(/(<!doctype\b[^>]*>)\s+(?=<html\b)/i, '$1').replace(/<[^>]+>/g, compactHtmlTag).trim();
-    protectedContents.forEach(function (content, index) {
-      optimized = optimized.split(tokenPrefix + index + '\uE001').join(content);
-    });
-    var optimizedBytes = byteLength(optimized);
-    var savedBytes = Math.max(0, originalBytes - optimizedBytes);
-    return {
-      html: optimized,
-      originalBytes: originalBytes,
-      optimizedBytes: optimizedBytes,
-      savedBytes: savedBytes,
-      savedPercent: originalBytes ? savedBytes / originalBytes * 100 : 0,
-      commentsRemoved: commentsRemoved,
-      changed: optimized !== source
-    };
+  function optimizeHtml(value, options) {
+    return optimizer.optimizeHtml(value, options);
   }
 
   function getQrLimit(ecc) {
@@ -631,56 +474,20 @@
     return values.filter(function (value, index) { return values.indexOf(value) === index; });
   }
 
-  function attributeValue(tag, name) {
-    var pattern = new RegExp('\\b' + name + '\\s*=\\s*(?:"([^"]*)"|\'([^\']*)\'|([^\\s>]+))', 'i');
-    var match = pattern.exec(tag || '');
-    return match ? (match[1] || match[2] || match[3] || '').trim() : '';
+  var lastAnalysisHtml = null;
+  var lastAnalysis = null;
+
+  function analyzeSource(html) {
+    html = String(html == null ? '' : html);
+    if (html !== lastAnalysisHtml) {
+      lastAnalysis = sourceAnalysis.analyze(html);
+      lastAnalysisHtml = html;
+    }
+    return lastAnalysis;
   }
 
-  function findExternalResources(html) {
-    var found = [];
-    var attributes = /<(script|link|img|iframe|audio|video|source|track|object|embed|input|image|use|a|form)\b[^>]*?\b(src|href|xlink:href|srcset|data|poster|action)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi;
-    var match;
-    while ((match = attributes.exec(html))) {
-      var value = (match[3] || match[4] || match[5] || '').trim();
-      if (value && !/^(?:data:|blob:|#|about:blank$)/i.test(value)) found.push(match[1] + '[' + match[2] + '] → ' + value.slice(0, 120));
-    }
-    var cssUrls = /url\(\s*(?:"([^"]*)"|'([^']*)'|([^\s)]+))\s*\)/gi;
-    while ((match = cssUrls.exec(html))) {
-      var cssValue = (match[1] || match[2] || match[3] || '').trim();
-      if (cssValue && !/^(?:data:|blob:|#)/i.test(cssValue)) found.push('CSS url() → ' + cssValue.slice(0, 120));
-    }
-    var cssImports = /@import\s+(?:"([^"]+)"|'([^']+)')/gi;
-    while ((match = cssImports.exec(html))) {
-      var importValue = (match[1] || match[2] || '').trim();
-      if (importValue && !/^(?:data:|blob:|#)/i.test(importValue)) found.push('CSS @import → ' + importValue.slice(0, 120));
-    }
-    var metaTags = html.match(/<meta\b[^>]*>/gi) || [];
-    metaTags.forEach(function (tag) {
-      if (!/^refresh$/i.test(attributeValue(tag, 'http-equiv'))) return;
-      var refresh = attributeValue(tag, 'content');
-      var target = /\burl\s*=\s*(?:"([^"]*)"|'([^']*)'|([^;\s]+))/i.exec(refresh);
-      var refreshUrl = target ? (target[1] || target[2] || target[3] || '').trim() : '';
-      if (!refreshUrl || !/^(?:data:|blob:|#|about:blank$)/i.test(refreshUrl)) found.push('meta[refresh] → ' + (refreshUrl || refresh || 'переход'));
-    });
-    if (/<base\b[^>]*href\s*=/i.test(html)) found.push('base[href]');
-    return unique(found);
-  }
-
-  function findNetworkApis(html) {
-    var patterns = [
-      ['fetch()', /\bfetch\s*\(/i],
-      ['XMLHttpRequest', /\bXMLHttpRequest\b/i],
-      ['WebSocket', /\bWebSocket\b/i],
-      ['EventSource', /\bEventSource\b/i],
-      ['sendBeacon()', /\bsendBeacon\s*\(/i],
-      ['importScripts()', /\bimportScripts\s*\(/i],
-      ['динамический import()', /\bimport\s*\(/i],
-      ['window.open()', /\bwindow\s*\.\s*open\s*\(/i],
-      ['переход через location', /(?:\b(?:window|document)\s*\.\s*)?\blocation(?:\s*\.\s*href)?\s*=|\blocation\s*\.\s*(?:assign|replace)\s*\(/i]
-    ];
-    return patterns.filter(function (entry) { return entry[1].test(html); }).map(function (entry) { return entry[0]; });
-  }
+  function findExternalResources(html) { return analyzeSource(html).external.slice(); }
+  function findNetworkApis(html) { return analyzeSource(html).network.slice(); }
 
   function countMarkupAndContent(source, totals) {
     var tagPattern = /<[^>]*>/g;
@@ -695,61 +502,7 @@
   }
 
   function compactCss(css) {
-    var source = String(css || '');
-    var withoutComments = '';
-    var quote = '';
-    for (var index = 0; index < source.length; index++) {
-      var character = source[index];
-      if (quote) {
-        withoutComments += character;
-        if (character === '\\' && index + 1 < source.length) withoutComments += source[++index];
-        else if (character === quote) quote = '';
-        continue;
-      }
-      if (character === '"' || character === "'") {
-        quote = character;
-        withoutComments += character;
-        continue;
-      }
-      if (character === '/' && source[index + 1] === '*') {
-        index += 2;
-        while (index < source.length && !(source[index] === '*' && source[index + 1] === '/')) index++;
-        index++;
-        continue;
-      }
-      withoutComments += character;
-    }
-    var output = '';
-    var pendingSpace = false;
-    quote = '';
-    for (var position = 0; position < withoutComments.length; position++) {
-      var current = withoutComments[position];
-      if (quote) {
-        output += current;
-        if (current === '\\' && position + 1 < withoutComments.length) output += withoutComments[++position];
-        else if (current === quote) quote = '';
-        continue;
-      }
-      if (current === '"' || current === "'") {
-        if (pendingSpace && output && !/[{}:;,>]$/.test(output)) output += ' ';
-        pendingSpace = false;
-        quote = current;
-        output += current;
-        continue;
-      }
-      if (/\s/.test(current)) {
-        pendingSpace = true;
-        continue;
-      }
-      if (pendingSpace) {
-        var previous = output[output.length - 1] || '';
-        if (output && !/[{}:;,>]$/.test(previous) && !/[{}:;,>]/.test(current)) output += ' ';
-        pendingSpace = false;
-      }
-      if (/[{}:;,>]/.test(current) && output[output.length - 1] === ' ') output = output.slice(0, -1);
-      output += current;
-    }
-    return output.replace(/;}/g, '}').trim();
+    return optimizer.compactCss(css);
   }
 
   function analyzeSize(html, options) {
@@ -883,34 +636,27 @@
     var network = findNetworkApis(html);
     var difficulty = inspectDifficulty(html);
     var reservedFormatIdentifiers = findReservedFormatIdentifiers(html);
+    var analysis = analyzeSource(html);
 
-    var doctypes = html.match(/<!doctype\s+html\s*>/gi) || [];
-    var validDoctype = doctypes.length === 1 && /^\s*<!doctype\s+html\s*>/i.test(html);
-    checks.push(result('single-html', 'HTML-документ', validDoctype ? 'pass' : 'fail', validDoctype ? 'Документ начинается с единственного <!doctype html>.' : 'Документ должен начинаться с единственного <!doctype html>.', doctypes.length > 1 ? 'Найдено doctype: ' + doctypes.length : ''));
+    var validDoctype = analysis.doctypes === 1 && /^\s*<!doctype\s+html\s*>/i.test(html);
+    checks.push(result('single-html', 'HTML-документ', validDoctype ? 'pass' : 'fail', validDoctype ? 'Документ начинается с единственного <!doctype html>.' : 'Документ должен начинаться с единственного <!doctype html>.', analysis.doctypes > 1 ? 'Найдено doctype: ' + analysis.doctypes : ''));
 
-    var hasUtf8 = /<meta\b[^>]*\bcharset\s*=\s*["']?utf-8["']?[^>]*>/i.test(html);
+    var hasUtf8 = analysis.hasUtf8;
     checks.push(result('charset', 'Кодировка UTF-8', hasUtf8 ? 'pass' : 'fail', hasUtf8 ? 'Тег meta charset=utf-8 найден.' : 'Добавьте meta charset=utf-8 для прямого открытия HTML с корректной кириллицей.'));
 
     if (technical.requiredViewport !== false) {
-      var viewportTags = html.match(/<meta\b[^>]*>/gi) || [];
-      var viewportTag = '';
-      viewportTags.some(function (tag) {
-        if (!/^viewport$/i.test(attributeValue(tag, 'name'))) return false;
-        viewportTag = tag;
-        return true;
-      });
-      var viewportContent = attributeValue(viewportTag, 'content');
+      var viewportContent = analysis.viewports[0] || '';
       var hasDeviceWidth = /(?:^|[,;\s])width\s*=\s*device-width(?:$|[,;\s])/i.test(viewportContent);
       var hasInitialScale = /(?:^|[,;\s])initial-scale\s*=\s*1(?:\.0+)?(?:$|[,;\s])/i.test(viewportContent);
-      var validViewport = !!viewportTag && hasDeviceWidth && hasInitialScale;
-      checks.push(result('viewport', 'Мобильный viewport', validViewport ? 'pass' : 'fail', validViewport ? 'Viewport содержит width=device-width и initial-scale=1.' : 'Добавьте meta viewport с width=device-width,initial-scale=1.', viewportTag && !validViewport ? viewportTag : ''));
+      var validViewport = !!viewportContent && hasDeviceWidth && hasInitialScale;
+      checks.push(result('viewport', 'Мобильный viewport', validViewport ? 'pass' : 'fail', validViewport ? 'Viewport содержит width=device-width и initial-scale=1.' : 'Добавьте meta viewport с width=device-width,initial-scale=1.', !validViewport ? viewportContent : ''));
     }
 
-    if (technical.externalResources === false) {
+    if (technical.externalResources !== true) {
       checks.push(result('external-resources', 'Внешние ресурсы', external.length ? 'fail' : 'pass', external.length ? 'Обнаружены внешние или файловые зависимости.' : 'Ссылки на внешние ресурсы не обнаружены.', external.join('\n')));
     }
 
-    if (technical.networkRequests === false) {
+    if (technical.networkRequests !== true) {
       checks.push(result('network-apis', 'Сеть и навигация', network.length ? 'fail' : 'pass', network.length ? 'Обнаружены сетевые API или переходы из приложения.' : 'Явные сетевые API и программные переходы не обнаружены.', network.join(', ')));
     }
 
@@ -939,11 +685,19 @@
       reservedFormatIdentifiers.join(', ')
     ));
 
-    var nativeDialogs = html.match(/\b(?:alert|confirm|prompt)\s*\(/gi) || [];
+    var nativeDialogs = analysis.dialogs;
     checks.push(result('native-dialogs', 'Нативные диалоги', nativeDialogs.length ? 'warn' : 'pass', nativeDialogs.length ? 'Нативные диалоги могут мешать рестарту и блокировать интерфейс.' : 'alert/confirm/prompt не обнаружены.', unique(nativeDialogs).join(', ')));
+    checks.push(result('source-analysis', 'Разбор HTML, CSS и JavaScript', analysis.unparsed.length ? 'warn' : 'pass',
+      analysis.unparsed.length ? 'Часть исходника не удалось проверить статически. Отчёт не подтверждает полную автоматическую готовность.' : 'Разметка, стили и JavaScript разобраны. Проверка не доказывает отсутствие скрытых или динамически создаваемых операций.', analysis.unparsed.join('\n')));
 
     var qrLimit = getQrLimit(ecc);
     checks.push(result('payload-size', 'Вместимость QR', payloadBytes <= qrLimit ? 'pass' : 'fail', payloadBytes + ' из ' + qrLimit + ' байт по стандартной вместимости QR; кодирование ' + encoding + ', коррекция ' + ecc + '.'));
+    var quiet = options.quietZone;
+    var hasQuiet = Number.isInteger(quiet) && quiet >= 0 && quiet <= 16;
+    checks.push(result('qr-quiet-zone', 'Белое поле QR', !hasQuiet ? 'pending' : quiet < 4 ? 'fail' : 'pass', !hasQuiet
+      ? 'Ожидаются параметры созданного QR-кода.'
+      : quiet < 4 ? 'Белое поле ' + quiet + ' модулей меньше обязательных четырёх. Такой QR пригоден только для эксперимента; добавьте поле перед печатью.'
+        : 'Белое поле составляет ' + quiet + ' модулей с каждой стороны.'));
     if (ecc === 'L') {
       var mReduction = getReductionToFit(html, encoding, 'M');
       var reductionText = mReduction.payloadReduction
@@ -955,7 +709,7 @@
     }
 
     if (interfaceRules.touchControls) {
-      var touchHint = /(?:touchstart|pointerdown|pointerup|onclick\s*=|addEventListener\s*\(\s*["']click|<button\b)/i.test(html);
+      var touchHint = analysis.touch;
       checks.push(result('touch-controls', 'Сенсорное управление', touchHint ? 'pass' : 'warn', touchHint ? 'Обнаружены обработчики или элементы, доступные касанием.' : 'Сенсорное управление не удалось подтвердить статически.'));
     }
 
@@ -1012,7 +766,8 @@
     if (!options.runtime) {
       checks.push(result('preview-start', 'Запуск предпросмотра', 'pending', 'Ожидается запуск изолированного предпросмотра.'));
       checks.push(result('runtime-errors', 'Ошибки выполнения', 'pending', 'Ожидается запуск изолированного предпросмотра.'));
-      checks.push(result('blocked-operations', 'Заблокированные операции', 'pending', 'Ожидается запуск изолированного предпросмотра.'));
+      var earlyBlocked = Array.isArray(options.blockedOperations) ? options.blockedOperations : [];
+      checks.push(result('blocked-operations', 'Заблокированные операции', earlyBlocked.length ? 'fail' : 'pending', earlyBlocked.length ? 'Переход из предпросмотра заблокирован до завершения запуска.' : 'Ожидается запуск изолированного предпросмотра.', earlyBlocked.map(function (item) { return item.uri || item.directive; }).join('\n')));
     } else {
       var runtimeErrors = Array.isArray(options.runtime.errors) ? options.runtime.errors : [];
       var blockedOperations = Array.isArray(options.runtime.blocked) ? options.runtime.blocked : [];
@@ -1024,6 +779,32 @@
     return checks;
   }
 
+  function expectedCheckIds(spec, ecc) {
+    var technical = spec.technical || {};
+    var rules = spec.interface || {};
+    var ids = ['single-html', 'charset', 'reserved-format-identifiers', 'native-dialogs', 'source-analysis', 'payload-size',
+      'qr-quiet-zone', 'preview-start', 'runtime-errors', 'blocked-operations'];
+    if (technical.requiredViewport !== false) ids.push('viewport');
+    if (technical.externalResources !== true) ids.push('external-resources');
+    if (technical.networkRequests !== true) ids.push('network-apis');
+    if (spec.type === 'game' || spec.difficulty != null) ids.push('difficulty');
+    if (ecc === 'L') ids.push('low-ecc');
+    if (rules.touchControls) ids.push('touch-controls');
+    if (rules.noHorizontalScroll) ids.push('horizontal-overflow');
+    if (rules.noVerticalScroll !== false) ids.push('vertical-overflow');
+    if (rules.minTouchTargetPx) ids.push('touch-target-size');
+    if (rules.minControlGapPx != null) ids.push('control-spacing');
+    if (rules.requireControlLabels) ids.push('control-labels');
+    return ids;
+  }
+
+  function validationProfileKey(spec, ecc) {
+    var rules = spec.interface || {};
+    return JSON.stringify({ validator: VALIDATOR_VERSION, checks: expectedCheckIds(spec, ecc).sort(), ecc: ecc,
+      difficulty: spec.difficulty == null ? spec.type === 'game' ? 3 : null : spec.difficulty,
+      minTouchTargetPx: rules.minTouchTargetPx || null, minControlGapPx: rules.minControlGapPx == null ? null : rules.minControlGapPx });
+  }
+
   function summarizeChecks(checks) {
     return checks.reduce(function (summary, check) {
       if (Object.prototype.hasOwnProperty.call(summary, check.status)) summary[check.status] += 1;
@@ -1032,34 +813,34 @@
   }
 
   function injectIntoHtml(html, injection) {
-    var head = /<head(?:\s[^>]*)?>/i.exec(html);
-    if (head) {
-      var at = head.index + head[0].length;
-      return html.slice(0, at) + injection + html.slice(at);
-    }
-    var doctype = /<!doctype[^>]*>/i.exec(html);
-    var position = doctype ? doctype.index + doctype[0].length : 0;
-    return html.slice(0, position) + injection + html.slice(position);
+    // Only an anchored doctype can precede the security bootstrap. Never search
+    // user text for a head tag: it may belong to a string or an inert element.
+    var doctype = /^\s*<!doctype\s+html\s*>/i.exec(html);
+    var at = doctype ? doctype[0].length : 0;
+    return (doctype ? html.slice(0, at) : '<!doctype html>') + injection + html.slice(at);
   }
 
   function buildPreviewDocument(html, token) {
-    var safeToken = JSON.stringify(String(token));
+    var safeToken = JSON.stringify(String(token)).replace(/</g, '\\u003c');
     var csp = '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; connect-src \'none\'; img-src data: blob:; media-src data: blob:; font-src data:; style-src \'unsafe-inline\'; script-src \'unsafe-inline\'; frame-src \'none\'; worker-src \'none\'; object-src \'none\'; base-uri \'none\'; form-action \'none\'">';
-    var monitor = '<script>(function(){var t=' + safeToken + ',z,x=[],b=[];' +
+    var monitor = '<script>(function(){var t=' + safeToken + ',z,last="",x=[],b=[];' +
       'function p(k,d){parent.postMessage({source:"qr-microapps-preview",token:t,kind:k,data:d||{}},"*")}' +
       'addEventListener("error",function(e){if(x.length>=20)return;var d={message:e.message||"Ошибка JavaScript",line:e.lineno||0};x.push(d);p("error",d);u()});' +
       'addEventListener("unhandledrejection",function(e){if(x.length>=20)return;var d={message:String(e.reason||"Необработанный Promise")};x.push(d);p("error",d);u()});' +
       'addEventListener("securitypolicyviolation",function(e){if(b.length>=20)return;var d={directive:e.violatedDirective||"",uri:e.blockedURI||""};b.push(d);p("blocked",d);u()});' +
       'function m(){var d=document.documentElement,o=document.body,sw=Math.max(d?d.scrollWidth:0,o?o.scrollWidth:0),sh=Math.max(d?d.scrollHeight:0,o?o.scrollHeight:0),vw=d?d.clientWidth:innerWidth,vh=d?d.clientHeight:innerHeight,es=document.querySelectorAll("button,a[href],input:not([type=hidden]),select,textarea,[role=button],[onclick]"),cs=[];' +
       'for(var i=0;i<es.length;i++){var e=es[i],r=e.getBoundingClientRect(),s=getComputedStyle(e);if(r.width<1||r.height<1||s.display=="none"||s.visibility=="hidden")continue;var l=(e.getAttribute("aria-label")||e.getAttribute("title")||e.innerText||e.value||"").trim();cs.push({width:Math.round(r.width*10)/10,height:Math.round(r.height*10)/10,left:Math.round(r.left*10)/10,top:Math.round(r.top*10)/10,right:Math.round(r.right*10)/10,bottom:Math.round(r.bottom*10)/10,labeled:!!l})}' +
-      'p("metrics",{horizontalOverflow:sw>vw+1,verticalOverflow:sh>vh+1,scrollWidth:sw,scrollHeight:sh,viewportWidth:vw,viewportHeight:vh,controls:cs,errors:x.slice(),blocked:b.slice()})}' +
-      'function u(){clearTimeout(z);z=setTimeout(m,40)}addEventListener("load",function(){m();new MutationObserver(u).observe(document.body,{childList:true,subtree:true});setTimeout(m,350);p("ready")});addEventListener("resize",u)})();</script>';
+      'var metrics={horizontalOverflow:sw>vw+1,verticalOverflow:sh>vh+1,scrollWidth:sw,scrollHeight:sh,viewportWidth:vw,viewportHeight:vh,controls:cs,errors:x.slice(),blocked:b.slice()};var next=JSON.stringify(metrics);if(next!==last){last=next;p("metrics",metrics)}}' +
+      'function u(){if(!z)z=setTimeout(function(){z=0;m()},80)}addEventListener("load",function(){m();new MutationObserver(u).observe(document.documentElement,{childList:true,subtree:true,attributes:true,characterData:true});if(typeof ResizeObserver!=="undefined"){var ro=new ResizeObserver(u);ro.observe(document.documentElement);if(document.body)ro.observe(document.body)}setTimeout(m,350);setInterval(u,500);p("ready")});addEventListener("resize",u)})();</script>';
     return injectIntoHtml(html, csp + monitor);
   }
 
   return {
     DATA_URL_PREFIX: DATA_URL_PREFIX,
     QR_LIMITS: QR_LIMITS,
+    VALIDATOR_VERSION: VALIDATOR_VERSION,
+    expectedCheckIds: expectedCheckIds,
+    validationProfileKey: validationProfileKey,
     byteLength: byteLength,
     utf8ToBase64: utf8ToBase64,
     base64ToUtf8: base64ToUtf8,

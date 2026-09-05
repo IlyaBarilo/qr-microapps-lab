@@ -299,7 +299,7 @@ test('автоотчёт предупреждает о пользователь�
   }, {}).find((check) => check.id === 'reserved-format-identifiers').status, 'pass');
 });
 
-test('оптимизатор HTML удаляет служебное форматирование и сохраняет чувствительное содержимое', () => {
+test('оптимизатор сокращает CSS и JavaScript, сохраняя HTML-пробелы и комментарии', () => {
   const html = `
 <!doctype html>
 <html>
@@ -321,13 +321,15 @@ test('оптимизатор HTML удаляет служебное формат
 </html>
 `;
   const result = core.optimizeHtml(html);
-  assert.doesNotMatch(result.html, /удалить/);
-  assert.match(result.html, /<html><style>\.note::before\{content:"два  пробела";color:red\}<\/style><body><div data-note="a  b"><span>Первый<\/span> <span>второй<\/span><\/div><script>/);
+  assert.match(result.html, /<!-- удалить -->/);
+  assert.match(result.html, /<style>\.note::before\{content:"два  пробела";color:red\}<\/style>/);
+  assert.match(result.html, /<div data-note = "a  b">/);
+  assert.match(result.html, /<span>Первый<\/span> <span>второй<\/span>/);
   assert.match(result.html, /const value="два  пробела";/);
   assert.match(result.html, /<pre>  строка 1\n  строка 2<\/pre>/);
   assert.ok(result.savedBytes > 0);
   assert.equal(result.optimizedBytes, core.byteLength(result.html));
-  assert.equal(result.commentsRemoved, 1);
+  assert.equal(result.commentsRemoved, 0);
   const secondPass = core.optimizeHtml(result.html);
   assert.equal(secondPass.html, result.html);
   assert.equal(secondPass.savedBytes, 0);
@@ -737,8 +739,34 @@ test('«Киберрефлекс» встроен как автономный п
   assert.match(game.html, /КИБЕР<br>РЕФЛЕКС/);
   assert.match(game.html, /conic-gradient/);
   assert.match(game.html, /setInterval/);
+  assert.match(game.html, /font:700 min\(9vw,6vh\) system-ui/);
+  assert.doesNotMatch(game.html, /font:700 64px system-ui/);
   assert.match(game.html, /o\.style='--p:'\+20\*r\+'%'/);
   assert.match(game.html, /'<br>'\+v\+' мс'/);
+  assert.match(game.html, /T=Math\.min\(\.\.\.a\)/);
+  assert.doesNotMatch(game.html, /k>v/);
+  assert.match(game.html, /СРЕДНИЙ/);
+  assert.match(game.html, /МИН\./);
+
+  const sandbox = {
+    m: { className: '' },
+    h: {},
+    t: {},
+    b: {},
+    o: { style: '' },
+    performance: { now: () => 0 },
+    setTimeout() {},
+    setInterval() {},
+    clearTimeout() {}
+  };
+  vm.runInNewContext(game.html.match(/<script>([\s\S]*?)<\/script>/)[1], sandbox);
+  sandbox.a = [200, 210, 220, 230, 240];
+  sandbox.y();
+  assert.equal(sandbox.h.innerText, 'СРЕДНИЙ 220 · МИН. 200 мс');
+  sandbox.a = [310, 320, 330, 340, 350];
+  sandbox.y();
+  assert.equal(sandbox.h.innerText, 'СРЕДНИЙ 330 · МИН. 310 мс');
+
   const checks = core.validateHtml(game.html, game.spec, { dataUrl: url, encoding: 'base64', ecc: 'M', qrVersion: 40 });
   assert.equal(checks.filter((check) => check.status === 'fail').length, 0);
 });
@@ -1215,8 +1243,8 @@ test('упрощённый конструктор создаёт валидны�
   assert.match(editorApp, /quietWhenEmpty = \(entry\[0\] === 'fail' \|\| entry\[0\] === 'warn'\) && entry\[2\] === 0/);
   assert.match(editorApp, /Предупреждение: /);
   assert.match(editorApp, /Нарушение: /);
-  assert.match(editorApp, /var optimization = core\.optimizeHtml\(sourceHtml\)/);
-  assert.match(editorApp, /html = core\.optimizeHtml\(currentHtml\(\)\)\.html/);
+  assert.match(editorApp, /var optimization = core\.optimizeHtml\(sourceHtml, \{ enabled: elements\.optimizeSource\.checked \}\)/);
+  assert.match(editorApp, /html = core\.optimizeHtml\(currentHtml\(\), \{ enabled: elements\.optimizeSource\.checked \}\)\.html/);
   assert.match(editorApp, /elements\.qrOpenHelp\.hidden = true/);
   assert.match(editorApp, /elements\.qrOpenHelp\.hidden = !exact/);
   assert.match(editorApp, /core\.analyzeQrImage\(decoded/);
@@ -1413,17 +1441,22 @@ test('CSV истории не содержит исходник и защища�
 });
 
 function comparisonReport(options = {}) {
+  const specification = specBuilder.build({ id: options.assignmentId || 'shared-task' });
+  const checks = core.expectedCheckIds(specification, 'M').map(id => ({ id, status: 'pass' }));
+  for (const status of ['fail', 'warn', 'pending']) {
+    for (let i = 0; i < (options[status] || 0); i++) checks.push({ id: status + '-' + i, status });
+  }
   return {
-    reportVersion: '0.1', generatedAt: options.generatedAt || '2026-08-17T12:00:00.000Z',
+    reportVersion: '0.1', validatorVersion: core.VALIDATOR_VERSION, generatedAt: options.generatedAt || '2026-08-17T12:00:00.000Z',
     application: { id: options.applicationId || 'shared-task', title: options.title || 'Реализация' },
-    specification: { id: options.assignmentId || 'shared-task' },
+    specification,
     measurements: {
       htmlBytes: options.htmlBytes || 1000, dataUrlBytes: options.dataUrlBytes || 1400,
       encoding: 'base64', checksum: { algorithm: 'SHA-256', value: options.checksum || 'abc' },
-      qr: { version: options.qrVersion == null ? 30 : options.qrVersion, ecc: 'M' }
+      qr: { version: options.qrVersion == null ? 30 : options.qrVersion, ecc: 'M', quietZone: 4 }
     },
     roundtrip: { ok: options.roundtripOk !== false },
-    validation: { summary: { pass: 10, fail: options.fail || 0, warn: options.warn || 0, pending: options.pending || 0, manual: 3 }, checks: [] }
+    validation: { summary: { ...core.summarizeChecks(checks), manual: 3 }, checks }
   };
 }
 
@@ -1486,13 +1519,13 @@ test('файл проекта сохраняет HTML, спецификацию 
   assert.equal(restored.version, '0.1');
   assert.equal(restored.html, item.html);
   assert.deepEqual(restored.specification, item.spec);
-  assert.deepEqual(restored.settings, { encoding: 'base64', ecc: 'M', moduleScale: 8, quietZone: 6 });
+  assert.deepEqual(restored.settings, { encoding: 'base64', ecc: 'M', moduleScale: 8, quietZone: 6, optimize: true });
   assert.deepEqual(restored.preview, { preset: '390x844', width: 390, height: 844 });
   const emulationSettings = projectFile.create({
     html: item.html, specification: item.spec,
     settings: { encoding: 'base64', ecc: 'Q', moduleScale: 1, quietZone: 0 }
   }).settings;
-  assert.deepEqual(emulationSettings, { encoding: 'base64', ecc: 'Q', moduleScale: 1, quietZone: 0 });
+  assert.deepEqual(emulationSettings, { encoding: 'base64', ecc: 'Q', moduleScale: 1, quietZone: 0, optimize: true });
 });
 
 test('файл проекта сохраняет редактируемую конфигурацию конструктора теста', () => {

@@ -59,7 +59,8 @@
         encoding: option(settings.encoding, ENCODINGS, option(specQr.encoding, ENCODINGS, 'base64')),
         ecc: option(settings.ecc, ECC_LEVELS, option(specQr.ecc, ECC_LEVELS, 'M')),
         moduleScale: clamp(settings.moduleScale, 1, 20, 6),
-        quietZone: clamp(settings.quietZone, 0, 16, 4)
+        quietZone: clamp(settings.quietZone, 0, 16, 4),
+        optimize: settings.optimize !== false
       },
       editor: {
         mode: simpleMode ? 'simple' : 'code',

@@ -47,5 +47,7 @@ jobs:
         run: npm --prefix tests ci
       - name: Install Chromium
         run: npm --prefix tests exec -- playwright install --with-deps chromium
+      - name: Check standalone browser
+        run: npm --prefix tests run test:standalone-browser
       - name: Run browser scenarios
         run: npm --prefix tests run test:e2e

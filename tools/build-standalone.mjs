@@ -23,7 +23,12 @@ function licenseBlock() {
   const entries = [
     ['QR MICROAPPS LAB — MIT LICENSE', read('LICENSE')],
     ['QRCODE.JS 1.0.0 — MIT LICENSE', read('editor/vendor/qrcodejs.LICENSE')],
-    ['JSQR 1.4.0 — APACHE LICENSE 2.0', read('editor/vendor/jsQR.LICENSE')]
+    ['JSQR 1.4.0 — APACHE LICENSE 2.0', read('editor/vendor/jsQR.LICENSE')],
+    ['ACORN 8.18.0 — MIT LICENSE', read('editor/vendor/acorn.LICENSE')],
+    ['CSS TREE 3.2.1 — MIT LICENSE', read('editor/vendor/csstree.LICENSE')],
+    ['MDN DATA — MIT LICENSE', read('editor/vendor/mdn-data.LICENSE')],
+    ['PARSE5 8.0.1 — MIT LICENSE', read('editor/vendor/parse5.LICENSE')],
+    ['ENTITIES 8.0.0 — BSD-2-CLAUSE LICENSE', read('editor/vendor/entities.LICENSE')]
   ];
   const text = entries.map(([title, license]) => `${title}\n${'='.repeat(title.length)}\n${license.trim()}`).join('\n\n');
   return `  <script type="text/plain" id="embedded-license-notices" data-purpose="license-notices">\n${text}\n  <\/script>\n`;
@@ -55,7 +60,7 @@ function build() {
     if (relativePath === 'editor/vendor/jsQR.js') banner = '/*! jsQR 1.4.0 | Apache License 2.0 | Полный текст лицензии встроен в этот HTML. */';
     return `  <script data-source="${relativePath}">\n${banner}\n${escapeInlineScript(readFileSync(fullPath, 'utf8').replace(/^\uFEFF/, '').trim())}\n  <\/script>`;
   });
-  if (scriptsInlined !== 11) throw new Error(`Ожидалось 11 локальных скриптов, встроено: ${scriptsInlined}.`);
+  if (scriptsInlined !== 18) throw new Error(`Ожидалось 18 локальных скриптов, встроено: ${scriptsInlined}.`);
 
   const releaseVersionTokens = html.match(/__APP_VERSION__/g) || [];
   if (releaseVersionTokens.length !== 1) throw new Error(`Ожидалась одна релизная метка версии, найдено: ${releaseVersionTokens.length}.`);

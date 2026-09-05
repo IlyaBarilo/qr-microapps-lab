@@ -1,8 +1,8 @@
 (function (root, factory) {
-  var api = factory();
+  var api = factory(typeof module === 'object' && module.exports ? require('./core.js') : root.QRMicroappsCore);
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.QRMicroappsComparison = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (core) {
   'use strict';
 
   var MAX_TEXT_LENGTH = 1000000;
@@ -31,6 +31,8 @@
     if (report.reportVersion !== '0.1') throw new Error('Поддерживаются отчёты версии 0.1.');
     var application = object(report.application);
     var specification = object(report.specification);
+    if (core.validateSpec(specification).length) throw new Error('В отчёте отсутствует полный корректный профиль проверки.');
+    if (report.validatorVersion !== core.VALIDATOR_VERSION) throw new Error('Отчёт создан другой версией валидатора. Повторите проверку приложения в текущей лаборатории.');
     var measurements = object(report.measurements);
     var qr = object(measurements.qr);
     var checksum = object(measurements.checksum);
@@ -42,6 +44,30 @@
     if (!applicationId || !title) throw new Error('В отчёте отсутствуют данные приложения.');
     if (number(measurements.htmlBytes) < 1 || number(measurements.dataUrlBytes) < 1) throw new Error('В отчёте отсутствуют измерения размера.');
     if (!text(checksum.value)) throw new Error('В отчёте отсутствует контрольная сумма.');
+    if (!Number.isInteger(measurements.htmlBytes) || !Number.isInteger(measurements.dataUrlBytes)) throw new Error('Размеры в отчёте должны быть целыми числами.');
+    if (!Number.isInteger(qr.version) || qr.version < 1 || qr.version > 40) throw new Error('Недопустимая версия QR в отчёте.');
+    if (!Number.isInteger(qr.quietZone) || qr.quietZone < 0 || qr.quietZone > 16) throw new Error('В отчёте отсутствует размер белого поля QR.');
+    if (['base64', 'percent'].indexOf(measurements.encoding) < 0 || ['L', 'M', 'Q', 'H'].indexOf(qr.ecc) < 0) throw new Error('Не заданы параметры кодирования QR.');
+    if (typeof roundtrip.ok !== 'boolean') throw new Error('Отсутствует результат обратного декодирования.');
+    var counts = { pass: 0, fail: 0, warn: 0, pending: 0 };
+    Object.keys(counts).forEach(function (status) {
+      if (!Number.isInteger(summary[status]) || summary[status] < 0) throw new Error('Сводка проверки неполна или содержит недопустимые значения.');
+    });
+    if (!Array.isArray(validation.checks) || !validation.checks.length) throw new Error('Отсутствует список выполненных проверок.');
+    var checkIds = [];
+    validation.checks.forEach(function (check) {
+      if (!check || typeof check.id !== 'string' || !check.id.trim() || checkIds.indexOf(check.id) >= 0 || !Object.prototype.hasOwnProperty.call(counts, check.status)) throw new Error('Некорректная или повторяющаяся проверка в отчёте.');
+      checkIds.push(check.id);
+      counts[check.status]++;
+    });
+    core.expectedCheckIds(specification, qr.ecc).forEach(function (id) {
+      if (checkIds.indexOf(id) < 0) throw new Error('В отчёте отсутствует обязательная проверка: ' + id + '.');
+    });
+    var quietCheck = validation.checks.find(function (check) { return check.id === 'qr-quiet-zone'; });
+    if (quietCheck.status !== (qr.quietZone < 4 ? 'fail' : 'pass')) throw new Error('Проверка белого поля противоречит параметрам QR.');
+    Object.keys(counts).forEach(function (status) {
+      if (counts[status] !== summary[status]) throw new Error('Сводка не совпадает со списком проверок.');
+    });
     var item = {
       source: text(sourceName, 'Отчёт'),
       title: title,
@@ -60,8 +86,10 @@
       roundtripOk: roundtrip.ok === true,
       checksum: text(checksum.value)
     };
-    item.automaticReady = item.validation.fail === 0 && item.validation.pending === 0 && item.roundtripOk && item.qrVersion > 0;
-    item.signature = [item.source, item.applicationId, item.checksum, item.encoding, item.ecc].join('|');
+    item.profileKey = core.validationProfileKey(specification, qr.ecc);
+    item.automaticReady = item.validation.fail === 0 && item.validation.pending === 0 && item.roundtripOk && item.qrVersion > 0 &&
+      validation.checks.find(function (check) { return check.id === 'source-analysis'; }).status === 'pass';
+    item.signature = [item.source, item.applicationId, item.checksum, item.encoding, item.ecc, item.profileKey].join('|');
     return item;
   }
 
@@ -106,6 +134,7 @@
       total: list.length,
       ready: list.filter(function (item) { return item.automaticReady; }).length,
       assignments: assignments,
+      mixedProfiles: new Set(list.map(function (item) { return item.profileKey; })).size > 1,
       mixedAssignments: assignments.length > 1
     };
   }

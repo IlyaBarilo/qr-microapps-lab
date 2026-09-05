@@ -12,7 +12,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var elements = {
     themeToggle: $('theme-toggle'), themeToggleIcon: $('theme-toggle-icon'), themeToggleLabel: $('theme-toggle-label'),
-    source: $('source'), spec: $('spec'), dataUrl: $('data-url'), encoding: $('encoding'), ecc: $('ecc'),
+    optimizeSource: $('optimize-source'), source: $('source'), spec: $('spec'), dataUrl: $('data-url'), encoding: $('encoding'), ecc: $('ecc'),
     moduleScale: $('module-scale'), quietZone: $('quiet-zone'), status: $('status'), canvas: $('qr-canvas'),
     placeholder: $('qr-placeholder'), qrZoom: $('qr-zoom'), qrZoomIcon: $('qr-zoom-icon'), htmlBytes: $('html-bytes'), urlBytes: $('url-bytes'),
     qrVersion: $('qr-version'), qrMatrix: $('qr-matrix'), qrMask: $('qr-mask'), qrReserve: $('qr-reserve'), qrReserveLabel: $('qr-reserve-label'),
@@ -62,9 +62,43 @@
     html: '', spec: null, dataUrl: '', qr: null, checks: [], runtime: null, checksum: null,
     roundtrip: null, report: null, sizeAnalysis: null, optimization: null, previewToken: '', previewHtml: '', runtimeMessages: [],
     iterations: [], comparisons: [], buildId: 0, mode: 'code', specEditorMode: 'form', importedQrProfile: null, qrEmulation: null,
-    sampleDocumentationLastFocus: null
+    sampleDocumentationLastFocus: null, previewBlocked: []
   };
   var simpleBuildTimer = 0;
+  var draftController = null;
+  var draftFieldIds = ['source', 'spec', 'example-select', 'encoding', 'ecc', 'module-scale', 'quiet-zone', 'optimize-source',
+    'preview-preset', 'preview-width', 'preview-height', 'simple-title', 'simple-theme', 'simple-background', 'simple-card', 'simple-accent',
+    'spec-title-input', 'spec-id-input', 'spec-type-input', 'spec-single-file-input', 'spec-external-input', 'spec-network-input',
+    'spec-viewport-input', 'spec-touch-input', 'spec-overflow-input', 'spec-vertical-overflow-input', 'spec-touch-size-input', 'spec-gap-input', 'spec-labels-input'];
+
+  function readDraftSnapshot() {
+    var fields = {};
+    draftFieldIds.forEach(function (id) { var input = $(id); fields[id] = input.type === 'checkbox' ? input.checked : input.value; });
+    return { format: 'qr-microapps-draft', version: '0.1', fields: fields,
+      mode: state.mode, specEditorMode: state.specEditorMode, questions: readSimpleConfig().questions, qrEmulation: state.qrEmulation };
+  }
+
+  function restoreDraftSnapshot(snapshot) {
+    invalidateBuild();
+    clearImportedQrAnalysis();
+    draftFieldIds.forEach(function (id) {
+      if (!Object.prototype.hasOwnProperty.call(snapshot.fields, id)) return;
+      var input = $(id);
+      if (input.type === 'checkbox') input.checked = snapshot.fields[id] === true;
+      else input.value = snapshot.fields[id];
+    });
+    renderSimpleQuestions(snapshot.questions);
+    state.qrEmulation = snapshot.qrEmulation ? JSON.parse(JSON.stringify(snapshot.qrEmulation)) : null;
+    renderQrEmulation();
+    setMode(snapshot.mode, false, true);
+    setSpecEditorMode(snapshot.specEditorMode, true, true);
+    updateSampleDocumentationButton();
+    refreshDifficultyEditor();
+    applyPreviewSize();
+  }
+
+  function checkpointDraft(label) { if (draftController) draftController.checkpoint(label); }
+  function draftChanged() { if (draftController) draftController.changed(); }
 
   function getSavedTheme() {
     try {
@@ -91,6 +125,33 @@
   function setStatus(message, kind) {
     elements.status.textContent = message;
     elements.status.className = 'status' + (kind ? ' ' + kind : '');
+  }
+
+  function clearBuildResult(message) {
+    state.html = ''; state.spec = null; state.dataUrl = ''; state.qr = null;
+    state.report = null; state.checks = []; state.roundtrip = null;
+    elements.dataUrl.value = '';
+    elements.downloadReport.disabled = true;
+    clearQr();
+    elements.htmlBytes.textContent = '—';
+    elements.urlBytes.textContent = '—';
+    elements.roundtripCard.className = 'roundtrip-card';
+    elements.roundtripIcon.textContent = '↺';
+    elements.roundtripTitle.textContent = message;
+    elements.roundtripDetail.textContent = 'Создайте QR заново, чтобы проверить и скачать текущий исходник.';
+    elements.roundtripPill.className = 'badge muted';
+    elements.roundtripPill.textContent = 'Требуется проверка';
+    elements.validationList.replaceChildren();
+    elements.validationSummary.textContent = message;
+    elements.validationRemarks.hidden = true;
+    renderComparison();
+  }
+
+  function invalidateBuild() {
+    state.buildId++;
+    clearBuildResult('Исходник или настройки изменены — требуется пересборка');
+    stopPreview();
+    setStatus('Изменения ещё не проверены. Нажмите «Проверить и создать QR».');
   }
 
   function formatBytes(value) {
@@ -410,6 +471,7 @@
       historyBadge('Заданий: ' + summary.assignments.length, summary.mixedAssignments ? 'warn' : 'muted')
     );
     if (summary.mixedAssignments) elements.comparisonSummary.appendChild(historyBadge('Смешаны разные ID приложений', 'warn'));
+    if (summary.mixedProfiles) elements.comparisonSummary.appendChild(historyBadge('Разные критерии проверки — места в списке не определяют лучший вариант', 'warn'));
 
     comparisonApi.rank(items).forEach(function (item, index) {
       var card = document.createElement('article');
@@ -575,13 +637,13 @@
   }
 
   function updateSpecFromForm() {
-    try { syncSpecJsonFromForm(false); }
+    try { syncSpecJsonFromForm(false); invalidateBuild(); }
     catch (error) { setStatus(error.message, 'bad'); }
   }
 
   function setSpecEditorMode(mode, quiet, skipSync) {
     var formMode = mode !== 'json';
-    if (formMode) {
+    if (formMode && !skipSync) {
       try {
         var parsed = JSON.parse(elements.spec.value);
         var errors = core.validateSpec(parsed);
@@ -606,6 +668,8 @@
   }
 
   function loadSpecText(text) {
+    checkpointDraft('Перед загрузкой профиля');
+    invalidateBuild();
     elements.spec.value = text;
     try {
       var parsed = JSON.parse(text);
@@ -621,6 +685,7 @@
       setSpecEditorMode('json', true, true);
       setStatus('Профиль проверки загружен с ошибкой: ' + error.message, 'bad');
     }
+    draftChanged();
   }
 
   function questionCountLabel(count) {
@@ -723,13 +788,16 @@
     clearTimeout(simpleBuildTimer);
     try { syncSimpleSource(); }
     catch (error) { setStatus(error.message, 'bad'); return; }
+    invalidateBuild();
+    draftChanged();
     setStatus('Изменения собраны. Обновляю проверку…');
     simpleBuildTimer = setTimeout(function () {
-      build().then(function () { if (state.mode === 'simple' && state.html) runPreview(); });
+      build().then(function (built) { if (built && state.mode === 'simple' && state.html) runPreview(); });
     }, 400);
   }
 
   function changeSimpleStructure(action, control) {
+    if (action === 'remove-question' || action === 'remove-answer') checkpointDraft('Перед удалением вопроса или ответа');
     var config = readSimpleConfig();
     var card = control && control.closest('.simple-question');
     var questionIndex = card ? Number(card.dataset.questionIndex) : -1;
@@ -772,8 +840,9 @@
     });
   }
 
-  function setMode(mode, rebuild) {
+  function setMode(mode, rebuild, restore) {
     var simpleMode = mode === 'simple';
+    if (simpleMode && !restore && state.mode !== 'simple') checkpointDraft('Перед открытием конструктора');
     state.mode = simpleMode ? 'simple' : 'code';
     clearTimeout(simpleBuildTimer);
     elements.simpleEditor.hidden = !simpleMode;
@@ -785,11 +854,13 @@
     elements.modeCode.setAttribute('aria-pressed', String(!simpleMode));
     elements.buildButton.textContent = simpleMode ? 'Собрать, проверить и создать QR' : 'Проверить и создать QR';
     elements.clearButton.textContent = simpleMode ? 'Сбросить поля' : 'Очистить';
-    if (simpleMode) {
+    if (simpleMode && !restore) {
       try { syncSimpleSource(); }
       catch (error) { setStatus(error.message, 'bad'); return; }
+      invalidateBuild();
+      draftChanged();
       setStatus('Конструктор теста: HTML собран и готов к автоматической проверке.');
-      if (rebuild) build().then(function () { if (state.mode === 'simple' && state.html) runPreview(); });
+      if (rebuild) build().then(function (built) { if (built && state.mode === 'simple' && state.html) runPreview(); });
     } else {
       refreshDifficultyEditor();
       setStatus('Режим кода: доступны HTML и профиль автоматических проверок.');
@@ -797,10 +868,12 @@
   }
 
   function resetSimpleWorkspace() {
+    checkpointDraft('Перед сбросом конструктора');
     writeSimpleConfig(simpleBuilder.DEFAULT_CONFIG);
     syncSimpleSource();
+    draftChanged();
     setStatus('Поля конструктора теста сброшены.');
-    build().then(function () { if (state.mode === 'simple' && state.html) runPreview(); });
+    build().then(function (built) { if (built && state.mode === 'simple' && state.html) runPreview(); });
   }
 
   function parseSpec() {
@@ -1027,6 +1100,7 @@
     if (!state.spec || !state.dataUrl) return null;
     return {
       reportVersion: '0.1',
+      validatorVersion: core.VALIDATOR_VERSION,
       generatedAt: new Date().toISOString(),
       application: { id: state.spec.id, title: state.spec.title },
       specification: state.spec,
@@ -1040,7 +1114,8 @@
           savedBytes: state.optimization.savedBytes,
           savedPercent: state.optimization.savedPercent,
           commentsRemoved: state.optimization.commentsRemoved,
-          changed: state.optimization.changed
+          changed: state.optimization.changed,
+          enabled: elements.optimizeSource.checked
         } : null,
         checksum: state.checksum,
         qr: state.qr,
@@ -1062,7 +1137,9 @@
       ecc: elements.ecc.value,
       dataUrl: state.dataUrl,
       qrVersion: state.qr && state.qr.version,
-      runtime: state.runtime
+      quietZone: state.qr && state.qr.quietZone,
+      runtime: state.runtime,
+      blockedOperations: state.runtime ? [] : state.previewBlocked
     });
     renderValidation(state.checks);
     state.report = createReport();
@@ -1074,11 +1151,10 @@
   async function build() {
     var buildId = ++state.buildId;
     setStatus('Оптимизирую HTML, выполняю проверки и формирую QR…');
-    clearQr();
-    elements.dataUrl.value = '';
+    clearBuildResult('Проверка выполняется…');
     try {
       var sourceHtml = currentHtml();
-      var optimization = core.optimizeHtml(sourceHtml);
+      var optimization = core.optimizeHtml(sourceHtml, { enabled: elements.optimizeSource.checked });
       var html = optimization.html;
       var matchingRuntime = state.previewHtml === html ? state.runtime : null;
       elements.encoding.value = 'base64';
@@ -1122,7 +1198,7 @@
       qr.mask = decoded.dataMask == null ? null : decoded.dataMask;
       var sourceChecksum = await core.checksum(dataUrl);
       var decodedChecksum = await core.checksum(decoded.data);
-      if (buildId !== state.buildId) return;
+      if (buildId !== state.buildId) return false;
 
       state.html = html;
       state.optimization = optimization;
@@ -1158,7 +1234,10 @@
           : ' Коррекция ' + requestedEcc + ' из профиля не вместила нагрузку; использован уровень ' + ecc + '.'
         : '';
       setStatus((failed ? 'QR создан, но найдено нарушений: ' + failed + '.' : 'QR создан и автоматически проверен.') + fallbackNote + emulationNote + optimizationNote, failed ? 'bad' : 'good');
+      if (draftController) draftController.flush();
+      return true;
     } catch (error) {
+      if (buildId !== state.buildId) return false;
       state.html = '';
       state.spec = null;
       state.dataUrl = '';
@@ -1169,6 +1248,7 @@
       renderComparison();
       renderSpecError(error.message);
       setStatus(error.message, 'bad');
+      return false;
     }
   }
 
@@ -1351,11 +1431,14 @@
       writeSpecForm(spec);
       refreshDifficultyEditor();
       setStatus('Сложность ' + value + ' применена к текущему HTML.');
-      build().then(function () { if (state.html) runPreview(); });
+      draftChanged();
+      build().then(function (built) { if (built && state.html) runPreview(); });
     } catch (error) { setStatus(error.message, 'bad'); }
   }
 
   function loadSample(id) {
+    checkpointDraft('Перед выбором примера');
+    invalidateBuild();
     var selected = typeof sample.getById === 'function' ? sample.getById(id || elements.exampleSelect.value) : sample;
     elements.exampleSelect.value = selected.id || selected.spec.id;
     elements.source.value = selected.html;
@@ -1366,9 +1449,11 @@
     updateSampleDocumentationButton();
     refreshDifficultyEditor();
     setStatus('Загружен эталонный пример «' + selected.spec.title + '».');
+    draftChanged();
   }
 
   function resetWorkspace() {
+    checkpointDraft('Перед очисткой');
     stopPreview();
     clearImportedQrAnalysis();
     clearQrEmulation(true);
@@ -1403,6 +1488,7 @@
     renderComparison();
     clearQr();
     setStatus('Поля очищены.');
+    draftChanged();
   }
 
   function downloadBlob(content, type, name) {
@@ -1426,7 +1512,8 @@
         encoding: elements.encoding.value,
         ecc: elements.ecc.value,
         moduleScale: elements.moduleScale.value,
-        quietZone: elements.quietZone.value
+        quietZone: elements.quietZone.value,
+        optimize: elements.optimizeSource.checked
       },
       editor: {
         mode: state.mode,
@@ -1445,7 +1532,7 @@
       var input = currentProjectInput();
       downloadBlob(projectApi.serialize(input), 'application/json;charset=utf-8', input.specification.id + '.qrapp.json');
       setStatus('Файл проекта сохранён локально.', 'good');
-    } catch (error) { setStatus(error.message, 'bad'); }
+    } catch (error) { setStatus(error.message + ' Незавершённую работу можно сохранить кнопкой «Скачать черновик».', 'bad'); }
   }
 
   function downloadCurrentSpec() {
@@ -1504,13 +1591,20 @@
 
   async function openProject(text) {
     try {
+      if (text.length > window.QRMicroappsDrafts.MAX_TEXT_LENGTH) throw new Error('Файл слишком велик.');
+      if (JSON.parse(text.replace(/^\uFEFF/, '')).format === window.QRMicroappsDrafts.FORMAT) {
+        draftController.importText(text);
+        return;
+      }
       if (!projectApi) throw new Error('Модуль файлов проекта не загружен.');
       var project = projectApi.parse(text);
       var specErrors = core.validateSpec(project.specification);
       if (specErrors.length) throw new Error('Профиль проверки проекта недействителен. ' + specErrors.join(' '));
       var projectSpec = specBuilder ? specBuilder.build(project.specification) : project.specification;
 
-      stopPreview();
+      checkpointDraft('Перед открытием проекта');
+      invalidateBuild();
+      clearQrEmulation(false);
       var restoredSimpleMode = false;
       if (project.editor.mode === 'simple' && project.editor.simpleConfig && simpleBuilder) {
         var simpleResult = simpleBuilder.build(project.editor.simpleConfig);
@@ -1528,6 +1622,7 @@
         refreshDifficultyEditor();
       }
 
+      elements.optimizeSource.checked = project.settings.optimize;
       elements.encoding.value = project.settings.encoding;
       elements.ecc.value = project.settings.ecc;
       elements.moduleScale.value = String(project.settings.moduleScale);
@@ -1537,9 +1632,9 @@
       elements.previewWidth.value = String(project.preview.width);
       elements.previewHeight.value = String(project.preview.height);
       applyPreviewSize();
+      draftChanged();
 
-      await build();
-      if (!state.html) return;
+      if (!await build()) return;
       var fallback = project.editor.mode === 'simple' && !restoredSimpleMode ? ' Конструктор теста этой версии не совпал с сохранённым HTML, поэтому открыт режим кода.' : '';
       setStatus('Проект «' + projectSpec.title + '» открыт и QR проверен. Для выполнения кода нажмите «Запустить».' + fallback, fallback ? '' : 'good');
     } catch (error) { setStatus('Не удалось открыть проект: ' + error.message, 'bad'); }
@@ -1573,12 +1668,14 @@
 
   function runPreview() {
     var html;
-    try { html = core.optimizeHtml(currentHtml()).html; }
+    try { html = core.optimizeHtml(currentHtml(), { enabled: elements.optimizeSource.checked }).html; }
     catch (error) { setStatus(error.message, 'bad'); return; }
     state.previewHtml = html;
     state.previewToken = Date.now().toString(36) + Math.random().toString(36).slice(2);
     state.runtimeMessages = [];
+    state.previewBlocked = [];
     state.runtime = null;
+    if (state.previewHtml === state.html) refreshValidation();
     elements.runtimeLog.innerHTML = '<li class="muted-item">Запуск в sandbox…</li>';
     elements.preview.removeAttribute('srcdoc');
     elements.preview.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(core.buildPreviewDocument(html, state.previewToken));
@@ -1588,6 +1685,9 @@
   function stopPreview() {
     state.previewToken = '';
     state.previewHtml = '';
+    state.previewBlocked = [];
+    state.runtime = null;
+    refreshValidation();
     elements.preview.removeAttribute('srcdoc');
     elements.preview.src = 'about:blank';
     elements.runtimeLog.innerHTML = '<li class="muted-item">Предпросмотр остановлен.</li>';
@@ -1673,23 +1773,41 @@
     input.value = '';
     if (file.type && !/^image\//i.test(file.type)) return setStatus('Выбранный файл не является изображением.', 'bad');
     if (file.size > 30 * 1024 * 1024) return setStatus('QR-изображение больше 30 МБ.', 'bad');
+    checkpointDraft('Перед загрузкой QR-изображения');
     clearImportedQrAnalysis();
     clearQrEmulation(true);
+    invalidateBuild();
+    draftChanged();
     setStatus('Декодирование QR-изображения…');
     try {
       var result = await decodeQrImage(file);
       renderImportedQrAnalysis(result.profile, result.decoded.data);
       if (result.profile.payload.isHtml) {
         var source = core.normalizeSource(result.decoded.data);
+        checkpointDraft('Перед загрузкой HTML из QR');
         setMode('code', false);
         elements.source.value = source;
+        invalidateBuild();
         refreshDifficultyEditor();
+        draftChanged();
         setStatus('QR-изображение декодировано и проанализировано: HTML загружен в редактор.', 'good');
       } else {
         setStatus('QR-изображение декодировано и проанализировано. Содержимое не является HTML и показано только в профиле.', 'good');
       }
     } catch (error) { setStatus(error.message || 'Не удалось декодировать QR-изображение.', 'bad'); }
   }
+
+  document.addEventListener('securitypolicyviolation', function (event) {
+    if (event.effectiveDirective !== 'frame-src' || !state.previewToken) return;
+    var blocked = { directive: 'frame-src', uri: event.blockedURI || 'переход из предпросмотра' };
+    if (state.previewBlocked.length >= 20) return;
+    state.previewBlocked.push(blocked);
+    addRuntimeMessage('Заблокирован переход: ' + blocked.uri, 'warn-item');
+    if (state.runtime && state.previewHtml === state.html) {
+      state.runtime.blocked = (state.runtime.blocked || []).concat([blocked]);
+    }
+    if (state.previewHtml === state.html) refreshValidation();
+  });
 
   window.addEventListener('message', function (event) {
     var message = event.data;
@@ -1699,22 +1817,23 @@
     if (message.kind === 'blocked') addRuntimeMessage('Заблокирован ресурс: ' + (message.data.uri || message.data.directive || 'неизвестный адрес'), 'warn-item');
     if (message.kind === 'metrics') {
       state.runtime = message.data;
+      state.runtime.blocked = (Array.isArray(message.data.blocked) ? message.data.blocked : []).concat(state.previewBlocked);
       addRuntimeMessage(message.data.horizontalOverflow ? 'Обнаружена горизонтальная прокрутка.' : 'Горизонтальное переполнение не обнаружено.', message.data.horizontalOverflow ? 'error-item' : 'good-item');
       if (state.previewHtml === state.html) refreshValidation();
-      else addRuntimeMessage('Предпросмотр отличается от последней QR-сборки; отчёт и история не обновлены.', 'warn-item');
+      else if (state.html) addRuntimeMessage('Предпросмотр отличается от последней QR-сборки; отчёт и история не обновлены.', 'warn-item');
     }
   });
 
   $('build').addEventListener('click', function () {
     if (state.mode === 'simple') syncSimpleSource();
-    build().then(function () { if (state.html) runPreview(); });
+    build().then(function (built) { if (built && state.html) runPreview(); });
   });
   elements.themeToggle.addEventListener('click', function () {
     applyTheme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light', true);
   });
   elements.applyImportedQr.addEventListener('click', applyImportedQrProfile);
   elements.closeImportedQr.addEventListener('click', function () { elements.qrImportAnalysis.hidden = true; setStatus('Профиль загруженного QR скрыт.'); });
-  elements.clearQrEmulation.addEventListener('click', function () { clearQrEmulation(true); setStatus('Возвращён автоматический выбор коррекции и стандартная геометрия QR.'); });
+  elements.clearQrEmulation.addEventListener('click', function () { clearQrEmulation(true); invalidateBuild(); draftChanged(); setStatus('Возвращён автоматический выбор коррекции и стандартная геометрия QR.'); });
   elements.qrZoom.addEventListener('click', function () { setQrExpanded(!elements.qrZoom.classList.contains('expanded')); });
   window.addEventListener('resize', fitExpandedQr);
   document.addEventListener('keydown', function (event) {
@@ -1723,15 +1842,17 @@
     else if (elements.qrZoom.classList.contains('expanded')) setQrExpanded(false);
   });
   elements.exampleSelect.addEventListener('change', function () {
-    setMode('code', false);
     loadSample(elements.exampleSelect.value);
-    build().then(function () { if (state.html) runPreview(); });
+    setMode('code', false);
+    build().then(function (built) { if (built && state.html) runPreview(); });
   });
   elements.sampleDocumentationOpen.addEventListener('click', openSampleDocumentation);
   elements.sampleDocumentationClose.addEventListener('click', closeSampleDocumentation);
   elements.sampleDocumentationOverlay.addEventListener('click', function (event) { if (event.target === elements.sampleDocumentationOverlay) closeSampleDocumentation(); });
   elements.applyDifficulty.addEventListener('click', applyCodeDifficulty);
-  elements.source.addEventListener('input', refreshDifficultyEditor);
+  elements.source.addEventListener('input', function () { refreshDifficultyEditor(); invalidateBuild(); });
+  elements.spec.addEventListener('input', invalidateBuild);
+  elements.optimizeSource.addEventListener('change', invalidateBuild);
   $('clear').addEventListener('click', function () { if (state.mode === 'simple') resetSimpleWorkspace(); else resetWorkspace(); });
   $('copy-url').addEventListener('click', copyDataUrl);
   $('download-png').addEventListener('click', downloadPng);
@@ -1751,17 +1872,17 @@
   $('run-preview').addEventListener('click', runPreview);
   $('stop-preview').addEventListener('click', stopPreview);
   $('reset-preview').addEventListener('click', function () { stopPreview(); setTimeout(runPreview, 30); });
-  $('html-file').addEventListener('change', function () { readFile(this, function (text) { elements.source.value = text; refreshDifficultyEditor(); setStatus('HTML-файл загружен.'); }); });
+  $('html-file').addEventListener('change', function () { readFile(this, function (text) { checkpointDraft('Перед загрузкой HTML'); elements.source.value = text; invalidateBuild(); refreshDifficultyEditor(); draftChanged(); setStatus('HTML-файл загружен.'); }); });
   $('qr-image-file').addEventListener('change', function () { loadQrImage(this); });
   $('spec-file').addEventListener('change', function () { readFile(this, loadSpecText); });
   elements.projectFile.addEventListener('change', function () { readFile(this, openProject); });
   elements.previewPreset.addEventListener('change', applyPreset);
   [elements.previewWidth, elements.previewHeight].forEach(function (input) { input.addEventListener('change', function () { elements.previewPreset.value = 'custom'; applyPreviewSize(); }); });
-  [elements.moduleScale, elements.quietZone].forEach(function (input) { input.addEventListener('change', function () { if (elements.source.value.trim()) build(); }); });
+  [elements.moduleScale, elements.quietZone].forEach(function (input) { input.addEventListener('input', invalidateBuild); input.addEventListener('change', function () { if (elements.source.value.trim()) build().then(function (built) { if (built) runPreview(); }); }); });
   elements.modeSimple.addEventListener('click', function () { setMode('simple', true); });
-  elements.modeCode.addEventListener('click', function () { setMode('code', false); });
-  elements.specModeForm.addEventListener('click', function () { setSpecEditorMode('form', false); });
-  elements.specModeJson.addEventListener('click', function () { setSpecEditorMode('json', false); });
+  elements.modeCode.addEventListener('click', function () { setMode('code', false); draftChanged(); });
+  elements.specModeForm.addEventListener('click', function () { if (setSpecEditorMode('form', false)) draftChanged(); });
+  elements.specModeJson.addEventListener('click', function () { setSpecEditorMode('json', false); draftChanged(); });
   [
     elements.specTitleInput, elements.specIdInput, elements.specTypeInput,
     elements.specSingleFileInput, elements.specExternalInput, elements.specNetworkInput, elements.specViewportInput,
@@ -1803,5 +1924,9 @@
   if (simpleBuilder) writeSimpleConfig(simpleBuilder.DEFAULT_CONFIG);
   populateExamples();
   loadSample(sample.defaultId);
-  build().then(runPreview);
+  draftController = window.QRMicroappsDraftController.create({
+    read: readDraftSnapshot, restore: restoreDraftSnapshot, status: setStatus, download: downloadBlob,
+    isInput: function (input) { return draftFieldIds.indexOf(input.id) >= 0 || elements.simpleQuestions.contains(input); }
+  });
+  if (!draftController.restoreLatest()) build().then(function (built) { if (built) runPreview(); });
 })();

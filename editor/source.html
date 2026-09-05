@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="frame-src data: about:; object-src 'none'; base-uri 'none'">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>QR Microapps Lab</title>
   <link rel="stylesheet" href="editor/styles.css">
@@ -54,6 +55,16 @@
           </div>
         </div>
       </div>
+
+      <details id="draft-panel" class="draft-panel">
+        <summary><strong>Черновики</strong><span id="draft-status" role="status">Изменения сохраняются автоматически</span></summary>
+        <div class="draft-actions">
+          <label for="draft-select">Сохранённые версии<select id="draft-select"></select></label>
+          <button id="restore-draft" class="button subtle small" type="button" disabled>Восстановить</button>
+          <button id="download-draft" class="button subtle small" type="button">Скачать черновик</button>
+        </div>
+        <p>Хранятся автосохранения последних 20 сеансов и 20 версий перед заменой содержимого. Незавершённый HTML и JSON сохраняются без проверки. Скачанный черновик открывается кнопкой «Открыть проект». Для переноса в другой браузер или к другой копии HTML скачайте файл.</p>
+      </details>
 
       <div class="mode-switch" role="group" aria-label="Режим редактора">
         <button id="mode-simple" class="mode-button" type="button" aria-pressed="false">Конструктор теста</button>
@@ -201,12 +212,14 @@
 
       <details class="qr-controls">
         <summary class="qr-controls-head"><span id="qr-settings-title" class="qr-controls-title">Параметры QR</span><span>Показать размер и рамку</span></summary>
+        <label class="optimization-option"><input id="optimize-source" type="checkbox" checked> Сокращать HTML, CSS и JavaScript</label>
         <input id="encoding" type="hidden" value="base64">
         <input id="ecc" type="hidden" value="M">
         <div class="settings" aria-label="Параметры упаковки">
           <label>Пикселей на модуль<input id="module-scale" type="number" min="1" max="20" value="6"></label>
           <label>Белая рамка, модулей<input id="quiet-zone" type="number" min="0" max="16" value="4"></label>
         </div>
+        <p class="qr-margin-hint">Для печати требуется белое поле не менее 4 модулей. Значения 0–3 предназначены для эксперимента и отмечаются нарушением в отчёте.</p>
         <div id="qr-emulation-note" class="qr-emulation-note" hidden><p id="qr-emulation-text"></p><button id="clear-qr-emulation" class="button subtle small" type="button">Вернуть автоматический режим</button></div>
       </details>
 
@@ -469,11 +482,18 @@
 
   <script src="editor/vendor/qrcode.min.js"></script>
   <script src="editor/vendor/jsQR.js"></script>
+  <script src="editor/vendor/acorn.js"></script>
+  <script src="editor/vendor/csstree.js"></script>
+  <script src="editor/vendor/parse5.js"></script>
+  <script src="editor/optimizer.js"></script>
+  <script src="editor/source-analysis.js"></script>
   <script src="editor/core.js"></script>
   <script src="editor/simple-builder.js"></script>
   <script src="editor/spec-builder.js"></script>
   <script src="editor/history.js"></script>
   <script src="editor/project.js"></script>
+  <script src="editor/drafts.js"></script>
+  <script src="editor/draft-controller.js"></script>
   <script src="editor/comparison.js"></script>
   <script src="editor/sample.js"></script>
   <script src="editor/device-test.js"></script>

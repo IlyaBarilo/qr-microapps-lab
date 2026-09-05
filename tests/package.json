@@ -4,16 +4,21 @@
   "author": "Ilya Barilo",
   "description": "Локальная лаборатория автономных HTML-микроприложений в QR-кодах",
   "scripts": {
-    "test": "node --test core.test.js",
+    "test": "node --test core.test.js reliability.test.js",
     "test:release": "node release-smoke.mjs",
     "test:standalone-browser": "node standalone-browser-smoke.mjs",
     "test:e2e": "playwright test",
     "build:standalone": "node ../tools/build-standalone.mjs",
+    "build:html-parser": "node ../tools/build-html-parser.mjs",
     "check:standalone": "node ../tools/build-standalone.mjs --check",
     "check": "npm test && npm run check:standalone && npm run test:release",
     "check:all": "npm run check && npm run test:standalone-browser && npm run test:e2e"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1"
+    "@playwright/test": "^1.62.1",
+    "acorn": "8.18.0",
+    "css-tree": "3.2.1",
+    "esbuild": "0.28.2",
+    "parse5": "8.0.1"
   }
 }
