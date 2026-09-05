@@ -36,8 +36,8 @@ jobs:
           package-manager-cache: false
       - name: Install test dependencies
         run: npm --prefix tests ci
-      - name: Install Chromium
-        run: npm --prefix tests exec -- playwright install --with-deps chromium
+      - name: Install Chromium, Firefox and WebKit
+        run: npm --prefix tests exec -- playwright install --with-deps chromium firefox webkit
       - name: Test before publishing
         run: npm --prefix tests run check:all
       - name: Inject release version

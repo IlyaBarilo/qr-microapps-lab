@@ -167,3 +167,29 @@ test('клавиатурный фокус загрузки файла обозн
   await page.locator('#html-file').focus();
   await expect(page.locator('label[for=html-file]')).toHaveCSS('outline-style', 'solid');
 });
+
+test('предпросмотр запускается после быстрых остановок и повторных запусков', async ({ page }) => {
+  await openLab(page);
+  for (let index = 0; index < 6; index++) {
+    await page.locator('#source').fill(prefix + '<button>Запуск ' + index + '</button>');
+    // Exercise pending navigations within one task, without waiting for blank to load.
+    await page.evaluate(() => {
+      for (let i = 0; i < 3; i++) {
+        document.querySelector('#stop-preview').click();
+        document.querySelector('#run-preview').click();
+      }
+    });
+    await expect(page.frameLocator('#preview').locator('button')).toHaveText('Запуск ' + index);
+    await expect(page.locator('#runtime-log')).toContainText('Приложение запустилось.');
+    await expect(page.locator('#preview')).toHaveAttribute('sandbox', 'allow-scripts');
+  }
+});
+
+test('браузерная проверка идентификатора принимает дефис и отклоняет посторонние символы', async ({ page }) => {
+  await openLab(page);
+  const result = await page.locator('#spec-id-input').evaluate(input => ['my-game-2', 'bad id', 'bad/id', 'Игра', '-game'].map(value => {
+    input.value = value;
+    return input.validity.patternMismatch;
+  }));
+  expect(result).toEqual([false, true, true, true, true]);
+});

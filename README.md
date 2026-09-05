@@ -152,15 +152,17 @@ npm --prefix tests run check
 
 ```text
 npm --prefix tests ci
-npm --prefix tests exec -- playwright install chromium
+npm --prefix tests exec -- playwright install chromium firefox webkit
 npm --prefix tests run check:all
 ```
 
 - `npm --prefix tests run build:standalone` обновляет корневой автономный HTML.
 - `npm --prefix tests run build:html-parser` воспроизводит локальную браузерную сборку parse5 из зависимостей, зафиксированных в `tests/package-lock.json`. Для обычной сборки лаборатории эта команда не нужна.
 - `npm --prefix tests run check` запускает модульные тесты, проверяет актуальность сборки и структуру репозитория.
-- `npm --prefix tests run test:standalone-browser` открывает HTML напрямую через `file://` и убеждается, что сетевых запросов нет.
-- `npm --prefix tests run test:e2e` проверяет основные пользовательские сценарии в Chromium.
+- `npm --prefix tests run test:standalone-browser` открывает HTML напрямую через `file://` в Chromium, проверяет отсутствие сетевых запросов и печать листов в PDF.
+- `npm --prefix tests run test:e2e` проверяет основные пользовательские сценарии в Chromium, Firefox и WebKit: черновики, импорт и экспорт, автономный запуск, предпросмотр и адаптивный интерфейс. Для одного браузера добавьте `-- --project=firefox` (или `chromium`, `webkit`).
+
+CI и публикация релиза запускают проверки во всех трёх браузерах. Используются тестовые сборки Playwright; WebKit в этих проверках не подтверждает работу камеры или Safari на настоящем iPhone. Тестовые браузеры нужны только для разработки и не включаются в автономный HTML.
 
 ## GitHub Pages
 

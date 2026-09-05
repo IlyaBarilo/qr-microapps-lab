@@ -1677,8 +1677,13 @@
     state.runtime = null;
     if (state.previewHtml === state.html) refreshValidation();
     elements.runtimeLog.innerHTML = '<li class="muted-item">Запуск в sandbox…</li>';
+    // A pending about:blank navigation can supersede a new data URL in WebKit.
+    // Insert a fresh frame with its final URL and the same sandbox attributes.
+    var previousPreview = elements.preview;
+    elements.preview = previousPreview.cloneNode(false);
     elements.preview.removeAttribute('srcdoc');
     elements.preview.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(core.buildPreviewDocument(html, state.previewToken));
+    previousPreview.replaceWith(elements.preview);
     setStatus('Предпросмотр запущен с запретом сетевых запросов.', 'good');
   }
 

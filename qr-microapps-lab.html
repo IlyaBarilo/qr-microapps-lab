@@ -1114,7 +1114,7 @@ visualization: {
             <section id="spec-form" class="spec-form" aria-label="Настройка профиля проверки">
               <div class="spec-grid three">
                 <label>Название<input id="spec-title-input" type="text" maxlength="80"></label>
-                <label>Идентификатор<input id="spec-id-input" type="text" maxlength="64" pattern="[a-z0-9][a-z0-9-]*"></label>
+                <label>Идентификатор<input id="spec-id-input" type="text" maxlength="64" pattern="[a-z0-9][a-z0-9\-]*"></label>
                 <label>Тип<select id="spec-type-input"><option value="quiz">Тест</option><option value="game">Игра</option><option value="career-guidance">Профориентация</option><option value="interactive">Интерактив</option><option value="other">Другое</option></select></label>
               </div>
 
@@ -22554,8 +22554,13 @@ if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='c
     state.runtime = null;
     if (state.previewHtml === state.html) refreshValidation();
     elements.runtimeLog.innerHTML = '<li class="muted-item">Запуск в sandbox…</li>';
+    // A pending about:blank navigation can supersede a new data URL in WebKit.
+    // Insert a fresh frame with its final URL and the same sandbox attributes.
+    var previousPreview = elements.preview;
+    elements.preview = previousPreview.cloneNode(false);
     elements.preview.removeAttribute('srcdoc');
     elements.preview.src = 'data:text/html;charset=utf-8,' + encodeURIComponent(core.buildPreviewDocument(html, state.previewToken));
+    previousPreview.replaceWith(elements.preview);
     setStatus('Предпросмотр запущен с запретом сетевых запросов.', 'good');
   }
 
