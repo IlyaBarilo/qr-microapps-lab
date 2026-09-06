@@ -718,9 +718,9 @@ test('извлечённая из QR игра «Успей в релиз» вс�
   assert.match(game.html, /u=2\.9\+\$d\*\.3/);
   assert.match(game.html, /t=58-\$d\*4\+n\(\)\*\(32-\$d\*2\)/);
   assert.match(game.html, /u\+=\.004\+\$d\*\.002/);
-  assert.match(game.html, /x\.arc\(M,50,11,0,7\);x\.fill\(\)/, 'луна должна начинаться с заполненного круга ниже счётчика');
-  assert.match(game.html, /x\.arc\(M\+4,47,8,0,7\);x\.fill\(\)/, 'смещённый круг цвета фона должен формировать заполненный полумесяц');
-  assert.match(game.html, /x\.fillText\(s,18,28\)/, 'счётчик должен располагаться с отступом от края');
+  assert.match(game.html, /x\.arc\(M,86,11,0,7\);x\.fill\(\)/, 'луна должна начинаться с заполненного круга ниже счётчика');
+  assert.match(game.html, /x\.arc\(M\+4,83,8,0,7\);x\.fill\(\)/, 'смещённый круг цвета фона должен формировать заполненный полумесяц');
+  assert.match(game.html, /j\(s,32,64\)/, 'счётчик должен располагаться ниже и правее верхнего левого края');
   assert.match(game.html, /x\[F\]='#123e'/, 'информационная карточка должна иметь контрастный тёмный фон');
   assert.match(game.html, /x\.font='bold 18px sans-serif'/, 'заголовок карточки должен быть полужирным');
   const checks = core.validateHtml(game.html, game.spec, { dataUrl: url, encoding: 'base64', ecc: 'M', qrVersion: 40 });
@@ -730,7 +730,7 @@ test('извлечённая из QR игра «Успей в релиз» вс�
     const html = core.setDifficulty(game.html, difficulty);
     const ticks = [];
     const drawingContext = {
-      setTransform() {}, fillRect() {}, beginPath() {}, arc() {}, fill() {}, fillText() {}
+      scale() {}, fillRect() {}, beginPath() {}, arc() {}, fill() {}, fillText() {}
     };
     const canvas = { style: {}, getContext: () => drawingContext };
     const sandbox = {
@@ -739,17 +739,62 @@ test('извлечённая из QR игра «Успей в релиз» вс�
       innerWidth: 360,
       innerHeight: 640,
       Math,
-      setInterval: (callback) => { ticks.push(callback); }
+      requestAnimationFrame: (callback) => { ticks.push(callback); }
     };
     vm.runInNewContext(html.match(/<script>\s*([\s\S]*?)<\/script>/)[1], sandbox);
+    ticks.shift()(0);
     canvas.onpointerdown({ preventDefault() {} });
     return { speed: sandbox.u, ticks, sandbox };
   });
   assert.deepEqual(variants.map((item) => Number(item.speed.toFixed(2))), [3.2, 3.5, 3.8, 4.1, 4.4]);
   variants.forEach((variant) => {
-    for (let index = 0; index < 36; index++) variant.ticks[0]();
+    for (let index = 1; index <= 36; index++) variant.ticks.shift()(index * 16);
     assert.ok(variant.sandbox.A.length > 0, 'после старта должно появиться препятствие');
   });
+});
+
+test('«Успей в релиз» сохраняет темп прыжка и движение мира при 60 и 120 Гц', () => {
+  function play(rate) {
+    const frames = [];
+    const context = { scale() {}, fillRect() {}, beginPath() {}, arc() {}, fill() {}, fillText() {} };
+    const canvas = { getContext: () => context };
+    const sandbox = {
+      c: canvas, innerWidth: 360, innerHeight: 640, devicePixelRatio: 1, Math,
+      requestAnimationFrame: (callback) => frames.push(callback)
+    };
+    const script = sample.getById('release-run').html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
+    vm.runInNewContext(script, sandbox);
+    frames.shift()(0);
+    const tap = () => {
+      let prevented = false;
+      canvas.onpointerdown({ preventDefault() { prevented = true; } });
+      assert.equal(prevented, true, 'тап должен подавлять стандартный жест браузера');
+    };
+    tap();
+    sandbox.A = [[320, sandbox.Y - 16, 22, 16, 0, 0]];
+    sandbox.t = 1e6;
+    tap();
+    const heights = [];
+    for (let frame = 1; frame <= rate; frame++) {
+      const before = sandbox.A[0][0];
+      if (frame === rate / 4) tap();
+      frames.shift()(frame * 1000 / rate);
+      assert.ok(sandbox.A[0][0] < before, 'препятствие должно двигаться на каждом кадре, включая повторный тап в воздухе');
+      assert.equal(sandbox.q, 0, 'за контрольный прыжок игра не должна закончиться');
+      if (frame % (rate / 4) === 0) heights.push(sandbox.y);
+    }
+    const position = sandbox.A[0][0];
+    frames.shift()(6000);
+    assert.ok(position - sandbox.A[0][0] <= sandbox.u * 2 + 1e-9, 'возвращение из фонового режима не должно прокручивать весь пропущенный путь');
+    assert.equal(frames.length, 1, 'должна работать одна цепочка кадров');
+    return { heights, position, ground: sandbox.Y - 22 };
+  }
+  const slow = play(60);
+  const fast = play(120);
+  slow.heights.forEach((height, index) => assert.ok(Math.abs(height - fast.heights[index]) < 1e-8, 'траектория не должна зависеть от частоты экрана'));
+  assert.ok(slow.heights[0] < slow.ground - 90, 'персонаж должен подняться в прыжке');
+  assert.equal(slow.heights[3], slow.ground, 'персонаж должен вернуться на землю');
+  assert.ok(Math.abs(slow.position - fast.position) < 1e-8, 'скорость мира не должна зависеть от частоты экрана');
 });
 
 test('«Киберрефлекс» встроен как автономный пример и укладывается в QR', () => {

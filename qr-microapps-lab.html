@@ -20127,15 +20127,16 @@ L=t=>{g=Math.min(2,(t-o)/16.7||1);o=t;if(!Q){X+=V*g;Y+=U*g;if(X<B||X>W-B)V=-V,X=
     }
   };
 
+  // Time is measured in 16 ms steps; the .25 correction preserves the original jump arc.
   var releaseRun = {
     id: 'release-run',
     title: 'Успей в релиз',
-    html: `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body style=margin:0;overflow:hidden><canvas id=c style=display:block;width:100vw;height:100vh;touch-action:none></canvas><script>\
-var $d=3;x=c.getContext('2d');f=x.fillRect.bind(x);F='fillStyle';n=Math.random;A=[];M=-20;m=1;q=s=l=0;onresize=z=_=>{W=innerWidth;H=innerHeight;Y=H-24;D=devicePixelRatio||1;c.width=W*D;c.height=H*D;x.setTransform(D,0,0,D,0,0);y=Y-22};z();\
+    html: `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><canvas id=c style=position:fixed;inset:0;width:100%;height:100%;touch-action:none></canvas><script>\
+var $d=3;x=c.getContext('2d');f=x.fillRect.bind(x);j=x.fillText.bind(x);F='fillStyle';n=Math.random;A=[];M=-20;m=1;q=s=l=T=0;onresize=z=_=>{W=innerWidth;H=innerHeight;Y=H-24;D=devicePixelRatio||1;c.width=W*D;c.height=H*D;x.scale(D,D);y=Y-22};z();\
 N=_=>{A=[];m=q=s=l=0;u=2.9+$d*.3;v=0;y=Y-22;t=36};P=_=>m?N():q?l<1&&N():y>Y-23?v=-10.5:0;c.onpointerdown=e=>e.preventDefault(P());\
-setInterval(_=>{M=M>W+20?-20:M+.2;q&&l&&l--;if(!m&&!q){v+=.5;y+=v;y>Y-22&&(y=Y-22,v=0);if(--t<1){k=n()*3|0;h=[16,30,22][k];w=(k?18:22)*(n()*3+1|0);A.push([W+w,Y-h,w,h,k,0]);t=58-$d*4+n()*(32-$d*2);u+=.004+$d*.002}for(i=A.length;i--;){a=A[i];a[0]-=u;r=a[0]+a[2];if(!a[5]&&r<44)s++,a[5]=1;48<r&&58>a[0]&&y+20>a[1]&&(q=1,l=36);a[0]<-a[2]&&A.splice(i,1)}}\
-x[F]='#124';f(0,0,W,H);x[F]='#789';for(i=18;i--;)f(i*79%W,i*53%(H*.45),2,2);x[F]='#fd7';x.beginPath();x.arc(M,50,11,0,7);x.fill();x[F]='#124';x.beginPath();x.arc(M+4,47,8,0,7);x.fill();x[F]='#333';f(0,Y,W,24);x[F]='#7cf';f(0,Y-4,W,4);x[F]='#fff';x.font='bold 18px sans-serif';x.textAlign='left';x.fillText(s,18,28);for(i=A.length;i--;){a=A[i];x[F]=a[4]==1?'#f80':a[4]==2?'#bbb':'#f45';f(a[0],a[1],a[2],a[3])}x[F]='#8ef';f(44,y,18,22);\
-if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='center';x.fillText('УСПЕЙ В РЕЛИЗ',C,B-14);x.font='15px sans-serif';x[F]='#fff';x.fillText(q?'СЧЕТ '+s:'ТАП-ПРЫЖОК',C,B+10);q&&l<1&&x.fillText('ЕЩЕ',C,B+32);m&&x.fillText('СТАРТ',C,B+32)}},16)<\/script>`,
+requestAnimationFrame(G=E=>{b=Math.min((E-T)/16,2);T=E;requestAnimationFrame(G);M=M>W+20?-20:M+.2*b;l>0&&(l-=b);if(!m&&!q){y+=(v+.25*b+.25)*b;v+=.5*b;y>Y-22&&(y=Y-22,v=0);if((t-=b)<1){k=n()*3|0;h=[16,30,22][k];w=(k?18:22)*(n()*3+1|0);A.push([W+w,Y-h,w,h,k,0]);t=58-$d*4+n()*(32-$d*2);u+=.004+$d*.002}for(i=A.length;i--;){a=A[i];a[0]-=u*b;r=a[0]+a[2];if(!a[5]&&r<44)s++,a[5]=1;48<r&&58>a[0]&&y+20>a[1]&&(q=1,l=36);a[0]<-a[2]&&A.splice(i,1)}}\
+x[F]='#124';f(0,0,W,H);x[F]='#789';for(i=18;i--;)f(i*79%W,i*53%(H*.45),2,2);x[F]='#fd7';x.beginPath();x.arc(M,86,11,0,7);x.fill();x[F]='#124';x.beginPath();x.arc(M+4,83,8,0,7);x.fill();x[F]='#333';f(0,Y,W,24);x[F]='#7cf';f(0,Y-4,W,4);x[F]='#fff';x.font='bold 18px sans-serif';x.textAlign='left';j(s,32,64);for(i=A.length;i--;){a=A[i];x[F]=a[4]==1?'#f80':a[4]==2?'#bbb':'#f45';f(a[0],a[1],a[2],a[3])}x[F]='#8ef';f(44,y,18,22);\
+if(m||q){B=H/2;C=W/2;x[F]='#123e';f(C-86,B-44,172,88);x[F]='#7cf';x.textAlign='center';j('УСПЕЙ В РЕЛИЗ',C,B-14);x.font='15px sans-serif';x[F]='#fff';j(q?'СЧЕТ '+s:'ТАП-ПРЫЖОК',C,B+10);q&&l<1&&j('ЕЩЕ',C,B+32);m&&j('СТАРТ',C,B+32)}})<\/script>`,
     spec: {
       schemaVersion: '0.1', id: 'release-run', title: 'Успей в релиз', type: 'game', difficulty: 3,
       qr: { encoding: 'base64', ecc: 'M' },
