@@ -45,6 +45,11 @@ function build() {
   if (!stylesheetPattern.test(html)) throw new Error('Не найдена ожидаемая ссылка на editor/styles.css.');
   html = html.replace(stylesheetPattern, `  <style data-source="editor/styles.css">\n${read('editor/styles.css').trim()}\n  </style>`);
 
+  const faviconPattern = /  <link rel="icon" type="image\/png" href="editor\/assets\/qr-microapps-lab\.png">/;
+  if (!faviconPattern.test(html)) throw new Error('Не найдена ожидаемая ссылка на значок вкладки.');
+  const faviconDataUrl = `data:image/png;base64,${readFileSync(join(root, 'editor/assets/qr-microapps-lab.png')).toString('base64')}`;
+  html = html.replace(faviconPattern, `  <link rel="icon" type="image/png" href="${faviconDataUrl}">`);
+
   const scriptPattern = /  <script src="([^"]+)"><\/script>/g;
   let scriptsInlined = 0;
   html = html.replace(scriptPattern, (tag, relativePath) => {

@@ -95,7 +95,7 @@
     setMode(snapshot.mode, false, true);
     setSpecEditorMode(snapshot.specEditorMode, true, true);
     updateSampleDocumentationButton();
-    refreshDifficultyEditor();
+    refreshSourceControls();
     applyPreviewSize();
   }
 
@@ -781,7 +781,7 @@
     var urlBytes = core.byteLength(core.makeDataUrl(built.html, built.spec.qr.encoding));
     elements.simpleSize.textContent = 'HTML ' + formatBytes(htmlBytes) + ' · Data URL ' + formatBytes(urlBytes);
     elements.simpleSize.parentElement.classList.toggle('over-limit', urlBytes > core.getQrLimit(built.spec.qr.ecc));
-    refreshDifficultyEditor();
+    refreshSourceControls();
     return built;
   }
 
@@ -864,7 +864,7 @@
       setStatus('Конструктор теста: HTML собран и готов к автоматической проверке.');
       if (rebuild) build().then(function (built) { if (built && state.mode === 'simple' && state.html) runPreview(); });
     } else {
-      refreshDifficultyEditor();
+      refreshSourceControls();
       setStatus('Режим кода: доступны HTML и профиль автоматических проверок.');
     }
   }
@@ -1171,7 +1171,7 @@
       var spec = parseSpec();
       var sourceDifficulty = core.inspectDifficulty(sourceHtml);
       if (sourceDifficulty.count === 1 && sourceDifficulty.valid) spec.difficulty = sourceDifficulty.value;
-      refreshDifficultyEditor();
+      refreshSourceControls();
       var encoding = 'base64';
       var dataUrl = core.makeDataUrl(html, encoding);
       var payloadBytes = core.byteLength(dataUrl);
@@ -1247,7 +1247,6 @@
           : ' Коррекция ' + requestedEcc + ' из профиля не вместила нагрузку; использован уровень ' + ecc + '.'
         : '';
       setStatus((failed ? 'QR создан, но найдено нарушений: ' + failed + '.' : 'QR создан и автоматически проверен.') + fallbackNote + emulationNote + optimizationNote, failed ? 'bad' : 'good');
-      if (draftController) draftController.flush();
       return true;
     } catch (error) {
       if (buildId !== state.buildId) return false;
@@ -1266,7 +1265,7 @@
   }
 
   function populateExamples() {
-    elements.exampleSelect.replaceChildren();
+    elements.exampleSelect.replaceChildren(new Option('', ''));
     (sample.items || [sample]).forEach(function (item) {
       var option = document.createElement('option');
       option.value = item.id || item.spec.id;
@@ -1278,7 +1277,14 @@
   }
 
   function selectedSample() {
+    if (!elements.exampleSelect.value) return null;
     return typeof sample.getById === 'function' ? sample.getById(elements.exampleSelect.value) : sample;
+  }
+
+  function syncSampleSelection() {
+    var selected = selectedSample();
+    if (selected && elements.source.value !== selected.html.replace(/\r\n?/g, '\n')) elements.exampleSelect.value = '';
+    updateSampleDocumentationButton();
   }
 
   function updateSampleDocumentationButton() {
@@ -1287,7 +1293,7 @@
     elements.sampleDocumentationOpen.disabled = !available;
     elements.sampleDocumentationOpen.title = available
       ? 'Открыть описание примера «' + (selected.title || selected.spec.title) + '»'
-      : 'Для этого примера описание пока не добавлено';
+      : selected ? 'Для этого примера описание пока не добавлено' : 'Выберите готовый пример, чтобы открыть его описание';
   }
 
   function appendDocumentationText(container, tagName, text, className) {
@@ -1408,7 +1414,8 @@
     if (state.sampleDocumentationLastFocus && typeof state.sampleDocumentationLastFocus.focus === 'function') state.sampleDocumentationLastFocus.focus();
   }
 
-  function refreshDifficultyEditor() {
+  function refreshSourceControls() {
+    syncSampleSelection();
     var source = elements.source.value;
     try { source = core.normalizeSource(source); }
     catch (error) { source = elements.source.value; }
@@ -1442,7 +1449,7 @@
       spec.difficulty = value;
       elements.spec.value = JSON.stringify(spec, null, 2);
       writeSpecForm(spec);
-      refreshDifficultyEditor();
+      refreshSourceControls();
       setStatus('Сложность ' + value + ' применена к текущему HTML.');
       draftChanged();
       build().then(function (built) { if (built && state.html) runPreview(); });
@@ -1460,7 +1467,7 @@
     elements.encoding.value = selected.spec.qr.encoding;
     elements.ecc.value = selected.spec.qr.ecc;
     updateSampleDocumentationButton();
-    refreshDifficultyEditor();
+    refreshSourceControls();
     setStatus('Загружен эталонный пример «' + selected.spec.title + '».');
     draftChanged();
   }
@@ -1479,7 +1486,7 @@
     state.runtime = null;
     state.report = null;
     elements.source.value = '';
-    refreshDifficultyEditor();
+    refreshSourceControls();
     var blankSpec = specBuilder ? specBuilder.build({}) : {};
     elements.spec.value = JSON.stringify(blankSpec, null, 2);
     writeSpecForm(blankSpec);
@@ -1632,7 +1639,7 @@
         elements.source.value = project.html;
         elements.spec.value = JSON.stringify(projectSpec, null, 2);
         writeSpecForm(projectSpec);
-        refreshDifficultyEditor();
+        refreshSourceControls();
       }
 
       elements.optimizeSource.checked = project.settings.optimize;
@@ -1812,7 +1819,7 @@
         setMode('code', false);
         elements.source.value = source;
         invalidateBuild();
-        refreshDifficultyEditor();
+        refreshSourceControls();
         draftChanged();
         setStatus('QR-изображение декодировано и проанализировано: HTML загружен в редактор.', 'good');
       } else {
@@ -1866,6 +1873,7 @@
     else if (elements.qrZoom.classList.contains('expanded')) setQrExpanded(false);
   });
   elements.exampleSelect.addEventListener('change', function () {
+    if (!elements.exampleSelect.value) { updateSampleDocumentationButton(); return; }
     loadSample(elements.exampleSelect.value);
     setMode('code', false);
     build().then(function (built) { if (built && state.html) runPreview(); });
@@ -1874,7 +1882,7 @@
   elements.sampleDocumentationClose.addEventListener('click', closeSampleDocumentation);
   elements.sampleDocumentationOverlay.addEventListener('click', function (event) { if (event.target === elements.sampleDocumentationOverlay) closeSampleDocumentation(); });
   elements.applyDifficulty.addEventListener('click', applyCodeDifficulty);
-  elements.source.addEventListener('input', function () { refreshDifficultyEditor(); invalidateBuild(); });
+  elements.source.addEventListener('input', function () { refreshSourceControls(); invalidateBuild(); });
   elements.spec.addEventListener('input', invalidateBuild);
   elements.optimizeSource.addEventListener('change', invalidateBuild);
   $('clear').addEventListener('click', function () { if (state.mode === 'simple') resetSimpleWorkspace(); else resetWorkspace(); });
@@ -1897,7 +1905,7 @@
   $('run-preview').addEventListener('click', runPreview);
   $('stop-preview').addEventListener('click', stopPreview);
   $('reset-preview').addEventListener('click', function () { stopPreview(); setTimeout(runPreview, 30); });
-  $('html-file').addEventListener('change', function () { readFile(this, function (text) { checkpointDraft('Перед загрузкой HTML'); elements.source.value = text; invalidateBuild(); refreshDifficultyEditor(); draftChanged(); setStatus('HTML-файл загружен.'); }); });
+  $('html-file').addEventListener('change', function () { readFile(this, function (text) { checkpointDraft('Перед загрузкой HTML'); elements.source.value = text; invalidateBuild(); refreshSourceControls(); draftChanged(); setStatus('HTML-файл загружен.'); }); });
   $('qr-image-file').addEventListener('change', function () { loadQrImage(this); });
   $('spec-file').addEventListener('change', function () { readFile(this, loadSpecText); });
   elements.projectFile.addEventListener('change', function () { readFile(this, openProject); });
@@ -1960,5 +1968,6 @@
     read: readDraftSnapshot, restore: restoreDraftSnapshot, status: setStatus, download: downloadBlob,
     isInput: function (input) { return draftFieldIds.indexOf(input.id) >= 0 || elements.simpleQuestions.contains(input); }
   });
-  if (!draftController.restoreLatest()) build().then(function (built) { if (built) runPreview(); });
+  draftController.restoreLatest();
+  if (elements.source.value.trim()) build().then(function (built) { if (built) runPreview(); });
 })();

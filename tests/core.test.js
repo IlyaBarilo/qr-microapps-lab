@@ -1176,6 +1176,48 @@ test('анализатор интерфейса измеряет размер, �
   assert.equal(metrics.smallestGap, 4);
 });
 
+test('интервал ровно 8 px проходит проверку при дробных координатах', () => {
+  for (const controls of [
+    [
+      { left: 0, top: 206.4, right: 42, bottom: 248.4, width: 42, height: 42, labeled: true },
+      { left: 0, top: 256.4, right: 42, bottom: 298.4, width: 42, height: 42, labeled: true }
+    ],
+    [
+      { left: 206.4, top: 0, right: 248.4, bottom: 42, width: 42, height: 42, labeled: true },
+      { left: 256.4, top: 0, right: 298.4, bottom: 42, width: 42, height: 42, labeled: true }
+    ],
+    [
+      { left: 0, top: 0, right: 42, bottom: 42, width: 42, height: 42, labeled: true },
+      { left: 46.8, top: 48.4, right: 88.8, bottom: 90.4, width: 42, height: 42, labeled: true }
+    ]
+  ]) {
+    const metrics = core.analyzeControls(controls, 42, 8);
+    assert.equal(metrics.tightPairCount, 0);
+    assert.equal(metrics.smallestGap, 8);
+  }
+});
+
+test('отчёт об интервалах сохраняет дробную часть и реальные нарушения', () => {
+  for (const [gap, status, displayed] of [
+    [8, 'pass', '8'],
+    [7.9, 'fail', '7,9'],
+    [7.99, 'fail', '7,99'],
+    [7.9999, 'fail', '7,9999'],
+    [8.1, 'pass', '8,1']
+  ]) {
+    const controls = [
+      { left: 0, top: 206.4, right: 42, bottom: 248.4, width: 42, height: 42, labeled: true },
+      { left: 0, top: 248.4 + gap, right: 42, bottom: 290.4 + gap, width: 42, height: 42, labeled: true }
+    ];
+    const check = core.validateHtml('<button>A</button><button>B</button>', {
+      interface: { minControlGapPx: 8 }
+    }, { runtime: { controls } }).find(item => item.id === 'control-spacing');
+    assert.equal(check.status, status, 'Интервал ' + gap + ' px');
+    assert.equal(check.evidence, 'Минимальный интервал: ' + displayed + ' px.');
+    if (status === 'fail') assert.equal(check.message, 'Пар с интервалом меньше 8 px: 1.');
+  }
+});
+
 test('анализ размера точно разделяет HTML, CSS, JavaScript и текст', () => {
   const html = '<!doctype html><style>body { color: red }</style><main>Привет</main><script>let x = 1</script>';
   const analysis = core.analyzeSize(html, { encoding: 'base64', ecc: 'M' });

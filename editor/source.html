@@ -5,6 +5,7 @@
   <meta http-equiv="Content-Security-Policy" content="frame-src data: about:; object-src 'none'; base-uri 'none'">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>QR Microapps Lab</title>
+  <link rel="icon" type="image/png" href="editor/assets/qr-microapps-lab.png">
   <link rel="stylesheet" href="editor/styles.css">
 </head>
 <body>
@@ -57,7 +58,12 @@
       </div>
 
       <details id="draft-panel" class="draft-panel">
-        <summary><strong>Черновики</strong><span id="draft-status" role="status">Изменения сохраняются автоматически</span></summary>
+        <summary>
+          <strong>Черновики</strong>
+          <button id="save-draft" class="button subtle small" type="button" title="Сохранить текущий код и настройки в этом браузере">Сохранить сейчас</button>
+          <span id="draft-status" role="status">Автосохранение каждые 30 сек.</span>
+        </summary>
+        <p>Изменения сохраняются в этом браузере каждые 30 сек. При уходе со страницы — сразу.</p>
         <div class="draft-actions">
           <label for="draft-select">Сохранённые версии<select id="draft-select"></select></label>
           <button id="restore-draft" class="button subtle small" type="button" disabled>Восстановить</button>

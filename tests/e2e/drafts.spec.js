@@ -13,6 +13,15 @@ async function openDrafts(page) {
   await page.locator('#draft-panel').evaluate(element => { element.open = true; });
 }
 
+async function saveDraft(page) {
+  await page.locator('#save-draft').click();
+  await expect(page.locator('#draft-status')).toContainText('Черновик сохранён в');
+}
+
+async function currentDraft(page) {
+  return page.evaluate(() => JSON.parse(localStorage.getItem('qr-microapps-drafts-v1:' + sessionStorage.getItem('qr-microapps-draft-tab'))));
+}
+
 async function restoreVersion(page, label) {
   await openDrafts(page);
   const value = await page.locator('#draft-select option').filter({ hasText: label }).first().getAttribute('value');
@@ -20,20 +29,95 @@ async function restoreVersion(page, label) {
   await page.locator('#restore-draft').click();
 }
 
-test('перезагрузка восстанавливает исходный HTML и незавершённый JSON без выполнения кода', async ({ page }) => {
+test('автосохранение работает каждые 30 секунд при непрерывных правках и пропускает неизменённый черновик', async ({ page }) => {
+  await page.clock.install({ time: new Date('2026-01-01T00:00:00Z') });
+  await page.clock.pauseAt(new Date('2026-01-01T00:00:01Z'));
+  await openLab(page);
+  await expect(page.locator('#draft-status')).toHaveText('Автосохранение каждые 30 сек.');
+  for (let index = 0; index < 3; index++) {
+    await page.locator('#source').fill(html + '<p>Правка ' + index + '</p>');
+    await page.clock.fastForward(index < 2 ? 10000 : 9900);
+    expect(await currentDraft(page)).toBeNull();
+  }
+  const latest = html + '<p>Последняя правка</p>';
+  await page.locator('#source').fill(latest);
+  await expect(page.locator('#draft-status')).toContainText('Есть изменения');
+  await page.locator('#build').click();
+  await expect(page.locator('#download-html')).toBeEnabled();
+  expect(await currentDraft(page)).toBeNull();
+  await page.clock.fastForward(100);
+  const saved = await currentDraft(page);
+  expect(saved.snapshot.fields.source).toBe(latest);
+  expect(saved.label).toBe('Автосохранение');
+  await expect(page.locator('#draft-status')).toContainText('Черновик сохранён в');
+  await page.clock.fastForward(30000);
+  expect(await currentDraft(page)).toEqual(saved);
+  await page.locator('#source').fill(html);
+  await page.clock.fastForward(29999);
+  expect(await currentDraft(page)).toEqual(saved);
+  await page.clock.fastForward(1);
+  expect((await currentDraft(page)).snapshot.fields.source).toBe(html);
+});
+
+test('кнопка сохраняет черновик сразу вместе с незавершённым JSON', async ({ page }) => {
+  await openLab(page);
+  await page.locator('#source').fill(html);
+  await page.locator('.spec-box').evaluate(element => { element.open = true; });
+  await page.locator('#spec-mode-json').click();
+  await page.locator('#spec').fill('{"title":');
+  expect(await currentDraft(page)).toBeNull();
+  await saveDraft(page);
+  const saved = await currentDraft(page);
+  expect(saved.snapshot.fields.source).toBe(html);
+  expect(saved.snapshot.fields.spec).toBe('{"title":');
+  expect(saved.label).toBe('Сохранено вручную');
+});
+
+test('перезагрузка создаёт QR и запускает восстановленный код без нажатия кнопки', async ({ page }) => {
+  await openLab(page);
+  await page.locator('#source').fill(html);
+  await page.reload();
+  await expect(page.locator('#source')).toHaveValue(html);
+  await expect(page.locator('#roundtrip-title')).toHaveText('Содержимое восстановлено без изменений');
+  await expect(page.locator('#qr-canvas')).toBeVisible();
+  await expect(page.locator('#download-html')).toBeEnabled();
+  await expect(page.locator('#runtime-log')).toContainText('Приложение запустилось.');
+  const preview = page.frameLocator('#preview');
+  await expect(preview.locator('p')).toHaveText('Мой незавершённый текст');
+  expect(await preview.locator('body').evaluate(body => body.ownerDocument.defaultView.draftExecuted)).toBe(true);
+  const restoredHtml = await page.evaluate(() => {
+    const payload = document.querySelector('#data-url').value;
+    return QRMicroappsCore.normalizeSource(payload);
+  });
+  expect(restoredHtml).toContain('Мой незавершённый текст');
+});
+
+test('перезагрузка пустого черновика не запускает пример и не создаёт QR', async ({ page }) => {
+  await openLab(page);
+  await page.locator('#source').fill('  \n  ');
+  await page.reload();
+  await expect(page.locator('#source')).toHaveValue('  \n  ');
+  await expect(page.locator('#status')).toHaveText('Черновик восстановлен.');
+  await expect(page.locator('#preview')).toHaveAttribute('src', 'about:blank');
+  await expect(page.locator('#download-html')).toBeDisabled();
+  await expect(page.locator('#qr-canvas')).toBeHidden();
+  await expect(page.locator('#data-url')).toHaveValue('');
+});
+
+test('перезагрузка сохраняет незавершённый JSON и показывает ошибку проверки', async ({ page }) => {
   await openLab(page);
   await page.locator('#source').fill(html);
   await page.locator('.spec-box').evaluate(element => { element.open = true; });
   await page.locator('#spec-mode-json').click();
   await page.locator('#spec').fill('{"title": "Ещё не готово",');
-  // Reload before the debounce expires: beforeunload must flush the raw fields.
+  // Перезагрузка до автосохранения должна сразу сохранить незавершённые поля.
   await page.reload();
   await expect(page.locator('#source')).toHaveValue(html);
   await expect(page.locator('#spec')).toHaveValue('{"title": "Ещё не готово",');
   await expect(page.locator('#spec-mode-json')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#preview')).toHaveAttribute('src', 'about:blank');
   await expect(page.locator('#download-html')).toBeDisabled();
-  await expect(page.locator('#status')).toContainText('Черновик восстановлен');
+  await expect(page.locator('#status')).toContainText('Ошибка JSON-профиля проверки');
 });
 
 test('после выбора примера, конструктора и очистки можно вернуть прежнюю работу', async ({ page }) => {
@@ -64,7 +148,8 @@ test('пустые поля вопросов остаются редактиру
   await expect(page.locator('[data-simple-prompt]').first()).toHaveValue('');
   await expect(page.locator('[data-simple-answer]').first()).toHaveValue('');
   await expect(page.locator('[data-simple-correct]').nth(1)).toBeChecked();
-  await expect(page.locator('#preview')).toHaveAttribute('src', 'about:blank');
+  await expect(page.locator('#runtime-log')).toContainText('Приложение запустилось.');
+  await expect(page.locator('#qr-canvas')).toBeVisible();
 });
 
 test('скачанный черновик открывается с незавершённым профилем в другом браузерном контексте', async ({ page, browser }) => {
@@ -94,7 +179,9 @@ test('при запрете хранилища показывается пред
   await page.addInitScript(() => { Storage.prototype.setItem = function () { throw new DOMException('Storage denied', 'SecurityError'); }; });
   await openLab(page);
   await page.locator('#source').fill(html);
-  await expect(page.locator('#draft-status')).toContainText('Автосохранение недоступно');
+  await openDrafts(page);
+  await page.locator('#save-draft').click();
+  await expect(page.locator('#draft-status')).toContainText('Сохранение недоступно');
   await page.locator('#example-select').selectOption('brick-breaker');
   await restoreVersion(page, 'Перед выбором примера');
   await expect(page.locator('#source')).toHaveValue(html);
@@ -108,7 +195,7 @@ test('при запрете хранилища показывается пред
 test('две вкладки с копией состояния сеанса не перезаписывают черновики друг друга', async ({ page, context }) => {
   await openLab(page);
   await page.locator('#source').fill(html);
-  await expect(page.locator('#draft-status')).toContainText('Черновик сохранён');
+  await saveDraft(page);
   const copiedSession = await page.evaluate(() => sessionStorage.getItem('qr-microapps-draft-tab'));
   const other = await context.newPage();
   await other.addInitScript(owner => sessionStorage.setItem('qr-microapps-draft-tab', owner), copiedSession);
@@ -116,8 +203,8 @@ test('две вкладки с копией состояния сеанса не
   await expect(other.locator('#source')).toHaveValue(html);
   await page.locator('#source').fill('первый черновик');
   await other.locator('#source').fill('второй черновик');
-  await expect(page.locator('#draft-status')).toContainText('Черновик сохранён');
-  await expect(other.locator('#draft-status')).toContainText('Черновик сохранён');
+  await saveDraft(page);
+  await saveDraft(other);
   const saved = await page.evaluate(() => Object.keys(localStorage).filter(key => key.startsWith('qr-microapps-drafts-v1:'))
     .map(key => JSON.parse(localStorage.getItem(key)).snapshot.fields.source));
   expect(saved).toContain('первый черновик');

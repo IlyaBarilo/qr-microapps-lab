@@ -121,6 +121,19 @@ test('проверка зависимостей разбирает все атр
   assert.ok(core.findExternalResources('<iframe srcdoc="&lt;img src=&quot;https://example.invalid/nested&quot;&gt;"></iframe>').some(value => value.includes('/nested')));
 });
 
+test('кнопки из JavaScript подтверждают сенсорное управление после запуска', () => {
+  for (const id of ['tiny-quiz', 'computer-thinking', 'tournament-bracket', 'career-compass']) {
+    const game = sample.getById(id);
+    const check = runtime => core.validateHtml(game.html, game.spec, { runtime }).find(item => item.id === 'touch-controls');
+    assert.equal(check().status, 'warn', 'строки с HTML не доказывают наличие кнопок');
+    assert.equal(check({ controls: [{ width: 120, height: 52 }], touchControls: false }).status, 'warn');
+    assert.equal(check({ touchControls: 'true' }).status, 'warn');
+    const actual = check({ touchControls: true });
+    assert.equal(actual.status, 'pass', id);
+    assert.match(actual.message, /В предпросмотре/);
+  }
+});
+
 test('QR без белого поля не проходит проверку, а неизвестные параметры остаются ожидающими', () => {
   for (const quietZone of [0, 1, 3, 4, 8, undefined]) {
     const check = core.validateHtml(sample.html, sample.spec, { quietZone }).find(check => check.id === 'qr-quiet-zone');

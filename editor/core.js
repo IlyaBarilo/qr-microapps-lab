@@ -607,7 +607,8 @@
         if (![first.left, first.top, second.left, second.top, firstRight, secondRight, firstBottom, secondBottom].every(Number.isFinite)) continue;
         var dx = Math.max(0, first.left - secondRight, second.left - firstRight);
         var dy = Math.max(0, first.top - secondBottom, second.top - firstBottom);
-        var gap = Math.sqrt(dx * dx + dy * dy);
+        // Убираем погрешность дробных координат (256.4 - 248.4 < 8), сохраняя точность до миллионной px.
+        var gap = Number(Math.sqrt(dx * dx + dy * dy).toFixed(6));
         if (smallestGap == null || gap < smallestGap) smallestGap = gap;
         if (gap < minGap) tightPairs++;
       }
@@ -709,8 +710,12 @@
     }
 
     if (interfaceRules.touchControls) {
-      var touchHint = analysis.touch;
-      checks.push(result('touch-controls', 'Сенсорное управление', touchHint ? 'pass' : 'warn', touchHint ? 'Обнаружены обработчики или элементы, доступные касанием.' : 'Сенсорное управление не удалось подтвердить статически.'));
+      var runtimeTouch = options.runtime && options.runtime.touchControls === true;
+      var touchHint = analysis.touch || runtimeTouch;
+      checks.push(result('touch-controls', 'Сенсорное управление', touchHint ? 'pass' : 'warn', runtimeTouch
+        ? 'В предпросмотре обнаружены элементы, доступные касанием.'
+        : touchHint ? 'Обнаружены обработчики или элементы, доступные касанием.'
+          : 'Сенсорное управление не удалось подтвердить' + (options.runtime ? ' в исходнике и предпросмотре.' : ' статически.')));
     }
 
     if (interfaceRules.noHorizontalScroll) {
@@ -747,7 +752,7 @@
           'Интервалы между элементами',
           controlMetrics.tightPairCount ? 'fail' : 'pass',
           controlMetrics.tightPairCount ? 'Пар с интервалом меньше ' + interfaceRules.minControlGapPx + ' px: ' + controlMetrics.tightPairCount + '.' : 'Интервалы между элементами не меньше ' + interfaceRules.minControlGapPx + ' px.',
-          controlMetrics.smallestGap == null ? '' : 'Минимальный интервал: ' + Math.round(controlMetrics.smallestGap) + ' px.'
+          controlMetrics.smallestGap == null ? '' : 'Минимальный интервал: ' + String(controlMetrics.smallestGap).replace('.', ',') + ' px.'
         ));
       } else checks.push(result('control-spacing', 'Интервалы между элементами', 'pending', 'Ожидается измерение элементов в предпросмотре.'));
     }
@@ -828,9 +833,9 @@
       'addEventListener("error",function(e){if(x.length>=20)return;var d={message:e.message||"Ошибка JavaScript",line:e.lineno||0};x.push(d);p("error",d);u()});' +
       'addEventListener("unhandledrejection",function(e){if(x.length>=20)return;var d={message:String(e.reason||"Необработанный Promise")};x.push(d);p("error",d);u()});' +
       'addEventListener("securitypolicyviolation",function(e){if(b.length>=20)return;var d={directive:e.violatedDirective||"",uri:e.blockedURI||""};b.push(d);p("blocked",d);u()});' +
-      'function m(){var d=document.documentElement,o=document.body,sw=Math.max(d?d.scrollWidth:0,o?o.scrollWidth:0),sh=Math.max(d?d.scrollHeight:0,o?o.scrollHeight:0),vw=d?d.clientWidth:innerWidth,vh=d?d.clientHeight:innerHeight,es=document.querySelectorAll("button,a[href],input:not([type=hidden]),select,textarea,[role=button],[onclick]"),cs=[];' +
-      'for(var i=0;i<es.length;i++){var e=es[i],r=e.getBoundingClientRect(),s=getComputedStyle(e);if(r.width<1||r.height<1||s.display=="none"||s.visibility=="hidden")continue;var l=(e.getAttribute("aria-label")||e.getAttribute("title")||e.innerText||e.value||"").trim();cs.push({width:Math.round(r.width*10)/10,height:Math.round(r.height*10)/10,left:Math.round(r.left*10)/10,top:Math.round(r.top*10)/10,right:Math.round(r.right*10)/10,bottom:Math.round(r.bottom*10)/10,labeled:!!l})}' +
-      'var metrics={horizontalOverflow:sw>vw+1,verticalOverflow:sh>vh+1,scrollWidth:sw,scrollHeight:sh,viewportWidth:vw,viewportHeight:vh,controls:cs,errors:x.slice(),blocked:b.slice()};var next=JSON.stringify(metrics);if(next!==last){last=next;p("metrics",metrics)}}' +
+      'function m(){var d=document.documentElement,o=document.body,sw=Math.max(d?d.scrollWidth:0,o?o.scrollWidth:0),sh=Math.max(d?d.scrollHeight:0,o?o.scrollHeight:0),vw=d?d.clientWidth:innerWidth,vh=d?d.clientHeight:innerHeight,es=document.querySelectorAll("button,a[href],input:not([type=hidden]),select,textarea,[role=button],[onclick]"),cs=[],tc=false;' +
+      'for(var i=0;i<es.length;i++){var e=es[i],r=e.getBoundingClientRect(),s=getComputedStyle(e);if(r.width<1||r.height<1||s.display=="none"||s.visibility=="hidden")continue;if(!e.matches(":disabled,[aria-disabled=true]")&&s.pointerEvents!=="none")tc=true;var l=(e.getAttribute("aria-label")||e.getAttribute("title")||e.innerText||e.value||"").trim();cs.push({width:Math.round(r.width*10)/10,height:Math.round(r.height*10)/10,left:Math.round(r.left*10)/10,top:Math.round(r.top*10)/10,right:Math.round(r.right*10)/10,bottom:Math.round(r.bottom*10)/10,labeled:!!l})}' +
+      'var metrics={touchControls:tc,horizontalOverflow:sw>vw+1,verticalOverflow:sh>vh+1,scrollWidth:sw,scrollHeight:sh,viewportWidth:vw,viewportHeight:vh,controls:cs,errors:x.slice(),blocked:b.slice()};var next=JSON.stringify(metrics);if(next!==last){last=next;p("metrics",metrics)}}' +
       'function u(){if(!z)z=setTimeout(function(){z=0;m()},80)}addEventListener("load",function(){m();new MutationObserver(u).observe(document.documentElement,{childList:true,subtree:true,attributes:true,characterData:true});if(typeof ResizeObserver!=="undefined"){var ro=new ResizeObserver(u);ro.observe(document.documentElement);if(document.body)ro.observe(document.body)}setTimeout(m,350);setInterval(u,500);p("ready")});addEventListener("resize",u)})();</script>';
     return injectIntoHtml(html, csp + monitor);
   }
