@@ -808,7 +808,6 @@ test('«Киберрефлекс» встроен как автономный п
   assert.match(game.html, /setInterval/);
   assert.match(game.html, /font:700 min\(9vw,6vh\) system-ui/);
   assert.doesNotMatch(game.html, /font:700 64px system-ui/);
-  assert.match(game.html, /o\.style='--p:'\+20\*r\+'%'/);
   assert.match(game.html, /'<br>'\+v\+' мс'/);
   assert.match(game.html, /T=Math\.min\(\.\.\.a\)/);
   assert.doesNotMatch(game.html, /k>v/);
@@ -820,13 +819,21 @@ test('«Киберрефлекс» встроен как автономный п
     h: {},
     t: {},
     b: {},
-    o: { style: '' },
+    o: { style: { background: '' } },
     performance: { now: () => 0 },
     setTimeout() {},
     setInterval() {},
     clearTimeout() {}
   };
   vm.runInNewContext(game.html.match(/<script>([\s\S]*?)<\/script>/)[1], sandbox);
+  for (let round = 1; round <= 5; round++) {
+    sandbox.r = round;
+    sandbox.x(250);
+    assert.equal(sandbox.o.style.background, round < 5 ? 'conic-gradient(#2ef ' + 20 * round + '%,#124 0)' : '#2ef', 'кольцо заполняется по раундам, а 100% рисуется сплошным цветом');
+  }
+  sandbox.r = 0;
+  sandbox.m.onpointerdown({ target: sandbox.b });
+  assert.equal(sandbox.o.style, '', 'новая игра сбрасывает градиент прогресса');
   sandbox.a = [200, 210, 220, 230, 240];
   sandbox.y();
   assert.equal(sandbox.h.innerText, 'СРЕДНИЙ 220 · МИН. 200 мс');
