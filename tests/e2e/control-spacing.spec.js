@@ -15,10 +15,11 @@ test('интервалы турнирной сетки проверяются б
 
   // Сначала создаём реальное нарушение и проверяем дробное значение в отчёте.
   await buttons.evaluateAll(elements => {
-    for (const element of elements) element.style.marginBottom = '3.9px';
+    // Половина пикселя представима во всех движках; 3.9px квантуется по-разному.
+    for (const element of elements) element.style.marginBottom = '3.5px';
   });
   await expect(spacing).toHaveClass(/\bfail\b/);
-  await expect(spacing).toContainText('Минимальный интервал: 7,9 px.');
+  await expect(spacing).toContainText('Минимальный интервал: 7,5 px.');
 
   // Возвращаем 8 px и сдвигаем кнопки к координатам, вызывавшим ложное нарушение.
   const roundedGap = await buttons.evaluateAll(elements => {

@@ -102,6 +102,18 @@ body.sample-documentation-open{overflow:hidden}.sample-documentation-overlay{pos
 .sample-grid-map{--grid-map-start:#ffd166;--grid-map-exit:#5de4cf;margin-top:14px}.sample-grid-map-caption{margin:0 0 8px!important;color:var(--muted)!important;text-align:center}.sample-grid-map-svg{display:block;width:min(100%,620px);height:auto;margin:auto}.sample-grid-map-cell{stroke:var(--bg);stroke-width:.025;shape-rendering:crispEdges}.sample-grid-map-cell.is-wall{fill:var(--muted);opacity:.55}.sample-grid-map-cell.is-floor{fill:var(--panel)}.sample-grid-map-marker rect{stroke:var(--bg);stroke-width:.035}.sample-grid-map-marker.is-start rect{fill:var(--grid-map-start)}.sample-grid-map-marker.is-exit rect{fill:var(--grid-map-exit)}.sample-grid-map-marker text{fill:#022127;font:bold .34px ui-sans-serif,system-ui,sans-serif;pointer-events:none}:root[data-theme=light] .sample-grid-map{--grid-map-start:#ffcf4a;--grid-map-exit:#5de4cf}@media(max-width:520px){.sample-grid-map-caption{font-size:12px}.sample-grid-map-svg{width:100%}}
 
 /* Adapt nested controls to their panel, including narrow laptop columns. */
+.project-links{display:inline;margin-left:12px;color:inherit;font-size:12px;vertical-align:baseline}
+.project-links>a,.author-credit{display:inline-block;white-space:nowrap}
+.author-credit{margin-left:12px}
+.project-links a{color:inherit;text-decoration-color:var(--line);text-underline-offset:3px}
+.project-links a:hover{color:var(--text);text-decoration-color:currentColor}
+.project-links a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+.first-steps{margin:0 24px 16px;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.first-steps>summary{padding:12px 16px;cursor:pointer;color:var(--accent);font-weight:750}
+.first-steps-content{padding:0 16px 16px;max-width:900px}
+.first-steps-content ol{margin:0;padding-left:22px}.first-steps-content li+li{margin-top:6px}
+@media(max-width:720px){.first-steps{margin-right:14px;margin-left:14px}}
+@media print{.first-steps{display:none!important}}
 .output-panel { container: qr-output / inline-size; }
 .input-panel { container: source-input / inline-size; }
 .optimization-option { display: flex; align-items: center; gap: 8px; padding: 0 13px 13px; color: var(--muted); font-size: 12px; }

@@ -52,6 +52,38 @@ test('стартовый пример создаёт QR, автоотчёт и �
   expect(errors).toEqual([]);
 });
 
+test('конструктор сохраняет прежнюю работу и помогает изменить готовый тест без сети', async ({ page, context }) => {
+  const networkRequests = [];
+  page.on('request', request => { if (/^https?:/i.test(request.url())) networkRequests.push(request.url()); });
+  await context.route(/^https?:/i, route => route.abort('internetdisconnected'));
+  await openLab(page);
+  const materials = page.getByRole('navigation', { name: 'Материалы проекта' });
+  await expect(materials.getByRole('link', { name: 'Илья Барило' })).toHaveAttribute('href', 'https://barilo.ru/');
+  await expect(materials.getByRole('link', { name: 'Методика и кейс применения' })).toHaveAttribute('href', /docs\/case-study-ru\.md$/);
+  const previousSource = '<!doctype html><p>Работа до знакомства с конструктором</p>';
+  await page.locator('#source').fill(previousSource);
+  await page.locator('#mode-simple').click();
+  await expect(page.locator('#simple-editor')).toBeVisible();
+  const question = page.locator('.simple-question').first();
+  await question.locator('[data-simple-prompt]').fill('Сколько будет 3 + 4?');
+  await question.locator('[data-simple-answer]').nth(0).fill('7');
+  await question.locator('[data-simple-answer]').nth(1).fill('8');
+  await question.locator('[data-simple-correct]').first().check();
+  await page.locator('#build').click();
+  const preview = page.frameLocator('#preview');
+  await expect(preview.getByText('Сколько будет 3 + 4?', { exact: true })).toBeVisible();
+  await expect(preview.getByRole('button', { name: '7', exact: true })).toBeVisible();
+  await preview.getByRole('button', { name: '7', exact: true }).click();
+  await expect(preview.getByText('Сколько будет 3 + 4?', { exact: true })).toHaveCount(0);
+  await expect(page.locator('#download-html')).toBeEnabled();
+  await page.locator('#draft-panel').evaluate(element => { element.open = true; });
+  const saved = await page.locator('#draft-select option').filter({ hasText: 'Перед открытием конструктора' }).first().getAttribute('value');
+  await page.locator('#draft-select').selectOption(saved);
+  await page.locator('#restore-draft').click();
+  await expect(page.locator('#source')).toHaveValue(previousSource);
+  expect(networkRequests).toEqual([]);
+});
+
 test('QR увеличивается, а компактные панели раскрываются и скрываются', async ({ page }) => {
   await openLab(page);
 

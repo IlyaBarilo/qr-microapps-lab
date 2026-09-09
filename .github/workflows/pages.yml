@@ -40,6 +40,16 @@ jobs:
         run: npm --prefix tests exec -- playwright install --with-deps chromium firefox webkit
       - name: Test before publishing
         run: npm --prefix tests run check:all
+      - name: Save browser failure report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-browser-failure-report
+          path: |
+            tests/playwright-report/
+            tests/test-results/
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Inject release version
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}

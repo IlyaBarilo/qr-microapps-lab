@@ -100,9 +100,9 @@ test('правки и загрузка HTML отключают старый эк
 
 test('карточки и управление сложностью помещаются на телефоне, планшете и ноутбуке', async ({ page }) => {
   await openLab(page);
-  for (const width of [390, 768, 1280, 1366, 1440, 1600, 1920]) {
+  for (const width of [390, 768, 1260, 1280, 1366, 1440, 1600, 1920]) {
     await page.setViewportSize({ width, height: 1000 });
-    const overflow = await page.evaluate(() => ['.output-panel', '.result-grid', '.metrics-column', '.correction-card', '.difficulty-editor'].map(selector => {
+    const overflow = await page.evaluate(() => ['html', '.project-links', '.first-steps', '.output-panel', '.result-grid', '.metrics-column', '.correction-card', '.difficulty-editor'].map(selector => {
       const element = document.querySelector(selector);
       return { selector, overflow: element.scrollWidth - element.clientWidth };
     }).filter(item => item.overflow > 1));

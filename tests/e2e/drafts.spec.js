@@ -14,6 +14,7 @@ async function openDrafts(page) {
 }
 
 async function saveDraft(page) {
+  await page.bringToFront();
   await page.locator('#save-draft').click();
   await expect(page.locator('#draft-status')).toContainText('Черновик сохранён в');
 }
@@ -201,12 +202,22 @@ test('две вкладки с копией состояния сеанса не
   await other.addInitScript(owner => sessionStorage.setItem('qr-microapps-draft-tab', owner), copiedSession);
   await other.goto(labUrl);
   await expect(other.locator('#source')).toHaveValue(html);
+  // Переключаем вкладку как пользователь: Firefox не гарантирует ввод в фоновую вкладку.
+  await page.bringToFront();
   await page.locator('#source').fill('первый черновик');
+  await expect(page.locator('#source')).toHaveValue('первый черновик');
+  await other.bringToFront();
   await other.locator('#source').fill('второй черновик');
+  await expect(other.locator('#source')).toHaveValue('второй черновик');
   await saveDraft(page);
   await saveDraft(other);
-  const saved = await page.evaluate(() => Object.keys(localStorage).filter(key => key.startsWith('qr-microapps-drafts-v1:'))
-    .map(key => JSON.parse(localStorage.getItem(key)).snapshot.fields.source));
-  expect(saved).toContain('первый черновик');
-  expect(saved).toContain('второй черновик');
+  const firstRecord = await currentDraft(page);
+  const secondRecord = await currentDraft(other);
+  expect(firstRecord.id).not.toBe(secondRecord.id);
+  expect(firstRecord.snapshot.fields.source).toBe('первый черновик');
+  expect(secondRecord.snapshot.fields.source).toBe('второй черновик');
+  // Сохранение синхронно в своей вкладке, а другая вкладка Firefox видит его позже.
+  await expect.poll(() => page.evaluate(() => Object.keys(localStorage).filter(key => key.startsWith('qr-microapps-drafts-v1:'))
+    .map(key => JSON.parse(localStorage.getItem(key)).snapshot.fields.source)))
+    .toEqual(expect.arrayContaining(['первый черновик', 'второй черновик']));
 });

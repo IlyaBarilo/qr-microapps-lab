@@ -51,3 +51,13 @@ jobs:
         run: npm --prefix tests run test:standalone-browser
       - name: Run browser scenarios
         run: npm --prefix tests run test:e2e
+      - name: Save browser failure report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-failure-report
+          path: |
+            tests/playwright-report/
+            tests/test-results/
+          retention-days: 14
+          if-no-files-found: ignore
