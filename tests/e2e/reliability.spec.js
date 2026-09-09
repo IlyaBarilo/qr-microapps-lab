@@ -100,13 +100,25 @@ test('правки и загрузка HTML отключают старый эк
 
 test('карточки и управление сложностью помещаются на телефоне, планшете и ноутбуке', async ({ page }) => {
   await openLab(page);
-  for (const width of [390, 768, 1260, 1280, 1366, 1440, 1600, 1920]) {
+  for (const width of [320, 390, 768, 1260, 1280, 1366, 1440, 1600, 1920]) {
     await page.setViewportSize({ width, height: 1000 });
-    const overflow = await page.evaluate(() => ['html', '.project-links', '.first-steps', '.output-panel', '.result-grid', '.metrics-column', '.correction-card', '.difficulty-editor'].map(selector => {
+    const overflow = await page.evaluate(() => ['html', '.lead', '.first-steps', '.output-panel', '.result-grid', '.metrics-column', '.correction-card', '.difficulty-editor'].map(selector => {
       const element = document.querySelector(selector);
       return { selector, overflow: element.scrollWidth - element.clientWidth };
     }).filter(item => item.overflow > 1));
     expect(overflow, 'viewport ' + width).toEqual([]);
+    // У строчного .project-links clientWidth равен нулю: проверяем границы его содержимого.
+    const links = page.locator('.project-links > a, .project-links > .author-credit');
+    await expect(links).toHaveCount(2);
+    const linksOverflow = await links.evaluateAll(elements => elements.map(element => {
+      const bounds = element.closest('.lead').getBoundingClientRect();
+      const rect = element.getBoundingClientRect();
+      return {
+        text: element.textContent.trim(),
+        overflow: Math.max(bounds.left - rect.left, rect.right - bounds.right, element.scrollWidth - element.clientWidth)
+      };
+    }).filter(item => item.overflow > 1));
+    expect(linksOverflow, 'project links ' + width).toEqual([]);
     const overlap = await page.locator('.difficulty-editor').evaluate(e => {
       const text = e.querySelector('.difficulty-editor-copy').getBoundingClientRect();
       const label = e.querySelector('label').getBoundingClientRect();
