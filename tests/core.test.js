@@ -34,11 +34,10 @@ test('SVG отклоняет испорченную матрицу и не пр�
   assert.throws(() => qrExport.toSvg(matrix, { quietZone: 4 }));
 });
 
-test('тест устройства формирует самостоятельный быстрый лист и шесть страниц полного набора', () => {
+test('тест устройства сохраняет A–E и формирует отдельную серию F–H', () => {
   const simpleGame = sample.getById('tiny-quiz');
   const brickGame = sample.getById('brick-breaker');
-  const lowCorrectionGame = sample.getById('cyber-maze-3d');
-  const suite = deviceTest.createTestSuite({ simpleHtml: simpleGame.html, brickHtml: brickGame.html, lowCorrectionHtml: lowCorrectionGame.html });
+  const suite = deviceTest.createTestSuite({ simpleHtml: simpleGame.html, brickHtml: brickGame.html });
   assert.equal(suite.quick.length, 1);
   assert.deepEqual(suite.full.map((page) => [page.id, page.items.length]), [
     ['overview', 4],
@@ -46,7 +45,9 @@ test('тест устройства формирует самостоятель�
     ['correction', 4],
     ['encoding', 4],
     ['density', 4],
-    ['iphone-manual', 4]
+    ['text-controls', 4],
+    ['manual-percent', 4],
+    ['manual-base64', 4]
   ]);
   assert.deepEqual(suite.quick[0].items.map((item) => item.id), ['Q1', 'Q2', 'Q3', 'Q4']);
   assert.deepEqual(suite.full[0].items.map((item) => item.id), ['A1', 'A2', 'A3', 'A4']);
@@ -83,21 +84,27 @@ test('тест устройства формирует самостоятель�
   assert.deepEqual(densityItems.map((item) => item.expectedVersion), [10, 20, 30, 40]);
   assert.ok(densityItems.every((item) => item.ecc === 'M' && item.moduleMm === 0.45));
 
-  const iphoneItems = suite.full[5].items;
-  assert.deepEqual(iphoneItems.map((item) => item.id), ['F1', 'F2', 'F3', 'F4']);
-  assert.deepEqual(iphoneItems.map((item) => item.payloadBytes), [42, 1017, 2245, 2933]);
-  assert.ok(iphoneItems.every((item) => item.payload.startsWith('Xdata:')));
-  assert.deepEqual(iphoneItems.map((item) => item.ecc), ['M', 'M', 'M', 'L']);
-  assert.ok(iphoneItems.every((item) => item.moduleMm === 0.50));
-  assert.deepEqual(iphoneItems.map((item) => item.expectedVersion || null), [null, null, 40, 40]);
-  assert.equal(core.parseDataUrl(iphoneItems[0].payload.slice(1)).text, '<h1>OFFLINE</h1>');
-  const offlineCheckHtml = core.parseDataUrl(iphoneItems[1].payload.slice(1)).text;
-  assert.match(offlineCheckHtml, /<h1>Тест автономного запуска<\/h1>/);
-  assert.match(offlineCheckHtml, /Тест пройден: страница и кнопка работают без Интернета/);
-  assert.notEqual(offlineCheckHtml, encodingItems[0].payload);
-  assert.equal(core.parseDataUrl(iphoneItems[2].payload.slice(1)).text, brickGame.html);
-  assert.equal(core.parseDataUrl(iphoneItems[3].payload.slice(1)).text, lowCorrectionGame.html);
-  assert.ok(iphoneItems.every((item) => item.payloadBytes <= core.getQrLimit(item.ecc)));
+  assert.deepEqual(suite.manual, suite.full.slice(5));
+  assert.deepEqual(suite.manual.map(page => page.letter), ['F', 'G', 'H']);
+  assert.ok(suite.manual.every(page => page.revision === '2026-09-14' && page.minQrSizeMm === 0));
+  const controls = suite.manual[0].items;
+  assert.deepEqual(controls.map(item => item.id), ['F1', 'F2', 'F3', 'F4']);
+  assert.equal(controls[0].payload, 'QR TEST 123');
+  assert.equal(controls[1].payload, encodingItems[0].payload);
+  assert.equal(controls[2].payload, encodingItems[1].payload);
+  assert.equal(controls[3].payload, encodingItems[3].payload);
+  assert.ok(suite.manual[0].footer.includes('data:text/html,OFFLINE'));
+  for (const [index, letter, basePayload] of [[1, 'G', controls[2].payload], [2, 'H', controls[3].payload]]) {
+    const items = suite.manual[index].items;
+    assert.deepEqual(items.map(item => item.id), [letter + '1', letter + '2', letter + '3', letter + '4']);
+    assert.deepEqual(items.map(item => item.payload), ['X' + basePayload, '!' + basePayload, basePayload.replace('data:', 'data :'), 'QR TEST\n' + basePayload]);
+    const restored = [items[0].payload.slice(1), items[1].payload.slice(1), items[2].payload.replace('data :', 'data:'), items[3].payload.slice('QR TEST\n'.length)];
+    for (const url of restored) {
+      assert.equal(url, basePayload, 'Правка по печатной инструкции должна точно восстанавливать исходный адрес.');
+      assert.equal(core.parseDataUrl(url).text, controls[1].payload);
+    }
+  }
+  assert.ok(suite.manual.flatMap(page => page.items).every(item => item.ecc === 'M' && item.moduleMm === 0.50 && item.quietZone === 4 && item.payloadBytes <= core.getQrLimit('M')));
 });
 
 test('цифровая проверка тестового QR различает совпадение, BOM и ошибку', () => {
@@ -1312,7 +1319,7 @@ test('упрощённый конструктор создаёт валидны�
   assert.match(editorPage, /id="validation-toggle"[^>]*class="[^"]*validation-toggle[^"]*summary-hint[^"]*"[^>]*>показать<\/button>/);
   assert.doesNotMatch(editorPage, /class="panel validation-panel"/);
   assert.match(editorPage, /id="open-quick-device-test"[\s\S]*id="open-full-device-test"/);
-  assert.match(editorPage, /Полный тест · листы A–F/);
+  assert.match(editorPage, /Полный тест · листы A–H/);
   assert.match(editorPage, /id="device-test-overlay"[\s\S]*id="device-test-pages"[\s\S]*id="device-test-screen-view"/);
   assert.match(editorPage, /id="device-card-ruler"[\s\S]*id="device-card-width"[\s\S]*id="device-screen-module-pixels"/);
   assert.match(editorPage, /<script data-source="editor\/device-test\.js">[\s\S]*<script data-source="editor\/app\.js">/);
@@ -1373,7 +1380,7 @@ test('упрощённый конструктор создаёт валидны�
   assert.match(deviceTestSource, /CARD_WIDTH_MM = 85\.60/);
   assert.match(deviceTestSource, /title: 'Представление и запуск HTML'/);
   assert.match(deviceTestSource, /title: 'Ступени плотности'/);
-  assert.match(deviceTestSource, /title: 'Ручной офлайн-запуск на iPhone'/);
+  assert.match(deviceTestSource, /title: 'Контроль чтения текста и HTML'/);
   assert.match(deviceTestSource, /verifyCanvasPayload\(canvas, payload, decoder\)/);
   assert.match(deviceTestSource, /modulePixels = Math\.max\(1, Math\.round\(targetCss \* dpr \/ totalModules\)\)/);
   const jsQrSource = fs.readFileSync(path.join(__dirname, '../editor/vendor/jsQR.js'), 'utf8');

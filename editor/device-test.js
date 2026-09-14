@@ -57,10 +57,6 @@
     return '<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>QR D</title><style>body{font:18px sans-serif;color:#123;padding:20px}button{font:inherit}</style><body><h1>&#1058;&#1077;&#1089;&#1090; &#1105; &#10003;</h1><p id="o"># % + ? &amp; =</p><button onclick="document.getElementById(\'o\').textContent=\'OK OFFLINE\'">&#1055;&#1088;&#1086;&#1074;&#1077;&#1088;&#1080;&#1090;&#1100;</button></body></html>';
   }
 
-  function makeOfflineCheckHtml() {
-    return '<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Тест автономного запуска</title><style>body{font:18px system-ui;color:#fff;background:#071d2b;padding:24px}button{font:inherit;padding:12px 18px}</style><body><h1>Тест автономного запуска</h1><p id="o">Нажмите кнопку. Если появится подтверждение, автономная страница и JavaScript работают.</p><button onclick="document.getElementById(\'o\').textContent=\'Тест пройден: страница и кнопка работают без Интернета\';this.disabled=true">Проверить</button></body></html>';
-  }
-
   function item(id, title, purpose, payload, ecc, printMm, type, moduleMm, metadata) {
     var result = {
       id: id,
@@ -96,15 +92,12 @@
 
   function createTestSuite(content) {
     content = content || {};
-    if (!content.simpleHtml || !content.brickHtml || !content.lowCorrectionHtml) throw new Error('Не найдены встроенные игры для тестовых QR.');
+    if (!content.simpleHtml || !content.brickHtml) throw new Error('Не найдены встроенные игры для тестовых QR.');
     var simpleHtml = String(content.simpleHtml);
     var brickHtml = String(content.brickHtml);
-    var lowCorrectionHtml = String(content.lowCorrectionHtml);
     var simplePayload = makeHtmlDataUrl(simpleHtml);
     var brickPayload = makeHtmlDataUrl(brickHtml);
-    var lowCorrectionPayload = makeHtmlDataUrl(lowCorrectionHtml);
     if (byteLength(simplePayload) > 2331 || byteLength(brickPayload) > 2331) throw new Error('Встроенная тестовая игра больше вместимости QR с коррекцией M.');
-    if (byteLength(lowCorrectionPayload) > 2953) throw new Error('Встроенная тестовая игра больше вместимости QR с коррекцией L.');
 
     var quick = createOverviewPage('quick', 'Q', 'Q', simplePayload, brickPayload);
     var overview = createOverviewPage('overview', 'A', 'A', simplePayload, brickPayload);
@@ -134,7 +127,6 @@
     };
 
     var probeHtml = makeEncodingProbeHtml();
-    var offlineCheckHtml = makeOfflineCheckHtml();
     var encoding = {
       id: 'encoding',
       letter: 'D',
@@ -159,35 +151,40 @@
     };
     if (encoding.items.some(function (testItem) { return testItem.payloadBytes > 2331; })) throw new Error('HTML-зонд кодирования больше вместимости QR с коррекцией M.');
 
-    var iphoneManual = {
-      id: 'iphone-manual',
-      letter: 'F',
-      number: 'F',
-      title: 'Ручной офлайн-запуск на iPhone',
-      description: 'Текстовые Xdata: нагрузки: скопировать, вставить в Safari, удалить первый X и перейти без Интернета',
-      footer: 'Порядок для F1–F4: показать текст → скопировать полностью → вставить в адресную строку Safari → удалить только первый X → нажать «Перейти». Интернет должен быть отключён. F3 — игра QR v40/M, F4 — игра QR v40/L.',
+    var manualProtocol = '□ найден  □ текст показан  □ скопирован полностью  □ открыт  □ кнопка работает  □ офлайн';
+    var textProtocol = '□ найден  □ текст показан  □ скопирован полностью  □ текст совпал';
+    var manualRevision = '2026-09-14';
+    var textControls = {
+      id: 'text-controls', letter: 'F', number: 'F', revision: manualRevision, minQrSizeMm: 0,
+      title: 'Контроль чтения текста и HTML',
+      description: 'F1 — простой текст; F2–F4 — один HTML-зонд с кнопкой «Проверить». ECC M, модуль 0,50 мм.',
+      footer: 'F1–F2 проверяют чтение текста, а не запуск страницы. Отдельная проверка Safari без QR: при отключённых Wi-Fi и мобильных данных введите data:text/html,OFFLINE. □ страница открылась. Это эксперимент, успешный запуск не гарантирован.',
       items: [
-        item('F1', 'iPhone · короткий Xdata', 'Статичная страница OFFLINE — базовая проверка ручного перехода', 'Xdata:text/html,%3Ch1%3EOFFLINE%3C%2Fh1%3E', 'M', 0, 'TEXT · XDATA', 0.50, {
-          manualPrefix: 'X',
-          protocol: '□ найден  □ скопирован  □ X удалён  □ открыт'
-        }),
-        item('F2', 'iPhone · тест автономного запуска', 'Одно нажатие выводит на странице подтверждение работы HTML и JavaScript без Интернета', 'X' + makeHtmlDataUrl(offlineCheckHtml), 'M', 0, 'TEXT · XDATA · BASE64', 0.50, {
-          manualPrefix: 'X',
-          protocol: '□ скопирован  □ открыт  □ кнопка работает  □ офлайн'
-        }),
-        item('F3', 'iPhone · «Разбей блоки» · QR v40/M', 'Полноценная игра версии 40 с коррекцией M и одним удаляемым символом X', 'X' + brickPayload, 'M', 0, 'TEXT · XDATA · ИГРА', 0.50, {
-          manualPrefix: 'X',
-          expectedVersion: 40,
-          protocol: '□ скопирован полностью  □ открыт  □ игра работает'
-        }),
-        item('F4', 'iPhone · «Киберлабиринт 2.5D» · QR v40/L', 'Почти предельная игра версии 40 с коррекцией L и одним удаляемым символом X', 'X' + lowCorrectionPayload, 'L', 0, 'TEXT · XDATA · ИГРА', 0.50, {
-          manualPrefix: 'X',
-          expectedVersion: 40,
-          protocol: '□ скопирован полностью  □ открыт  □ игра работает'
-        })
+        item('F1', 'Простой текст', 'Ожидаемый текст: QR TEST 123', 'QR TEST 123', 'M', 0, 'TEXT', 0.50, { protocol: textProtocol }),
+        item('F2', 'HTML как текст · повтор D1', 'Исходный HTML с тегами; запуск не требуется', probeHtml, 'M', 0, 'HTML · UTF-8', 0.50, { protocol: textProtocol }),
+        item('F3', 'Data URL · percent', 'Повтор D2: открыть страницу и нажать «Проверить»', makePercentDataUrl(probeHtml, false), 'M', 0, 'DATA · PERCENT', 0.50, { protocol: manualProtocol }),
+        item('F4', 'Data URL · Base64', 'Повтор D4: открыть страницу и нажать «Проверить»', makeHtmlDataUrl(probeHtml), 'M', 0, 'DATA · BASE64', 0.50, { protocol: manualProtocol })
       ]
     };
-    if (iphoneManual.items.some(function (testItem) { return testItem.payloadBytes > (testItem.ecc === 'L' ? 2953 : 2331); })) throw new Error('Xdata: тест iPhone больше вместимости выбранной коррекции QR.');
+    function manualVariants(letter, encodingName, payload) {
+      var variants = [
+        { title: 'Префикс Xdata:', payload: 'X' + payload, instruction: 'Удалите только первый X.' },
+        { title: 'Префикс !data:', payload: '!' + payload, instruction: 'Удалите только первый !.' },
+        { title: 'Пробел в data :', payload: payload.replace(/^data:/, 'data :'), instruction: 'Удалите пробел между data и двоеточием.' },
+        { title: 'Текст перед адресом', payload: 'QR TEST\n' + payload, instruction: 'Удалите первую строку QR TEST и перенос строки.' }
+      ];
+      return {
+        id: 'manual-' + encodingName.toLowerCase(), letter: letter, number: letter, revision: manualRevision, minQrSizeMm: 0,
+        title: 'Ручной переход · ' + encodingName,
+        description: 'Тот же HTML-зонд, четыре изменения начала строки. ECC M, модуль 0,50 мм. Распознавание как текста проверяется экспериментально.',
+        footer: 'Покажите текст → скопируйте полностью → вставьте в Safari → выполните указанную правку → перейдите без сети → нажмите «Проверить». Ожидается OK OFFLINE. При отказе запишите точное сообщение и этап. Варианты запуска пока не подтверждены.',
+        items: variants.map(function (variant, index) {
+          return item(letter + (index + 1), variant.title, variant.instruction, variant.payload, 'M', 0, 'ЭКСПЕРИМЕНТ · ' + encodingName, 0.50, { protocol: manualProtocol });
+        })
+      };
+    }
+    var manual = [textControls, manualVariants('G', 'percent', makePercentDataUrl(probeHtml, false)), manualVariants('H', 'Base64', makeHtmlDataUrl(probeHtml))];
+    if (manual.some(function (page) { return page.items.some(function (testItem) { return testItem.payloadBytes > 2331; }); })) throw new Error('Тестовая нагрузка F–H больше вместимости QR с коррекцией M.');
 
     var densityTargets = [
       { bytes: 200, version: 10 },
@@ -210,7 +207,7 @@
       })
     };
 
-    return { quick: [quick], full: [overview, threshold, correction, encoding, density, iphoneManual] };
+    return { quick: [quick], full: [overview, threshold, correction, encoding, density].concat(manual), manual: manual };
   }
 
   function calculateCalibration(cardCssWidth, devicePixelRatio) {
@@ -342,7 +339,7 @@
     var elements = {
       overlay: $('device-test-overlay'), dialog: documentObject.querySelector('.device-test-dialog'), pages: $('device-test-pages'), pagesView: $('device-test-pages-view'), screenView: $('device-test-screen-view'),
       pagesTab: $('device-test-pages-tab'), screenTab: $('device-test-screen-tab'), set: $('device-test-set'), close: $('device-test-close'), print: $('device-test-print'),
-      openQuick: $('open-quick-device-test'), openFull: $('open-full-device-test'), screenCode: $('device-screen-code'), prev: $('device-screen-prev'), next: $('device-screen-next'),
+      openQuick: $('open-quick-device-test'), openFull: $('open-full-device-test'), openManual: $('open-manual-device-test'), screenCode: $('device-screen-code'), prev: $('device-screen-prev'), next: $('device-screen-next'),
       pixelPresets: $('device-screen-pixel-presets'), mmPresets: $('device-screen-mm-presets'), cardRuler: $('device-card-ruler'), cardWidth: $('device-card-width'),
       cardWidthOutput: $('device-card-width-output'), calibrationSave: $('device-calibration-save'), calibrationReset: $('device-calibration-reset'), calibrationResult: $('device-calibration-result'),
       screenStage: $('device-screen-stage'), screenCanvas: $('device-screen-canvas'), screenCaption: $('device-screen-caption'), screenOnly: $('device-screen-only'), screenOnlyExit: $('device-screen-only-exit'),
@@ -421,16 +418,17 @@
       var page = documentObject.createElement('article');
       page.className = 'device-print-page device-print-page-' + testPage.id;
       page.dataset.pageNumber = String(testPage.number);
+      if (testPage.revision) page.dataset.revision = testPage.revision;
       var head = documentObject.createElement('header');
       head.className = 'device-print-head';
-      head.innerHTML = '<div><b>QR Microapps Lab · тест устройства</b><h3>Лист ' + escapeHtml(testPage.letter) + ' · ' + escapeHtml(testPage.title) + '</h3><p>' + escapeHtml(testPage.description) + '</p></div><div class="device-print-fields">Устройство: ____________________<br>Сканер / камера: _______________<br>ОС / браузер: __________________<br>Источник: □ экран &nbsp; □ бумага<br>Испытание: <span data-print-timestamp></span></div>';
+      head.innerHTML = '<div><b>QR Microapps Lab · тест устройства' + (testPage.revision ? ' · редакция ' + escapeHtml(testPage.revision) : '') + '</b><h3>Лист ' + escapeHtml(testPage.letter) + ' · ' + escapeHtml(testPage.title) + '</h3><p>' + escapeHtml(testPage.description) + '</p></div><div class="device-print-fields">Устройство: ____________________<br>Сканер / камера: _______________<br>ОС / браузер: __________________<br>Источник: □ экран &nbsp; □ бумага<br>Испытание: <span data-print-timestamp></span>' + (testPage.revision ? '<br>Сеть: □ отключена &nbsp; □ включена' : '') + '</div>';
       var grid = documentObject.createElement('div');
       grid.className = 'device-print-grid';
       testPage.items.forEach(function (testItem) {
         var model = getModel(testItem);
         var modules = model.getModuleCount();
         var version = (modules - 17) / 4;
-        var printGeometry = calculatePrintGeometry(modules, testItem.quietZone, testItem.moduleMm || testItem.printMm / (modules + testItem.quietZone * 2), 30);
+        var printGeometry = calculatePrintGeometry(modules, testItem.quietZone, testItem.moduleMm || testItem.printMm / (modules + testItem.quietZone * 2), testPage.minQrSizeMm == null ? 30 : testPage.minQrSizeMm);
         var printMm = printGeometry.sizeMm;
         var card = documentObject.createElement('button');
         card.type = 'button';
@@ -447,7 +445,7 @@
           : verification;
         var copy = documentObject.createElement('div');
         copy.className = 'device-print-code-copy';
-        copy.innerHTML = '<strong>' + escapeHtml(testItem.id) + ' · ' + escapeHtml(testItem.title) + '</strong><span>' + escapeHtml(testItem.type) + ' · ' + testItem.payloadBytes + ' Б · QR v' + version + ' · ECC ' + escapeHtml(testItem.ecc) + '</span><small>' + formatDecimal(printMm, 1) + ' мм · модуль ' + formatDecimal(printGeometry.moduleMm, 2) + ' мм</small><small>' + formatDecimal(printGeometry.printerDots300, 1) + ' точки при 300 dpi · ' + formatDecimal(printGeometry.printerDots600, 1) + ' при 600 dpi</small><small>' + escapeHtml(testItem.purpose) + '</small><small class="device-print-preflight ' + escapeHtml(versionStatus.status) + '">Автопроверка: ' + escapeHtml(versionStatus.label) + '</small><em>' + escapeHtml(testItem.protocol || '□ найден  □ предложено действие  □ открыто') + '</em>';
+        copy.innerHTML = '<strong>' + escapeHtml(testItem.id) + ' · ' + escapeHtml(testItem.title) + '</strong><span>' + escapeHtml(testItem.type) + ' · ' + testItem.payloadBytes + ' Б · QR v' + version + ' · ECC ' + escapeHtml(testItem.ecc) + '</span><small>' + formatDecimal(printMm, 1) + ' мм · модуль ' + formatDecimal(printGeometry.moduleMm, 2) + ' мм</small><small>' + formatDecimal(printGeometry.printerDots300, 1) + ' точки при 300 dpi · ' + formatDecimal(printGeometry.printerDots600, 1) + ' при 600 dpi</small><small>' + escapeHtml(testItem.purpose) + '</small><small class="device-print-preflight ' + escapeHtml(versionStatus.status) + '">Автопроверка: ' + escapeHtml(versionStatus.label) + '</small><em>' + escapeHtml(testItem.protocol || '□ найден  □ предложено действие  □ открыто') + '</em>' + (testPage.revision ? '<small>Сообщение / этап отказа: __________________</small>' : '');
         card.append(canvas, copy);
         grid.appendChild(card);
       });
@@ -484,7 +482,7 @@
     }
 
     function selectSet(setName) {
-      state.set = setName === 'full' ? 'full' : 'quick';
+      state.set = setName === 'full' || setName === 'manual' ? setName : 'quick';
       elements.set.value = state.set;
       var suite = createTestSuite(getCurrent());
       state.pages = suite[state.set];
@@ -604,6 +602,7 @@
 
     elements.openQuick.addEventListener('click', function () { open('quick'); });
     elements.openFull.addEventListener('click', function () { open('full'); });
+    elements.openManual.addEventListener('click', function () { open('manual'); });
     elements.close.addEventListener('click', close);
     elements.pagesTab.addEventListener('click', function () { setView('pages'); });
     elements.screenTab.addEventListener('click', function () { setView('screen'); });

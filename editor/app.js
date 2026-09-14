@@ -1945,11 +1945,9 @@
       getCurrent: function () {
         var simpleGame = sample.getById('tiny-quiz');
         var brickGame = sample.getById('brick-breaker');
-        var lowCorrectionGame = sample.getById('cyber-maze-3d');
         return {
           simpleHtml: simpleGame.html,
-          brickHtml: brickGame.html,
-          lowCorrectionHtml: lowCorrectionGame.html
+          brickHtml: brickGame.html
         };
       }
     });
